@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "906357683460",
+    "project_id": "road-companion-700b0",
+    "storage_bucket": "road-companion-700b0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:906357683460:android:a5171ee1e16842949c0c51",
+        "android_client_info": {
+          "package_name": "com.example.road_companion"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDh5SOOyWSl_ENOMGJxxcZU7u-dEhdI3Kk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
