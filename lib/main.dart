@@ -17,8 +17,7 @@ class RoadCompanionApp extends StatelessWidget {
       title: 'Road Companion',
       debugShowCheckedModeBanner: false, // Removes debug banner
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+        primarySwatch: Colors.blue,        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: Home(),
     );
