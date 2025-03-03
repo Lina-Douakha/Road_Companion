@@ -29,7 +29,7 @@ class Home extends StatelessWidget {
               context,
               icon: Icons.login,
               text: 'Login',
-              page: const LoginFlowLauncher(), 
+              page:  LoginScreen(),
               ),
             _buildFeatureButton(
               context,
