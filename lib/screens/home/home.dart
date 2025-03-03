@@ -25,12 +25,12 @@ class Home extends StatelessWidget {
         child: ListView(
           children: [
             const SizedBox(height: 20),
-            _buildFeatureButton(
+              _buildFeatureButton(
               context,
               icon: Icons.login,
               text: 'Login',
-              page: const LoginScreen(),
-            ),
+              page: const LoginFlowLauncher(), 
+              ),
             _buildFeatureButton(
               context,
               icon: Icons.gavel,

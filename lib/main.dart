@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'screens/home/home.dart';
+import 'screens/authenticate/login.dart'; 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,3 +25,4 @@ class RoadCompanionApp extends StatelessWidget {
     );
   }
 }
+
