@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:road_companion/screens/traffic_law/traffic_law_consultation/choisir_categorie.dart'; // Importation de la navbar
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+void main() {
+  runApp(const MaterialApp(home: HomePage()));
+}
+
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Home")),
-      body: const Center(
-        child: Text(
-          "Hello!",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
+    return const ChoisirCategorie(); // Appel du widget de navigation
   }
 }
