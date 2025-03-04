@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:road_companion/services/auth_service.dart';
+// import 'package:road_companion/screens/authenticate/email_verification_screen.dart';
 
 class RegistrationScreen extends StatefulWidget {
   @override
@@ -9,6 +11,39 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   bool offerService = true;
   String serviceType = 'Mécanicien';
   bool acceptedTerms = false;
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  TextEditingController nameController = TextEditingController();
+  TextEditingController phoneController = TextEditingController();
+  TextEditingController confirmPasswordController = TextEditingController();
+  final AuthService _authService = AuthService(); // Add this line at the top
+
+
+  bool _validateFields() {
+    if (emailController.text.trim().isEmpty ||
+        passwordController.text.trim().isEmpty ||
+        confirmPasswordController.text.trim().isEmpty ||
+        nameController.text.trim().isEmpty ||
+        phoneController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Tous les champs sont obligatoires"), backgroundColor: Colors.red),
+      );
+      return false;
+    }
+
+    // Check if passwords match
+    if (passwordController.text.trim() != confirmPasswordController.text.trim()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Les mots de passe ne correspondent pas"), backgroundColor: Colors.red),
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -34,11 +69,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildTextField(label: "Nom d'utilisateur", hint: "Username"),
-            _buildTextField(label: "Adresse Email", hint: "Email Address", icon: Icons.email_outlined),
-            _buildPhoneField(),
-            _buildTextField(label: "Mot de passe", hint: "Password", isPassword: true),
-            _buildTextField(label: "Confirmez le mot de passe", hint: "Confirm Password", isPassword: true),
+
+            _buildTextField(label: "Nom d'utilisateur", hint: "Username", controller: nameController),
+            _buildTextField(label: "Adresse Email", hint: "Email Address", icon: Icons.email_outlined, controller: emailController),
+            _buildPhoneField(), // Phone field should also use a controller
+            _buildTextField(label: "Mot de passe", hint: "Password", isPassword: true, controller: passwordController),
+            _buildTextField(label: "Confirmez le mot de passe", hint: "Confirm Password", isPassword: true, controller: confirmPasswordController),
+
             const SizedBox(height: 10),
             const Text("Offrez-vous un service ?", style: TextStyle(fontWeight: FontWeight.bold)),
             Column(
@@ -96,9 +133,31 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                onPressed: acceptedTerms ? () {
-                  // Logique d'inscription ici
+                onPressed: acceptedTerms ? () async {
+                  print("DEBUG: Email = '${emailController.text}'");
+                  print("DEBUG: Password = '${passwordController.text}'");
+                  print("DEBUG: Confirm Password = '${confirmPasswordController.text}'");
+                  print("DEBUG: Name = '${nameController.text}'");
+                  print("DEBUG: Phone = '${phoneController.text}'");
+
+                  if (_validateFields()) {  // Ensure fields are filled
+                    String? error = await _authService.registerUser(
+                      emailController.text.trim(),
+                      passwordController.text.trim(),
+                      nameController.text.trim(),
+                      phoneController.text.trim(),
+                      offerService ? serviceType : "User", // Role is based on selection
+                      context,
+                    );
+
+                    if (error != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(error), backgroundColor: Colors.red),
+                      );
+                    }
+                  }
                 } : null,
+
                 child: const Text(
                   "Continue",
                   style: TextStyle(fontSize: 18, color: Colors.white),
@@ -110,8 +169,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       ),
     );
   }
-
-  Widget _buildTextField({required String label, required String hint, IconData? icon, bool isPassword = false}) {
+  Widget _buildTextField({
+    required String label,
+    required String hint,
+    required TextEditingController controller,
+    IconData? icon,
+    bool isPassword = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
@@ -119,6 +183,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         children: [
           Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
           TextField(
+            controller: controller,
             obscureText: isPassword,
             decoration: InputDecoration(
               hintText: hint,
@@ -126,14 +191,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               suffixIcon: isPassword ? const Icon(Icons.visibility_off) : null,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               filled: true,
-              fillColor: const Color.fromARGB(255, 255, 255, 255),
+              fillColor: Colors.white,
             ),
           ),
         ],
       ),
     );
   }
-
   Widget _buildPhoneField() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -142,11 +206,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         children: [
           const Text("Numéro de téléphone", style: TextStyle(fontWeight: FontWeight.bold)),
           TextField(
+            controller: phoneController,
             keyboardType: TextInputType.phone,
             decoration: InputDecoration(
-              hintText: "+213  Numéro de téléphone",
+              hintText: "+213 Numéro de téléphone",
               filled: true,
-              fillColor: const Color.fromARGB(255, 255, 255, 255),
+              fillColor: Colors.white,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             ),
           ),
@@ -154,6 +219,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       ),
     );
   }
+
 
   Widget _buildRadio(String label, bool value) {
     return Row(

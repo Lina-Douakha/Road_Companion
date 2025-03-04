@@ -1,31 +1,126 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:road_companion/screens/authenticate/email_verification_screen.dart';
+
+
+
 
 class AuthService {
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<User?> signIn(String email, String password) async {
+  // Sign in with Email and Password
+  Future<String?> signIn(String email, String password) async {
     try {
-      final userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      return null; // Login successful, return null (no error)
+    } on FirebaseAuthException catch (e) {
+      return _getErrorMessageSignIn(e.code); // Return readable error message
+    }
+  }
+
+  // Sign out
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
+
+  // Get current user
+  User? get currentUser => _auth.currentUser;
+
+  // Handle Login Errors
+  String _getErrorMessageSignIn(String errorCode) {
+    switch (errorCode) {
+      case "invalid-email":
+        return "L'adresse e-mail est mal formatée.";
+      case "user-not-found":
+        return "Aucun utilisateur trouvé avec cet e-mail.";
+      case "wrong-password":
+        return "Mot de passe incorrect. Veuillez réessayer.";
+      case "user-disabled":
+        return "Ce compte a été désactivé.";
+      default:
+        return "Une erreur inattendue s'est produite. Veuillez réessayer.";
+    }
+  }
+
+
+  // Google Sign-In
+  Future<UserCredential?> signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return null; // User canceled login
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
       );
-      return userCredential.user;
+
+      return await _auth.signInWithCredential(credential);
     } catch (e) {
-      print('Error signing in: $e');
+      print("Google Sign-In failed: $e");
       return null;
     }
   }
 
-  Future<User?> signUp(String email, String password) async {
-    try {
-      final userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      return userCredential.user;
-    } catch (e) {
-      print('Error signing up: $e');
-      return null;
+
+Future<String?> registerUser(String email, String password, String name, String phone, String role, BuildContext context) async {
+  try {
+    UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    User? user = userCredential.user;
+    if (user != null) {
+      // Store user info in Firestore
+      await _firestore.collection('users').doc(user.uid).set({
+
+        'UserID': user.uid,
+        'Email': email,
+        'Name': name,
+        'Phone': phone,
+        'Role': role, // New field added
+      });
+
+
+
+
+      if (!user.emailVerified) {
+        await user.sendEmailVerification();
+        if (context.mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const EmailVerificationScreen()),
+
+          );
+        }
+      }
     }
+
+    return null; // Success
+  } on FirebaseAuthException catch (e) {
+    return _getErrorMessageRegister(e.code);
   }
+}
+
+
+String _getErrorMessageRegister(String errorCode) {
+  switch (errorCode) {
+    case "email-already-in-use":
+      return "This email is already registered.";
+    case "invalid-email":
+      return "Invalid email format.";
+    case "weak-password":
+      return "Password must be at least 6 characters long.";
+    default:
+      return "An unexpected error occurred. Please try again.";
+  }
+}
 }
