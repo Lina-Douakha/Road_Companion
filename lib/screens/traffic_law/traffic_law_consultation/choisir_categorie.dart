@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:road_companion/widgets/navigation_bar_widget.dart';
+//import 'priority_question_screen.dart'; // Importation de la page
+import 'package:road_companion/screens/traffic_law/traffic_law_consultation/priorité_passage.dart';
 
 class ChoisirCategorie extends StatelessWidget {
   const ChoisirCategorie({super.key});
@@ -7,14 +8,12 @@ class ChoisirCategorie extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(backgroundColor: const Color(0xFF1B9169), elevation: 0),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const SizedBox(height: 100),
           const Text(
             'Choisir une catégorie',
-
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -26,33 +25,40 @@ class ChoisirCategorie extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Center(
-                // Centre les boutons
                 child: SizedBox(
-                  height: 400, // Définit une hauteur pour le GridView
+                  height: 400,
                   child: GridView.count(
                     crossAxisCount: 2,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
                     childAspectRatio: 1,
-                    // Carré
                     children: [
                       categorieItem(
-                        'lib/assets/images/priorité.jpg',
+                        context,
+                        'assets/images/priorité.jpg',
                         'Priorité de passage',
-                        () => print('Priorité sélectionnée'),
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PriorityQuestionScreen(),
+                          ),
+                        ),
                       ),
                       categorieItem(
-                        'lib/assets/images/panneaux.jpg',
+                        context,
+                        'assets/images/panneaux.jpg',
                         'Panneaux de signalisation',
                         () => print('Panneaux sélectionnés'),
                       ),
                       categorieItem(
-                        'lib/assets/images/exam.jpg',
+                        context,
+                        'assets/images/exam.jpg',
                         'Questions d\'examen',
                         () => print('Examens sélectionnés'),
                       ),
                       categorieItem(
-                        'lib/assets/images/penalties.jpg',
+                        context,
+                        'assets/images/penalties.jpg',
                         'Pénalités et amendes',
                         () => print('Pénalités sélectionnées'),
                       ),
@@ -64,28 +70,31 @@ class ChoisirCategorie extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: NavigationBarWidget(),
     );
   }
 
-  Widget categorieItem(String imagePath, String title, VoidCallback onPressed) {
+  Widget categorieItem(
+    BuildContext context,
+    String imagePath,
+    String title,
+    VoidCallback onPressed,
+  ) {
     return SizedBox(
       width: double.infinity,
       height: double.infinity,
       child: Material(
-        color: const Color(0xFFF1F5F9), // Couleur de fond
-        borderRadius: BorderRadius.circular(18), // Bord arrondi
-        elevation: 4, // Ombre
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(18),
+        elevation: 4,
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(18),
           splashColor: const Color.fromARGB(255, 183, 185, 186),
-          // Couleur du splash effect
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(200), // Bord rond
+                borderRadius: BorderRadius.circular(200),
                 child: Image.asset(
                   imagePath,
                   width: 60,
