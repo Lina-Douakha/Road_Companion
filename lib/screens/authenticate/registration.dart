@@ -16,7 +16,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   TextEditingController nameController = TextEditingController();
   TextEditingController phoneController = TextEditingController();
   TextEditingController confirmPasswordController = TextEditingController();
-  final AuthService _authService = AuthService(); // Add this line at the top
+  final AuthService _authService = AuthService();
 
 
   bool _validateFields() {
