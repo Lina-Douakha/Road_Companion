@@ -7,8 +7,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:road_companion/screens/authenticate/email_verification_screen.dart';
 
 
-
-
 class AuthService {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
