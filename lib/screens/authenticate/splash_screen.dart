@@ -12,7 +12,7 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   int _currentLight = 0; // 0 = Rouge, 1 = Orange, 2 = Vert
   late Timer _timer;
-  int _cycleCount = 0;  // Compte combien de fois la séquence a tourné
+  int _cycleCount = 0; // Compte combien de fois la séquence a tourné
 
   @override
   void initState() {
