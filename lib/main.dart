@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:road_companion/screens/authenticate/reset_password.dart';
 //import 'screens/home/home.dart'; //appel dans le cas d'afficher le navbar
 import 'package:road_companion/screens/authenticate/splash_screen.dart';
 // import 'package:road_companion/screens/traffic_law/traffic_law_consultation/choisir_categorie.dart';
@@ -21,10 +22,11 @@ class RoadCompanionApp extends StatelessWidget {
       title: 'Road Companion',
       theme: ThemeData(
         scaffoldBackgroundColor:
-            Colors.white, // ✅ Fond blanc par défaut pour tous les Scaffold
+            Colors.white, 
       ),
       //home: ChoisirCategorie(),
-      home: SplashScreen(),
+     home: SplashScreen(),
+      //home : ResetPasswordScreen(),
       //home: HomePage(), //test the existing screens
       //home: PriorityQuestionScreen(),
     );

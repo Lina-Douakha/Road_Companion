@@ -33,7 +33,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.email, size: 80, color: Colors.green),
+              const Icon(Icons.email, size: 80, color:Color(0xFF00d47e)),
               const SizedBox(height: 20),
               const Text(
                 "Verify Your Email 📩",
@@ -48,7 +48,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _resendVerificationEmail,
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF00d47e)),
                 child: const Text("Resend Email", style: TextStyle(color: Colors.white)),
               ),
             ],

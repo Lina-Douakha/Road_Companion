@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'login.dart'; // Import the LoginScreen
+import 'login.dart'; 
 
 class OnboardingScreen extends StatefulWidget {
   @override
@@ -23,6 +23,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       );
     }
   }
+  void goToLogin() {
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => LoginScreen()),
+  );
+}
 
   Widget buildOnboardingPage({
     required String imagePath,
@@ -38,7 +44,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           height: 220,
           fit: BoxFit.contain,
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 80),
         if (text != null)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -51,7 +57,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
           ),
-        const SizedBox(height: 50),
+        const SizedBox(height: 30),
         if (!isLastPage)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -60,7 +66,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               children: [
                 if (showSkip)
                   GestureDetector(
-                    onTap: () => Navigator.pushReplacementNamed(context, '/login'),
+                    onTap: goToLogin,
+                    
                     child: const Text(
                       "Skip",
                       style: TextStyle(
@@ -148,7 +155,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           buildOnboardingPage(
             imagePath: 'City_driver_bro.png',
-            text: 'Visualise tous les incidents \nsignalés et obtiens des infos \ntrafic en direct.',
+            text: 'Visualise tous les incidents \nsignalés et obtiens des informations \ntrafic en direct.',
           ),
           buildOnboardingPage(
             imagePath: 'City_driver_pana.png',
