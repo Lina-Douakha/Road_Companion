@@ -20,12 +20,11 @@ class RoadCompanionApp extends StatelessWidget {
       title: 'Road Companion',
       theme: ThemeData(
         scaffoldBackgroundColor:
-            Colors.white, // ✅ Fond blanc par défaut pour tous les Scaffold
+            Colors.white, // Fond blanc par défaut pour tous les Scaffold
       ),
-      //home: ChoisirCategorie(),
       //home: SplashScreen(),  // test the auth feature
-      //home: HomePage(), // test the app features
-      home: ExamsScreen(),
+      home: HomePage(), // test the app features
+      //home: ExamsScreen(),  // test the exam screen
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:road_companion/screens/traffic_law/traffic_law_consultation/choisir_categorie.dart';
 import 'package:road_companion/widgets/navigation_bar_widget.dart';
 
@@ -28,19 +29,20 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Color(0xFF1B9169),
+          statusBarIconBrightness: Brightness.light,
+        ),
+    child:  Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        title: const Center(child: Text('Road Companion')),
-        backgroundColor: const Color(0xFF1B9169),
-        foregroundColor: Colors.white, // Ceci rend le texte blanc
-      ),
       body: _pages[_selectedIndex],
       backgroundColor: Colors.white, // Affichage dynamique du contenu
       bottomNavigationBar: NavigationBarWidget(
         selectedIndex: _selectedIndex,
         onItemTapped: _onItemTapped,
-      ), // ✅ Utilisation correcte de la navbar
+      ), // Utilisation correcte de la navbar
+    ),
     );
   }
 }

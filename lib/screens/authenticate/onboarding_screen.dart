@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'login.dart'; 
+import 'login.dart';
+import 'package:flutter/services.dart';
 
 class OnboardingScreen extends StatefulWidget {
   @override
@@ -138,7 +139,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Color(0xFF1B9169),
+          statusBarIconBrightness: Brightness.light,
+        ),
+    child: Scaffold(
       backgroundColor: Colors.white,
       body: PageView(
         controller: _controller,
@@ -171,6 +177,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 }

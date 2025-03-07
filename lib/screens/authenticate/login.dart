@@ -3,6 +3,7 @@ import 'package:road_companion/services/auth_service.dart';
 import 'package:road_companion/screens/authenticate/reset_password.dart';
 import 'package:road_companion/screens/authenticate/registration.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -80,7 +81,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Color(0xFF1B9169),
+          statusBarIconBrightness: Brightness.light,
+        ),
+    child:  Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Padding(
@@ -299,6 +305,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 }

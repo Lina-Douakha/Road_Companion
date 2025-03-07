@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:road_companion/widgets/navigation_bar_widget.dart';
 
 class PriorityQuestionScreen extends StatefulWidget {
@@ -10,15 +11,15 @@ class _PriorityQuestionScreenState extends State<PriorityQuestionScreen> {
   // Liste des questions et réponses
   final List<Map<String, String>> questions = [
     {
-      "imageUrl": "assets/images/prioritéAlgerien.jpg",
+      "imageUrl": "assets/images/prio1.png",
       "question": "Qui a la priorité à cette intersection ?",
       "answer":
       "Intersection avec un panneau stop à 150 mètres :\n Un panneau stop est placé à 150 mètres.\nLes voitures bleue et jaune passent en même temps, suivies par la voiture rouge",
     },
     {
-      "imageUrl": "assets/images/prioritéAlgerien2.jpg",
+      "imageUrl": "assets/images/prio2.png",
       "question": "Qui a la priorité à cette intersection ?",
-      "answer": " Le véhicule rouge et le véhicule bleu ont la priorité.",
+      "answer": " Le véhicule jaune et le véhicule bleu ont la priorité.",
     },
   ];
 
@@ -51,14 +52,16 @@ class _PriorityQuestionScreenState extends State<PriorityQuestionScreen> {
   @override
   Widget build(BuildContext context) {
     final questionData = questions[currentIndex];
-    return Scaffold(
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Color(0xFF1B9169),
+          statusBarIconBrightness: Brightness.light,
+        ),
+
+    child: Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        title: Text('Road Companion'),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF1B9169),
-        foregroundColor: Colors.white,
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -69,6 +72,7 @@ class _PriorityQuestionScreenState extends State<PriorityQuestionScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    SizedBox(height: screenHeight * 0.09),  // more space above 'Priorité de passage'
                     const Text(
                       'Priorité de passage',
                       style: TextStyle(
@@ -77,7 +81,8 @@ class _PriorityQuestionScreenState extends State<PriorityQuestionScreen> {
                         color: Color(0xFF1B9169),
                       ),
                     ),
-                    SizedBox(height: 15),
+                    //SizedBox(height: screenHeight * 0.03),
+                    SizedBox(height: 20),
 
                     // Vérification de l'existence de l'image
                     if (questionData.containsKey("imageUrl"))
@@ -198,6 +203,7 @@ class _PriorityQuestionScreenState extends State<PriorityQuestionScreen> {
         selectedIndex: _selectedIndex,
         onItemTapped: _onItemTapped,
       ),
+    ),
     );
   }
 }

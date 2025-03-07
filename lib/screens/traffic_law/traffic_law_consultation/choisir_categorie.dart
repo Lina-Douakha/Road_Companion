@@ -12,7 +12,7 @@ class ChoisirCategorie extends StatelessWidget {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(height: 100),
+          const SizedBox(height: 150),
           const Text(
             'Choisir une catégorie',
             style: TextStyle(
@@ -47,7 +47,7 @@ class ChoisirCategorie extends StatelessWidget {
                       ),
                       categorieItem(
                         context,
-                        'assets/images/panneau.jpg',
+                        'assets/images/panneaux.jpg',
                         'Panneaux de signalisation',
                             () => print('Panneaux sélectionnés'),
                       ),

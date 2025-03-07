@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:road_companion/services/auth_service.dart';
-// import 'package:road_companion/screens/authenticate/email_verification_screen.dart';
+import 'package:flutter/services.dart';
 
 class RegistrationScreen extends StatefulWidget {
   @override
@@ -55,7 +55,12 @@ bool _isConfirmPasswordVisible = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Color(0xFF1B9169),
+          statusBarIconBrightness: Brightness.light,
+        ),
+    child: Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -163,6 +168,7 @@ bool _isConfirmPasswordVisible = false;
           ],
         ),
       ),
+    ),
     );
   }
   
