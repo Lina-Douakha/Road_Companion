@@ -15,13 +15,18 @@ class RoadCompanionApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,   // Removes debug banner
       title: 'Road Companion',
-      debugShowCheckedModeBanner: false, // Removes debug banner
       theme: ThemeData(
-        primarySwatch: Colors.blue,        visualDensity: VisualDensity.adaptivePlatformDensity,
+        primarySwatch: Colors.green,        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
+    initialRoute: '/login', // Set your initial route to login
+    routes: {
+      '/login': (context) => SplashScreen(), // Login route
+      '/home': (context) => HomePage(), // Home route to navigate to
       //home: SplashScreen(), //test the existing screens
-      home: HomePage(),
+      //home: HomePage(),
+    }
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:road_companion/services/auth_service.dart';
 import 'package:flutter/services.dart';
+import 'login.dart';
 
 class RegistrationScreen extends StatefulWidget {
   @override
@@ -209,6 +210,11 @@ onPressed: () {
     setState(() {
         if (isConfirmPassword) {
             _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+            // Redirect to LoginScreen
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => LoginScreen()),
+            );
         } else {
             _isPasswordVisible = !_isPasswordVisible;
         }
