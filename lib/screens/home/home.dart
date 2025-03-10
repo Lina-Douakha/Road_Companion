@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:road_companion/screens/traffic_law/traffic_law_consultation/choisir_categorie.dart';
 import 'package:road_companion/screens/emergency/emergency.dart';
 import 'package:road_companion/screens/incident_reporting/incident_report_screen.dart';
 import 'package:road_companion/screens/profile/profile.dart';
 import 'package:road_companion/widgets/navigation_bar_widget.dart';
+import 'package:road_companion/screens/traffic_law/Traffic_Law.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,7 +20,7 @@ class _HomePageState extends State<HomePage> {
   final List<Widget> _pages = [
     const IncidentReportScreen(),
     const EmergencyCallPage(),
-    const ChoisirCategorie(),
+    const TrafficLawScreen(),
     const ProfilePage(),
   ];
 

@@ -16,7 +16,7 @@ class ChoisirCategorie extends StatelessWidget {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(height: 120),
+          const SizedBox(height: 150),
           const Text(
             'Choisir une catégorie',
             style: TextStyle(
