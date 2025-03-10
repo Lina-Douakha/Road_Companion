@@ -4,6 +4,7 @@ import 'screens/home/home.dart';
 import 'package:road_companion/screens/emergency/emergency.dart';
 import 'package:road_companion/screens/incident_reporting/incident_report_screen.dart';
 import 'package:road_companion/widgets/navigation_bar_widget.dart';
+import 'package:road_companion/screens/profile/profile.dart';
 
 
 class MainScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class _MainScreenState extends State<MainScreen> {
     IncidentReportScreen(), // Écran "Map" affiche l'écran des incidents
     EmergencyCallPage(), // Écran "Urgence"
     Placeholder(), // Remplace-le par l'écran du 3e onglet plus tard
-   // ProfileScreen(), // Écran "Profil"
+    ProfilePage(), // Écran "Profil"
   ];
 
   void _onItemTapped(int index) {
