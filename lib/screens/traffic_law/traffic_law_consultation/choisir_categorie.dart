@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 //import 'priority_question_screen.dart'; // Importation de la page
 import 'package:road_companion/screens/traffic_law/traffic_law_consultation/priorité_passage.dart';
+import 'package:road_companion/screens/traffic_law/traffic_law_consultation/panneaux_principal.dart';
 
 class ChoisirCategorie extends StatelessWidget {
   const ChoisirCategorie({super.key});
@@ -47,9 +48,14 @@ class ChoisirCategorie extends StatelessWidget {
                       ),
                       categorieItem(
                         context,
-                        'assets/images/panneaux.jpg',
+                        'assets/images/panneau.jpg',
                         'Panneaux de signalisation',
-                            () => print('Panneaux sélectionnés'),
+                            () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChoisirPanneauxGlobal(),
+                          ),
+                        ),
                       ),
                       categorieItem(
                         context,
