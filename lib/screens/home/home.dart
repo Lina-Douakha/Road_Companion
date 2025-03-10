@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:road_companion/screens/traffic_law/traffic_law_consultation/choisir_categorie.dart';
+import 'package:road_companion/screens/emergency/emergency.dart';
+import 'package:road_companion/screens/incident_reporting/incident_report_screen.dart';
+import 'package:road_companion/screens/profile/profile.dart';
 import 'package:road_companion/widgets/navigation_bar_widget.dart';
 
 class HomePage extends StatefulWidget {
@@ -15,10 +18,10 @@ class _HomePageState extends State<HomePage> {
 
   // Liste des pages associées aux onglets de la navbar
   final List<Widget> _pages = [
-    const Center(child: Text("Page principale")),
-    const Center(child: Text("Page d’appel")),
+    const IncidentReportScreen(),
+    const EmergencyCallPage(),
     const ChoisirCategorie(),
-    const Center(child: Text("Profil")),
+    const ProfilePage(),
   ];
 
   void _onItemTapped(int index) {
@@ -30,19 +33,19 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-        value: const SystemUiOverlayStyle(
-          statusBarColor: Color(0xFF1B9169),
-          statusBarIconBrightness: Brightness.light,
-        ),
-    child:  Scaffold(
-      resizeToAvoidBottomInset: true,
-      body: _pages[_selectedIndex],
-      backgroundColor: Colors.white, // Affichage dynamique du contenu
-      bottomNavigationBar: NavigationBarWidget(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
-      ), // Utilisation correcte de la navbar
-    ),
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Color(0xFF1B9169),
+        statusBarIconBrightness: Brightness.light,
+      ),
+      child:  Scaffold(
+        resizeToAvoidBottomInset: true,
+        body: _pages[_selectedIndex],
+        backgroundColor: Colors.white, // Affichage dynamique du contenu
+        bottomNavigationBar: NavigationBarWidget(
+          selectedIndex: _selectedIndex,
+          onItemTapped: _onItemTapped,
+        ), // Utilisation correcte de la navbar
+      ),
     );
   }
 }

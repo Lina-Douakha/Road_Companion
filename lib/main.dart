@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'screens/home/home.dart';
 import 'package:road_companion/screens/authenticate/splash_screen.dart';
-import 'package:road_companion/screens/traffic_law/exams/exams_screen.dart';
-import 'package:road_companion/screens/traffic_law/traffic_law_consultation/questionExamen.dart';
-import 'package:road_companion/screens/traffic_law/traffic_law_consultation/panneaux_principal.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,16 +15,14 @@ class RoadCompanionApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'Road Companion',
+      debugShowCheckedModeBanner: false, // Removes debug banner
       theme: ThemeData(
-        scaffoldBackgroundColor:
-            Colors.white, // Fond blanc par défaut pour tous les Scaffold
+        primarySwatch: Colors.blue,        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      //home: SplashScreen(),  // test the auth feature
-      home: HomePage(), // test the app features
-      //home: ExamsScreen(),  // test the exam screen
-      //home: QuestionExamen(),
+      //home: SplashScreen(), //test the existing screens
+      home: HomePage(),
     );
   }
 }
+

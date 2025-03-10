@@ -75,6 +75,7 @@ class _QuestionExamenState extends State<QuestionExamen> {
         statusBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
+        backgroundColor: Colors.white,
         resizeToAvoidBottomInset: true,
         body: Padding(
           padding: const EdgeInsets.all(16.0),

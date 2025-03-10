@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<key>NSCameraUsageDescription</key>
+<string>Nous avons besoin de la caméra pour sélectionner des images.</string>
+<key>NSPhotoLibraryUsageDescription</key>
+<string>Nous avons besoin d’accéder à la galerie pour sélectionner des images.</string>
+
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>

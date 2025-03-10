@@ -11,11 +11,12 @@ class ChoisirCategorie extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(height: 150),
+          const SizedBox(height: 120),
           const Text(
             'Choisir une catégorie',
             style: TextStyle(
@@ -24,7 +25,7 @@ class ChoisirCategorie extends StatelessWidget {
               color: Color(0xFF1B9169),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
