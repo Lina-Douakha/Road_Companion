@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:road_companion/widgets/navigation_bar_widget.dart';
+import 'package:flutter/services.dart';
 
 class EmergencyCallPage extends StatefulWidget {
   final int selectedIndex;
@@ -60,13 +61,19 @@ class _EmergencyCallPageState extends State<EmergencyCallPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Color(0xFF1B9169),
+          statusBarIconBrightness: Brightness.light,
+        ),
+    child: Scaffold(
+      backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 32.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-             SizedBox(height: 90),
+             SizedBox(height: 70),
             const Text(
               'Appel d’urgence',
               style: TextStyle(
@@ -76,7 +83,7 @@ class _EmergencyCallPageState extends State<EmergencyCallPage> {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 10),
             Expanded(
               child: ListView.builder(
                 itemCount: emergencyNumbers.length,
@@ -123,6 +130,7 @@ class _EmergencyCallPageState extends State<EmergencyCallPage> {
         selectedIndex: _selectedIndex,
         onItemTapped: _onItemTapped,
       ),*/
+    ),
     );
   }
 }

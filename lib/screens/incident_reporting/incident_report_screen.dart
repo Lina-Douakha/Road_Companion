@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:road_companion/widgets/navigation_bar_widget.dart';
@@ -18,14 +19,14 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
   String? _selectedType;
   int _selectedIndex = 4;
   File? _selectedImage;
-  bool _isButtonPressed = false; 
- 
+  bool _isButtonPressed = false;
+
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.selectedIndex;
   }
-  
+
 
   @override
   void dispose() {
@@ -214,7 +215,7 @@ void _submitForm() {
         backgroundColor: Colors.red,
       ),
     );
-    return; 
+    return;
   }
 
   if (_formKey.currentState!.validate()) {
@@ -267,8 +268,8 @@ void _showSuccessBottomSheet() {
             const SizedBox(height: 24),
             GestureDetector(
               onTap: () {
-                Navigator.pop(context);  
-                Navigator.pushNamed(context, '/map');  
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/map');
               },
               child: const Text(
                 'OK',
@@ -290,9 +291,15 @@ void _showSuccessBottomSheet() {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Color(0xFF1B9169),
+          statusBarIconBrightness: Brightness.light,
+        ),
+    child: Scaffold(
+      backgroundColor: Colors.white,
       body: Padding(
-        padding: const EdgeInsets.only(top: 170, left: 16, right: 16, bottom: 16),
+        padding: const EdgeInsets.only(top: 90, left: 16, right: 16, bottom: 16),
         child: SingleChildScrollView(
           child: Form(
             key: _formKey,
@@ -361,6 +368,7 @@ onTapUp: (_) {
         ),
       ),
       //bottomNavigationBar: NavigationBarWidget(selectedIndex: _selectedIndex, onItemTapped: _onItemTapped),
+    ),
     );
   }
 }
