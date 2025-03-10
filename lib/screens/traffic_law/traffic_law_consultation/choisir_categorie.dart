@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 //import 'priority_question_screen.dart'; // Importation de la page
 import 'package:road_companion/screens/traffic_law/traffic_law_consultation/priorité_passage.dart';
 import 'package:road_companion/screens/traffic_law/traffic_law_consultation/panneaux_principal.dart';
+import 'package:road_companion/screens/traffic_law/traffic_law_consultation/questionExamen.dart';
+import 'package:road_companion/screens/traffic_law/traffic_law_consultation/penalties.dart';
 
 class ChoisirCategorie extends StatelessWidget {
   const ChoisirCategorie({super.key});
@@ -61,13 +63,23 @@ class ChoisirCategorie extends StatelessWidget {
                         context,
                         'assets/images/exam.jpg',
                         'Questions d\'examen',
-                            () => print('Examens sélectionnés'),
+                            () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => QuestionExamen(),
+                          ),
+                        ),
                       ),
                       categorieItem(
                         context,
                         'assets/images/penalties.jpg',
                         'Pénalités et amendes',
-                            () => print('Pénalités sélectionnées'),
+                            () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => Law(),
+                          ),
+                        ),
                       ),
                     ],
                   ),

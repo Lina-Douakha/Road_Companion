@@ -147,6 +147,7 @@
 //   },
 // ];
 import 'package:flutter/material.dart';
+import 'package:road_companion/screens/traffic_law/traffic_law_consultation/panneaux_de_danger.dart'; // Import the screen you have implemented
 import 'package:road_companion/widgets/navigation_bar_widget.dart';
 
 class ChoisirPanneauxGlobal extends StatelessWidget {
@@ -169,7 +170,7 @@ class ChoisirPanneauxGlobal extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
             child: Column(
               children: [
-                const SizedBox(height: 90), // Ajout d'un espace en haut
+                const SizedBox(height: 90),
                 Expanded(
                   child: GridView.builder(
                     padding: EdgeInsets.only(bottom: screenWidth * 0.2),
@@ -195,7 +196,7 @@ class ChoisirPanneauxGlobal extends StatelessWidget {
                           context,
                           category['imagePath']!,
                           category['title']!,
-                              () => print(category['title']),
+                              () => _handleNavigation(context, index),
                           screenWidth,
                         ),
                       )
@@ -203,7 +204,7 @@ class ChoisirPanneauxGlobal extends StatelessWidget {
                         context,
                         category['imagePath']!,
                         category['title']!,
-                            () => print(category['title']),
+                            () => _handleNavigation(context, index),
                         screenWidth,
                       );
                     },
@@ -215,16 +216,33 @@ class ChoisirPanneauxGlobal extends StatelessWidget {
         },
       ),
       bottomNavigationBar: NavigationBarWidget(
-        selectedIndex:
-        0, // Remplace par la valeur actuelle de ton onglet sélectionné
+        selectedIndex: _selectedIndex,
         onItemTapped: (index) {
-          // Logique de changement d'onglet
           print("Onglet sélectionné : $index");
         },
       ),
     );
   }
 
+  // Navigation handler
+  void _handleNavigation(BuildContext context, int index) {
+    switch (index) {
+      case 1: // "Panneaux de danger"
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => PanneauxScreen()),
+        );
+        break;
+      default: // Placeholder for other categories
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ComingSoonScreen()),
+        );
+        break;
+    }
+  }
+
+  // Widget for grid items
   Widget categorieItem(
       BuildContext context,
       String imagePath,
@@ -273,6 +291,24 @@ class ChoisirPanneauxGlobal extends StatelessWidget {
   }
 }
 
+// 🔹 Placeholder Screen for other categories
+class ComingSoonScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("En cours de construction")),
+      body: Center(
+        child: Text(
+          "Cette catégorie sera bientôt disponible!",
+          style: TextStyle(fontSize: 20, color: Colors.grey),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+}
+
+// 🔹 List of categories
 final List<Map<String, String>> _categories = [
   {
     'imagePath': 'assets/images/panneaux_interdiction.png',

@@ -4,6 +4,7 @@ import 'screens/home/home.dart';
 import 'package:road_companion/screens/authenticate/splash_screen.dart';
 import 'package:road_companion/screens/traffic_law/exams/exams_screen.dart';
 import 'package:road_companion/screens/traffic_law/traffic_law_consultation/questionExamen.dart';
+import 'package:road_companion/screens/traffic_law/traffic_law_consultation/panneaux_principal.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,9 +25,9 @@ class RoadCompanionApp extends StatelessWidget {
             Colors.white, // Fond blanc par défaut pour tous les Scaffold
       ),
       //home: SplashScreen(),  // test the auth feature
-      //home: HomePage(), // test the app features
+      home: HomePage(), // test the app features
       //home: ExamsScreen(),  // test the exam screen
-      home: QuestionExamen(),
+      //home: QuestionExamen(),
     );
   }
 }
