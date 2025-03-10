@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:road_companion/services/auth_service.dart';
-// import 'package:road_companion/screens/authenticate/email_verification_screen.dart';
+import 'package:flutter/services.dart';
 
 class RegistrationScreen extends StatefulWidget {
   @override
@@ -55,7 +55,12 @@ bool _isConfirmPasswordVisible = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Color(0xFF1B9169),
+          statusBarIconBrightness: Brightness.light,
+        ),
+    child: Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -163,6 +168,7 @@ bool _isConfirmPasswordVisible = false;
           ],
         ),
       ),
+    ),
     );
   }
   
@@ -172,22 +178,22 @@ Widget _buildTextField({
   IconData? icon,
   bool isPassword = false,
   bool isConfirmPassword = false, 
-bool passwordVisible = false,
-bool confirmPasswordVisible = false,
+
 
 }) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 8),
     child: TextField(
       controller: controller,
+      
        obscureText: isPassword
           ? (isConfirmPassword ? !_isConfirmPasswordVisible : !_isPasswordVisible)
           : false,
 
-      cursorColor: const Color(0xFF4CAF50),
+      cursorColor: const Color.fromARGB(255, 0, 0, 0),
       decoration: InputDecoration(
         labelText: label,
-         labelStyle: const TextStyle(color: Color.fromRGBO(0, 0, 0, 1)),  // Couleur du label au repos
+         labelStyle: const TextStyle(color: Color.fromRGBO(0, 0, 0, 1)), 
         floatingLabelStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),  
         floatingLabelBehavior: FloatingLabelBehavior.always, 
         prefixIcon: icon != null ? Icon(icon) : null,
@@ -234,27 +240,27 @@ Widget _buildPhoneField() => Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextField(
         controller: phoneController,
+        cursorColor: Colors.black,
         keyboardType: TextInputType.phone,
-        cursorColor: const Color(0xFF4CAF50), // Curseur vert
         decoration: InputDecoration(
           labelText: "Numéro de téléphone",
-          labelStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)), // Label au repos
-          floatingLabelStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)), // Label flottant (focus)
+          labelStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)), 
+          floatingLabelStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)), 
           floatingLabelBehavior: FloatingLabelBehavior.always,
           prefixText: "+213 ",
           filled: true,
           fillColor: Colors.white,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color.fromARGB(255, 0, 0, 0)), // Bordure normale (gris clair)
+            borderSide: const BorderSide(color: Color.fromARGB(255, 0, 0, 0)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color.fromARGB(255, 0, 0, 0)), // Bordure normale (gris clair)
+            borderSide: const BorderSide(color: Color.fromARGB(255, 0, 0, 0)), 
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.green, width: 2), // Bordure verte quand focus
+            borderSide: const BorderSide(color: Colors.green, width: 2), 
           ),
         ),
       ),
@@ -319,7 +325,7 @@ Widget _buildPhoneField() => Padding(
         ),
       );
 
- 
+ //HEDI FOR THE FILE PICKER
   Widget _buildStaticDocumentField(String label) {
     return Padding(
       padding: const EdgeInsets.only(top: 8),

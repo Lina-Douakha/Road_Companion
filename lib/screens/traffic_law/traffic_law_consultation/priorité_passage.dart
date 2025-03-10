@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
+import 'package:road_companion/widgets/navigation_bar_widget.dart';
 
 class PriorityQuestionScreen extends StatefulWidget {
   @override
@@ -6,115 +9,225 @@ class PriorityQuestionScreen extends StatefulWidget {
 }
 
 class _PriorityQuestionScreenState extends State<PriorityQuestionScreen> {
-  // Liste des questions et réponses
-  final List<Map<String, String>> questions = [
-    {
-      "imageUrl":
-          "https://via.placeholder.com/300", // Remplace par une vraie image
-      "question": "Qui a la priorité à cette intersection ?",
-      "answer": "Le véhicule venant de droite a la priorité.",
-    },
-    {
-      "imageUrl": "https://via.placeholder.com/300",
-      "question": "Quel véhicule doit céder le passage ?",
-      "answer": "La voiture rouge doit céder le passage.",
-    },
-    {
-      "imageUrl": "https://via.placeholder.com/300",
-      "question": "Que signifie ce panneau ?",
-      "answer": "Ce panneau indique une priorité à droite.",
-    },
-  ];
-
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  List<Map<String, dynamic>> questions = [];
   int currentIndex = 0;
   bool showAnswer = false;
+  bool isLoading = true;
 
-  // Fonction pour changer de question
+  @override
+  void initState() {
+    super.initState();
+    _fetchPriorityQuestions();
+  }
+
+  //Fetch priority questions from Firestore
+  Future<void> _fetchPriorityQuestions() async {
+    try {
+      QuerySnapshot querySnapshot = await _firestore
+          .collection("Traffic_Laws")
+          .where("Category", isEqualTo: "priorities") // Filter for priority questions
+          .get();
+
+      List<Map<String, dynamic>> fetchedQuestions = querySnapshot.docs
+          .map((doc) => doc.data() as Map<String, dynamic>)
+          .toList();
+
+      setState(() {
+        questions = fetchedQuestions;
+        isLoading = false; // Stop loading indicator
+      });
+    } catch (e) {
+      print("Error fetching priority questions: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  // Go to next question
   void nextQuestion() {
+    if (questions.isNotEmpty) {
+      setState(() {
+        currentIndex = (currentIndex + 1) % questions.length;
+        showAnswer = false; // Hide answer when switching
+      });
+    }
+  }
+
+  // Go to previous question
+  void previousQuestion() {
+    if (questions.isNotEmpty) {
+      setState(() {
+        currentIndex = (currentIndex - 1 + questions.length) % questions.length;
+        showAnswer = false; // Hide answer when switching
+      });
+    }
+  }
+
+  int _selectedIndex = 0;
+  void _onItemTapped(int index) {
     setState(() {
-      currentIndex = (currentIndex + 1) % questions.length;
-      showAnswer = false; // Masquer la réponse pour la nouvelle question
+      _selectedIndex = index;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final questionData = questions[currentIndex];
+    final screenHeight = MediaQuery.of(context).size.height;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Priorité de passage"),
-        backgroundColor: Colors.green[700],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Color(0xFF1B9169),
+        statusBarIconBrightness: Brightness.light,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              "Priorité de passage",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 15),
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: isLoading
+              ? Center(child: CircularProgressIndicator()) // Show loading indicator
+              : questions.isEmpty
+              ? Center(child: Text("Aucune question de priorité trouvée."))
+              : Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(height: screenHeight * 0.09),
+                      const Text(
+                        'Priorité de passage',
+                        style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1B9169),
+                        ),
+                      ),
+                      SizedBox(height: 20),
 
-            // Affichage de l’image
-            Image.network(
-              questionData["imageUrl"]!,
-              height: 200,
-              fit: BoxFit.cover,
-            ),
+                      // Show image if exists (Load from assets instead of network)
+                      if (questions[currentIndex]["imageURL"] != null &&
+                          questions[currentIndex]["imageURL"].isNotEmpty)
+                        Image.asset(
+                          "assets/images/${questions[currentIndex]["imageURL"]}",
+                          height: 150,
+                          fit: BoxFit.cover,
+                        ),
 
-            SizedBox(height: 15),
 
-            // Champ de texte pour la question
-            TextField(
-              controller: TextEditingController(text: questionData["question"]),
-              readOnly: true,
-              decoration: InputDecoration(border: OutlineInputBorder()),
-            ),
+                      SizedBox(height: 40),
 
-            SizedBox(height: 15),
+                      // Show Question
+                      SizedBox(
+                        width: 350,
+                        height: 60,
+                        child: TextField(
+                          controller: TextEditingController(
+                            text: questions[currentIndex]["Category"] ??
+                                "Question non disponible",
+                          ),
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Color(0xFFCBD5E1)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Color(0xFFCBD5E1)),
+                            ),
+                          ),
+                        ),
+                      ),
 
-            // Bouton pour afficher la réponse
-            ElevatedButton.icon(
-              onPressed: () {
-                setState(() {
-                  showAnswer = !showAnswer;
-                });
-              },
-              icon: Icon(showAnswer ? Icons.expand_less : Icons.expand_more),
-              label: Text("Afficher la réponse"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[400],
-                foregroundColor: Colors.white,
-              ),
-            ),
+                      SizedBox(height: 30),
 
-            // Affichage conditionnel de la réponse
-            if (showAnswer)
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  questionData["answer"]!,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.green[800],
+                      // Show Answer Button
+                      SizedBox(
+                        width: 300,
+                        height: 55,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              showAnswer = !showAnswer;
+                            });
+                          },
+                          label: Text(
+                            "Afficher la réponse",
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFD1FADF),
+                            foregroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          icon: Icon(
+                            showAnswer ? Icons.expand_less : Icons.expand_more,
+                            color: Color(0xFF00D47E),
+                            size: 30,
+                          ),
+                        ),
+                      ),
+
+                      // Show Answer if button is pressed
+                      if (showAnswer)
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            questions[currentIndex]["Description"] ?? "Réponse non disponible",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF000000),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+
+                      SizedBox(height: 40),
+                    ],
                   ),
-                  textAlign: TextAlign.center,
                 ),
               ),
 
-            Spacer(),
+              // Navigation Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  IconButton(
+                    onPressed: previousQuestion,
+                    icon: Icon(Icons.arrow_circle_left_outlined, size: 30),
+                    color: Color(0xFF1B9169),
+                    tooltip: "Question précédente",
+                  ),
+                  IconButton(
+                    onPressed: nextQuestion,
+                    icon: Icon(Icons.arrow_circle_right_outlined, size: 30),
+                    color: Color(0xFF1B9169),
+                    tooltip: "Question suivante",
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
 
-            // Bouton pour passer à une autre question
-            IconButton(
-              onPressed: nextQuestion, // Charger une nouvelle question
-              icon: Icon(Icons.refresh, size: 30),
-            ),
-          ],
+        bottomNavigationBar: NavigationBarWidget(
+          selectedIndex: _selectedIndex,
+          onItemTapped: _onItemTapped,
         ),
       ),
     );
   }
 }
+

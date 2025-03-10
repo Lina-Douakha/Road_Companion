@@ -3,6 +3,7 @@ import 'package:road_companion/services/auth_service.dart';
 import 'package:road_companion/screens/authenticate/reset_password.dart';
 import 'package:road_companion/screens/authenticate/registration.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
 
-  // Email validation
+
   bool _isValidEmail(String email) {
     final RegExp emailRegex = RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
     return emailRegex.hasMatch(email);
@@ -46,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = false);
 
     if (errorMessage == null) {
-      // Login successful, navigate to HomeScreen
+
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       _showSnackBar(errorMessage, isError: true);
@@ -64,14 +65,13 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signInWithGoogle() async {
-    setState(() => _isLoading = true); // Show loading state
+    setState(() => _isLoading = true); 
 
     UserCredential? userCredential = await _authService.signInWithGoogle();
 
-    setState(() => _isLoading = false); // Hide loading state
-
+    setState(() => _isLoading = false); 
     if (userCredential != null) {
-      // Successful login, navigate to home
+     
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       _showSnackBar("Échec de la connexion avec Google.", isError: true);
@@ -81,15 +81,21 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Color(0xFF1B9169),
+          statusBarIconBrightness: Brightness.light,
+        ),
+    child:  Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Padding(
+          
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 80), // Espace initial (au lieu de Spacer)
+              const SizedBox(height: 80), 
               const Text(
                 "Bienvenue à Road Companion",
                 textAlign: TextAlign.center,
@@ -125,10 +131,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 30),
 
-             // Champ Adresse Email
+             
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
+                cursorColor: Colors.black,
                 decoration: InputDecoration(
                   labelText: "Adresse email",
                   floatingLabelBehavior: FloatingLabelBehavior.always,
@@ -147,16 +154,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.black54),
+                    borderSide: const BorderSide(color: Colors.green, width: 2),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Champ Mot de passe
+             
               TextField(
                 controller: _passwordController,
-                obscureText: _obscurePassword, // Toggle visibility
+                cursorColor: Colors.black,
+                obscureText: _obscurePassword,
                 decoration: InputDecoration(
                   labelText: "Mot de passe",
                   floatingLabelBehavior: FloatingLabelBehavior.always,
@@ -175,13 +183,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.black54),
+                    borderSide: const BorderSide(color: Colors.green, width: 2),
                   ),
                   suffixIcon: IconButton(
                     icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
                     onPressed: () {
                       setState(() {
-                        _obscurePassword = !_obscurePassword; // Toggle password visibility
+                        _obscurePassword = !_obscurePassword; 
                       });
                     },
                   ),
@@ -205,11 +213,11 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 12),
 
 
-             // Bouton Se Connecter
+           
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _login, // Calls the _login function when pressed
+                  onPressed: _login,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF00D47E),
                     shape: RoundedRectangleBorder(
@@ -218,7 +226,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white) // Show loader when logging in
+                      ? const CircularProgressIndicator(color: Colors.white) 
                       : const Text(
                     "Se Connecter",
                     style: TextStyle(
@@ -241,7 +249,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Bouton Google
+             
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
@@ -297,6 +305,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 }

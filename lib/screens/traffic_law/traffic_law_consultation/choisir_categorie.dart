@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 //import 'priority_question_screen.dart'; // Importation de la page
 import 'package:road_companion/screens/traffic_law/traffic_law_consultation/priorité_passage.dart';
+import 'package:road_companion/screens/traffic_law/traffic_law_consultation/panneaux_principal.dart';
+import 'package:road_companion/screens/traffic_law/traffic_law_consultation/questionExamen.dart';
+import 'package:road_companion/screens/traffic_law/traffic_law_consultation/penalties.dart';
 
 class ChoisirCategorie extends StatelessWidget {
   const ChoisirCategorie({super.key});
@@ -8,10 +11,11 @@ class ChoisirCategorie extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(height: 100),
+          const SizedBox(height: 150),
           const Text(
             'Choisir une catégorie',
             style: TextStyle(
@@ -37,7 +41,7 @@ class ChoisirCategorie extends StatelessWidget {
                         context,
                         'assets/images/priorité.jpg',
                         'Priorité de passage',
-                        () => Navigator.push(
+                            () => Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => PriorityQuestionScreen(),
@@ -46,21 +50,36 @@ class ChoisirCategorie extends StatelessWidget {
                       ),
                       categorieItem(
                         context,
-                        'assets/images/panneaux.jpg',
+                        'assets/images/panneau.jpg',
                         'Panneaux de signalisation',
-                        () => print('Panneaux sélectionnés'),
+                            () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChoisirPanneauxGlobal(),
+                          ),
+                        ),
                       ),
                       categorieItem(
                         context,
                         'assets/images/exam.jpg',
                         'Questions d\'examen',
-                        () => print('Examens sélectionnés'),
+                            () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => QuestionExamen(),
+                          ),
+                        ),
                       ),
                       categorieItem(
                         context,
                         'assets/images/penalties.jpg',
                         'Pénalités et amendes',
-                        () => print('Pénalités sélectionnées'),
+                            () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => Law(),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -74,11 +93,11 @@ class ChoisirCategorie extends StatelessWidget {
   }
 
   Widget categorieItem(
-    BuildContext context,
-    String imagePath,
-    String title,
-    VoidCallback onPressed,
-  ) {
+      BuildContext context,
+      String imagePath,
+      String title,
+      VoidCallback onPressed,
+      ) {
     return SizedBox(
       width: double.infinity,
       height: double.infinity,

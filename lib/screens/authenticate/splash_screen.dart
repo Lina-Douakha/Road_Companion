@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
 import 'onboarding_screen.dart'; // Import the OnboardingScreen
 
@@ -48,7 +49,12 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Color(0xFF1B9169),
+          statusBarIconBrightness: Brightness.light,
+        ),
+    child: Scaffold(
       backgroundColor: Colors.white,
       body: Center(
         child: Column(
@@ -82,6 +88,7 @@ class _SplashScreenState extends State<SplashScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 
