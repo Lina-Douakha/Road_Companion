@@ -56,13 +56,14 @@ class _LawState extends State<Law> {
         statusBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
+        backgroundColor: Colors.white,
         resizeToAvoidBottomInset: true,
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SizedBox(height: 90),
+              SizedBox(height: 70),
 
               const Text(
                 'القانون المروري',

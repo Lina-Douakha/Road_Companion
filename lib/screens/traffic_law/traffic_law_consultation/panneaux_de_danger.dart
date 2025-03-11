@@ -69,6 +69,7 @@ class _PanneauxScreenState extends State<PanneauxScreen> {
         statusBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
+        backgroundColor: Colors.white,
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(

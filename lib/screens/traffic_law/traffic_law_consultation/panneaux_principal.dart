@@ -158,6 +158,7 @@ class ChoisirPanneauxGlobal extends StatelessWidget {
     int _selectedIndex = 0;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
       body: LayoutBuilder(
         builder: (context, constraints) {

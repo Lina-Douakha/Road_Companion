@@ -82,6 +82,7 @@ class _PriorityQuestionScreenState extends State<PriorityQuestionScreen> {
         statusBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
+        backgroundColor: Colors.white,
         resizeToAvoidBottomInset: true,
         body: Padding(
           padding: const EdgeInsets.all(16.0),
