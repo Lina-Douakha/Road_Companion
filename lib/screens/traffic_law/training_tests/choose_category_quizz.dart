@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:road_companion/Theming/colors.dart';
 import 'package:road_companion/Theming/font_weight_helper.dart';
-import 'package:road_companion/screens/traffic_law/training_tests/priority_questions.dart'; // Import your screen
-import 'package:road_companion/screens/traffic_law/training_tests/roadsigns_questions.dart'; // Remplace par le bon chemin si nécessaire
+import 'package:road_companion/screens/traffic_law/training_tests/priority_questions.dart';
+import 'package:road_companion/screens/traffic_law/training_tests/roadsigns_questions.dart';
 
 class ChooseCategoryQuizScreen extends StatelessWidget {
   const ChooseCategoryQuizScreen({super.key});
@@ -34,7 +34,7 @@ class ChooseCategoryQuizScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      SizedBox(height: screenHeight * 0.07), // Added space above title
+                      SizedBox(height: screenHeight * 0.07), // Dynamic space above title
                       Text(
                         'Choisir une catégorie',
                         style: TextStyle(
@@ -43,12 +43,12 @@ class ChooseCategoryQuizScreen extends StatelessWidget {
                           color: ColorsManager.Green1,
                         ),
                       ),
-                      SizedBox(height: screenHeight * 0.05),
+                      SizedBox(height: screenHeight * 0.09), // Dynamic space under title
                       Column(
                         children: [
                           CategoryCard(
                             text: 'Priorité de passage',
-                            imagePath: 'assets/images/priorité.jpg',
+                            imagePath: 'assets/images/priorité1.png',
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -59,7 +59,7 @@ class ChooseCategoryQuizScreen extends StatelessWidget {
                           SizedBox(height: screenHeight * 0.03),
                           CategoryCard(
                             text: 'Panneaux de signalisation',
-                            imagePath: 'assets/images/ORHG1K0_1.png',
+                            imagePath: 'assets/images/panel.png',
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -99,28 +99,47 @@ class CategoryCard extends StatelessWidget {
     final double cardWidth = screenWidth * 0.8;
     final double cardHeight = cardWidth * 0.4;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: SizedBox(
-        width: cardWidth,
-        height: cardHeight,
-        child: Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return SizedBox(
+      width: cardWidth,
+      height: cardHeight,
+      child: Card(
+        elevation: 4,
+        color: const Color(0xFFf1f5f9), // Light background color
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: InkWell(
+          onTap: onTap,
+          splashColor: const Color.fromARGB(255, 183, 185, 186), // Splash color when pressed
+          highlightColor: const Color(0xFFE2E4E6), // Color on tap hold
+          borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Image.asset(imagePath, width: cardHeight * 0.8, height: cardHeight * 0.8),
-                SizedBox(width: 12),
+                // Image on the left*
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                   child:ClipRRect(
+                     borderRadius: BorderRadius.circular(8),
+                     child: Image.asset(
+                     imagePath,
+                     width: cardHeight * 0.6, // Reduced image size
+                     height: cardHeight * 0.6,
+                     fit: BoxFit.cover,
+                     ),
+                   ),
+                 ),
+                const SizedBox(width: 12),
+                // Centered text
                 Expanded(
-                  child: Text(
-                    text,
-                    textAlign: TextAlign.start,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                  child: Align(
+                    alignment: Alignment.center, // Center the text vertically
+                    child: Text(
+                      text,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
@@ -132,3 +151,5 @@ class CategoryCard extends StatelessWidget {
     );
   }
 }
+
+

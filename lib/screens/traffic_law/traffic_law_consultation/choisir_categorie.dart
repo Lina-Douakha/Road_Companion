@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-//import 'priority_question_screen.dart'; // Importation de la page
 import 'package:road_companion/screens/traffic_law/traffic_law_consultation/priorité_passage.dart';
 import 'package:road_companion/screens/traffic_law/traffic_law_consultation/panneaux_principal.dart';
 import 'package:road_companion/screens/traffic_law/traffic_law_consultation/questionExamen.dart';
@@ -10,13 +9,15 @@ class ChoisirCategorie extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          const SizedBox(height: 150),
+          SizedBox(height: screenHeight * 0.2),
           const Text(
             'Choisir une catégorie',
             style: TextStyle(
@@ -25,7 +26,7 @@ class ChoisirCategorie extends StatelessWidget {
               color: Color(0xFF1B9169),
             ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: screenHeight * 0.0001),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -142,3 +143,4 @@ class ChoisirCategorie extends StatelessWidget {
     );
   }
 }
+
