@@ -14,6 +14,9 @@ class _RoadSignQuestionScreenState extends State<RoadSignQuestionScreen> {
   bool showResult = false;
   bool showErrorMessage = false;
   bool isConfirmed = false;
+  List<Map<String, dynamic>> panneaux = [];
+  List<Map<String, dynamic>> filteredPanneaux = [];
+  bool isLoading = true;
 
   final int correctAnswer = 1;
 
