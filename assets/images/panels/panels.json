@@ -1,0 +1,775 @@
+[
+    {
+
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Autres dangers. Indique un danger non spécifié sur la route",
+        "ImageUrl": "panel01.png"
+
+    },
+    {
+        
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Intersection, priorité à droite",
+        "ImageUrl": "panel06.png"
+    },
+    {
+       
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Circulation dans les deux sens",
+        "ImageUrl": "panel15.png"
+    },
+    {
+        
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Carrefour à sens giratoire",
+        "ImageUrl": "panel20.png"
+    },
+    {
+      
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Succession de virages dont le premier est à droite",
+        "ImageUrl": "panel24.png"
+    },
+    {
+
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Succession de virages dont le premier est à gauche",
+        "ImageUrl": "panel109.png"
+    },
+    {
+   
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Passage pour piéton",
+        "ImageUrl": "panel34.png"
+    },
+    {
+      
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Endroit fréquenté par les enfants",
+        "ImageUrl": "panel112.png"
+    },
+    {
+    
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Passage d'animaux domestiques",
+        "ImageUrl": "panel99.png"
+    },
+    {
+       
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Chaussée rétrécie",
+        "ImageUrl": "panel133.png"
+    },
+    {
+
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Chaussée rétrécie par la gauche",
+        "ImageUrl": "panel90.png"
+    },
+    {
+
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Chaussée rétrécie par la droite",
+        "ImageUrl": "panel122.png"
+    },
+    {
+      
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Vent latéral",
+        "ImageUrl": "panel120.png"
+    },
+    {
+       
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Débouché sur un quai ou une berge",
+        "ImageUrl": "panel93.png"
+    },
+    {
+        
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Virage à gauche",
+        "ImageUrl": "panel81.png"
+    },
+    {
+        
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Virage à droite",
+        "ImageUrl": "panel92.png"
+    },
+    {
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Chaussée particulièrement glissante",
+        "ImageUrl": "panel95.png"
+    },
+    {
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Pont mobile",
+        "ImageUrl": "panel119.png"
+    },
+    {
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Traversée d'une aire de danger aérien",
+        "ImageUrl": "panel114.png"
+    },
+    {
+      
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Descente dangereuse",
+        "ImageUrl": "panel111.png"
+    },
+    {
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Passage de cavaliers",
+        "ImageUrl": "panel118.png"
+    
+    },
+    {
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Ralentisseur de type dos-d'âne",
+        "ImageUrl": "panel134.png"
+
+    },
+    {
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Passage à niveau muni de barrières à fonctionnement manuel lors du passage des trains",
+        "ImageUrl": "panel135.png"
+
+    },
+    {
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Risque de chute de pierres ou de présence sur la route de pierres tombées",
+        "ImageUrl": "panel136.png"
+
+    },
+    {
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Chaussée glissante, danger temporaire",
+        "ImageUrl": "panel46.png"
+
+    },
+    {
+        "Category": "panels",
+        "LawType" : "Danger",
+        "Title": "Autres dangers, danger temporaire",
+        "ImageUrl": "panel58.png"
+
+    },
+    {
+       "Category": "panels",
+       "LawType" : "Danger",
+       "Title": "Chaussée rétrécie, danger temporaire",
+       "ImageUrl": "panel123.png"
+
+    },
+    {
+       "Category": "panels",
+       "LawType" : "Danger",
+       "Title": "Travaux, danger temporaire",
+       "ImageUrl": "panel46.png"
+
+    },
+
+
+  {
+           
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Interdiction de tourner à droite à la prochaine intersection",
+            "imageURL": "panel02.png"
+        },
+        {
+
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Interdiction de tourner à gauche à la prochaine intersection",
+            "imageURL": "panel137.png"
+  },
+        {
+         
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Stationnement interdit du 16 à la fin du mois",
+            "imageURL": "panel03.png"
+        },
+        {
+
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Stationnement interdit du  1er au  15 du mois",
+            "imageURL": "panel98.png"
+        },
+        {
+
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Stationnement interdit",
+            "imageURL": "panel82.png"
+        },
+        {
+           
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Entrée d'une zone à stationnement interdit",
+            "imageURL": "panel10.png"
+        },
+        {
+         
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Accès interdit aux bicyclettes",
+            "imageURL": "panel14.png"
+        },
+        {
+          
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Entrée d'une zone à vitesse limitée à 30 km/h",
+            "imageURL": "panel16.png"
+        },
+        {
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Accès interdit aux véhicules affectés au transport de marchandises",
+            "imageURL": "panel26.png"
+        },
+        {
+           
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Sens interdit",
+            "imageURL": "panel27.png"
+        },
+        {
+
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Limitation de vitesse - 30 km/h",
+            "imageURL": "panel28.png"
+        },
+        {
+           
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Interdiction de dépasser",
+            "imageURL": "panel29.png"
+        },
+        {
+
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "interdiction de dépasser concernant seulement les transports de marchandises de plus de 3,5 tonnes",
+            "imageURL": "panel31.png"
+        },
+        {
+            
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Interdiction de faire demi-tour",
+            "imageURL": "panel39.png"
+        },
+        {
+
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Interdit aux véhicules dont la longueur est supérieure à 10m",
+            "imageURL": "panel47.png"
+        },
+
+        {
+          
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Arrêt et stationnement interdits",
+            "imageURL": "panel55.png"
+        },
+        {
+
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Cédez le passage à la circulation venant en sens inverse",
+            "imageURL": "panel57.png"
+        },
+        {
+
+           "Category": "panels",
+           "LawType" : "interdiction",
+           "Title": "Accès interdit aux véhicules de plus de 5,5 tonnes",
+           "imageURL": "panel65.png"
+        },
+        {
+           
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Signaux sonores interdits",
+            "imageURL": "panel70.png"
+        },
+        {
+
+           "Category": "panels",
+           "LawType" : "interdiction",
+           "Title": "Interdiction de circuler sans maintenir une distance de 70m",
+           "imageURL": "panel80.png"
+        },
+        {
+            
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Interdit aux véhicules transportant des substances polluantes",
+            "imageURL": "panel88.png"
+        },
+        {
+         
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Accès interdit aux piétons",
+            "imageURL": "panel91.png"
+        },
+        {
+
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Circulation interdite à tout véhicule dans les deux sens",
+            "imageURL": "panel96.png"
+        },
+        {
+            
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Accès interdit aux véhicules de transport en commun de personnes",
+            "imageURL": "panel100.png"
+        },
+        {
+           
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Interdit aux véhicules transportant des marchandises dangereuses",
+            "imageURL": "panel104.png"
+        },
+        {
+
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Arrêt au poste de gendarmerie",
+            "imageURL": "panel113.png"
+        },
+        {
+
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Arrêt au poste de police",
+            "imageURL": "panel115.png"
+        },
+        {
+
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Arrêt au poste de douane",
+            "imageURL": "panel130.png"
+        },
+        {
+
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Fin de toutes les interdictions précédemment signalées",
+            "imageURL": "panel05.png"
+        },
+        {
+
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Fin d'interdiction de dépasser",
+            "imageURL": "panel30.png"
+        },
+        {
+
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Fin d'interdiction de dépasser (camions)",
+            "imageURL": "panel07.png"
+        },
+        {
+
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Sortie de zone à stationnement interdit",
+            "imageURL": "panel12.png"
+        },
+        {
+
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Fin de limitation de vitesse 50 Km/h",
+            "imageURL": "panel18.png"
+        },
+        {
+
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Fin d'interdiction de l'usage de l'avertisseur sonore",
+            "imageURL": "panel41.png"
+        },
+        {
+
+            "Category": "panels",
+            "LawType" : "interdiction",
+            "Title": "Fin de limitation de vitesse 110 Km/h",
+            "imageURL": "panel42.png"
+        },
+
+            {
+              
+              "Category": "panels",
+              "LawType" : "obligation",
+              "Title": "Obligation de tourner à droite avant le panneau",
+              "imageURL": "panel04.png"
+            },
+            {
+             
+              "Category": "panels",
+              "LawType" : "obligation",
+              "Title": "Obligation de tourner à gauche avant le panneau",
+              "imageURL": "panel102.png"
+            },
+            {
+              
+              "Category": "panels",
+              "LawType" : "obligation",
+              "Title": "Direction obligatoire à droite à la prochaine intersection",
+              "imageURL": "panel22.png"
+            },
+            {
+
+              "Category": "panels",
+              "LawType" : "obligation",
+              "Title": "Direction obligatoire à gauche à la prochaine intersection",
+              "imageURL": "panel139.png"
+            },
+            {
+
+              "Category": "panels",
+              "LawType" : "obligation",
+              "Title": "Contournement obligatoire par la droite",
+              "imageURL": "panel40.png"
+            },
+            {
+
+              "Category": "panels",
+              "LawType" : "obligation",
+              "Title": "Contournement obligatoire par la gauche",
+              "imageURL": "panel140.png"
+            },
+            {
+
+              "Category": "panels",
+              "LawType" : "obligation",
+              "Title": "Directions obligatoires à la prochaine intersection : à droite ou à gauche",
+              "imageURL": "panel125.png"
+            },
+            {
+
+              "Category": "panels",
+              "LawType" : "obligation",
+              "Title": "Direction obligatoire à la prochaine intersection : tout droit",
+              "imageURL": "panel126.png"
+            },
+            {
+
+               "Category": "panels",
+               "LawType" : "obligation",
+               "Title": "Piste ou bande obligatoire pour les cycles",
+               "imageURL": "panel11.png"
+            },
+            {
+
+               "Category": "panels",
+               "LawType" : "obligation",
+               "Title": "Fin de piste ou bande obligatoire pour cycles",
+               "imageURL": "panel09.png"
+            },
+            {
+
+               "Category": "panels",
+               "LawType" : "obligation",
+               "Title": "Vitesse minimale obligatoire 30 Km/h",
+               "imageURL": "panel17.png"
+            },
+            {
+             
+              "Category": "panels",
+              "LawType" : "obligation",
+              "Title": "Fin de vitesse minimale obligatoire 30 Km/h",
+              "imageURL": "panel36.png"
+            },
+            {
+             
+              "Category": "panels",
+              "LawType" : "obligation",
+              "Title": "Chemin obligatoire pour piétons",
+              "imageURL": "panel61.png"
+            },
+            {
+              
+              "Category": "panels",
+              "LawType" : "obligation",
+              "Title": "Fin de chemin obligatoire pour piétons",
+              "imageURL": "panel76.png"
+            },
+            {
+             
+              "Category": "panels",
+              "LawType" : "obligation",
+              "Title": "Voie réservée aux véhicules des services de transport en commun",
+              "imageURL": "panel101.png"
+            },
+            {
+             
+              "Category": "panels",
+              "LawType" : "obligation",
+              "Title": "Chaînes à neige obligatoires",
+              "imageURL": "panel116.png"
+            },
+
+                {
+                
+                  "Category": "panels",
+                  "LawType": "indication",
+                  "Title": "Station de taxis",
+                  "imageURL": "panel08.png"
+                },
+                {
+                  
+                  "Category": "panels",
+                  "LawType": "indication",
+                  "Title": "Risque d’incendie",
+                  "imageURL": "panel13.png"
+                },
+                {
+                  
+                  "Category": "panels",
+                  "LawType": "indication",
+                  "Title": "Surélévation de chaussée",
+                  "imageURL": "panel25.png"
+                },
+                {
+                 
+                  "Category": "panels",
+                  "LawType": "indication",
+                  "Title": "Vitesse conseillée (70 km/h)",
+                  "imageURL": "panel32.png"
+                },
+                {
+
+                  "Category": "panels",
+                  "LawType": "indication",
+                  "Title": "Début d’une section d’autoroute",
+                  "imageURL": "panel78.png"
+                },
+                {
+                 
+                  "Category": "panels",
+                  "LawType": "indication",
+                  "Title": "Fin d’une section d'autoroute",
+                  "imageURL": "panel33.png"
+                },
+                {
+                 
+                  "Category": "panels",
+                  "LawType": "indication",
+                  "Title": "Voie de détresse à droite",
+                  "imageURL": "panel37.png"
+                },
+                {
+
+                  "Category": "panels",
+                  "LawType": "indication",
+                  "Title": "Route recommandé pour les camions de plus de 10 mètres de longueur",
+                  "imageURL": "panel43.png"
+                },
+                {
+
+                   "Category": "panels",
+                   "LawType": "indication",
+                   "Title": "Une route à deux voies, la vitesse maximale autorisée est de 90 km/h sur la voie de gauche et de 70 km/h sur la voie de droite",
+                   "imageURL": "panel51.png"
+                },
+                {
+
+                   "Category": "panels",
+                   "LawType": "indication",
+                   "Title": "Impasse: une rue sans issue",
+                   "imageURL": "panel58.png"
+                },
+                {
+
+                   "Category": "panels",
+                   "LawType": "indication",
+                   "Title": "Route à accès réglementé",
+                   "imageURL": "panel121.png"
+                },
+                {
+                  
+                  "Category": "panels",
+                  "LawType": "indication",
+                  "Title": "Installations accessibles aux personnes handicapées",
+                  "imageURL": "panel59.png"
+                },
+                {
+
+                   "Category": "panels",
+                   "LawType": "indication",
+                   "Title": "Cabine téléphonique publique",
+                   "imageURL": "panel60.png"
+                },
+                {
+                 
+                  "Category": "panels",
+                  "LawType": "indication",
+                  "Title": "Entrée d'aire piétonne",
+                  "imageURL": "panel62.png"
+                },
+                {
+                 
+                  "Category": "panels",
+                  "LawType": "indication",
+                  "Title": "Arrêt d’autobus",
+                  "imageURL": "panel66.png"
+                },
+                {
+
+                  "Category": "panels",
+                  "LawType": "indication",
+                  "Title": " Lieu aménagé pour le stationnement",
+                  "imageURL": "panel141.png"
+                },
+                {
+                  
+                  "Category": "panels",
+                  "LawType": "indication",
+                  "Title": "Restaurant ouvert 7 jours sur 7",
+                  "imageURL": "panel79.png"
+                },
+                {
+                 
+                  "Category": "panels",
+                  "LawType": "indication",
+                  "Title": "Circulation à sens unique",
+                  "imageURL": "panel124.png"
+                },
+                {
+                
+                  "Category": "information",
+                  "LawType": "indication",
+                  "Title": "Poste de distribution de carburant",
+                  "imageURL": "panel128.png"
+                },
+                {
+                  
+                  "Category": "panels",
+                  "LawType": "indication",
+                  "Title": "Hôpital",
+                  "imageURL": "panel110.png"
+                },
+                {
+                 
+                  "Category": "panels",
+                  "LawType": "indication",
+                  "Title": "Traversée de tramways",
+                  "imageURL": "panel132.png"
+                },
+                {
+
+                   "Category": "panels",
+                   "LawType": "indication",
+                   "Title": "Informations relatives aux services ou activités touristiques",
+                   "imageURL": "panel142.png"
+                },
+
+  {
+
+    "Category": "panels",
+    "LawType": "intersection",
+    "Title": "Intersection, priorité à droite",
+    "imageURL": "panel06.png"
+  },
+  {
+
+    "Category": "panels",
+    "LawType": "intersection",
+    "Title": "Intersection avec une route dont les usages doivent céder le passage",
+    "imageURL": "panel94.png"
+  },
+  {
+
+    "Category": "panels",
+    "LawType": "intersection",
+    "Title": "Carrefour à sens giratoire",
+    "imageURL": "panel20.png"
+  },
+  {
+
+    "Category": "panels",
+    "LawType": "intersection",
+    "Title": "Cédez le passage à l'intersection. Signal de position",
+    "imageURL": "panel77.png"
+  },
+  {
+
+    "Category": "panels",
+    "LawType": "intersection",
+    "Title": " Cédez le passage à l'intersection. Signal avancé",
+    "imageURL": "panel23.png"
+  },
+  {
+
+    "Category": "panels",
+    "LawType": "intersection",
+    "Title": "Stop: arrêt  à l'intersection",
+    "imageURL": "panel108.png"
+  },
+  {
+
+    "Category": "panels",
+    "LawType": "intersection",
+    "Title": "Arrêt à l'intersection. Signal avancé",
+    "imageURL": "panel63.png"
+  },
+  {
+
+    "Category": "panels",
+    "LawType": "intersection",
+    "Title": "Indication du caractère prioritaire d'une route",
+    "imageURL": "panel19.png"
+  },
+  {
+
+    "Category": "panels",
+    "LawType": "intersection",
+    "Title": "Fin du caractère prioritaire d'une route",
+    "imageURL": "panel21.png"
+  }
+]
