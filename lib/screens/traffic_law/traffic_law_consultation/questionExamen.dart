@@ -20,12 +20,11 @@ class _QuestionExamenState extends State<QuestionExamen> {
     _fetchExamQuestions();
   }
 
-  /// Fetch Exam Questions (category == question)
   Future<void> _fetchExamQuestions() async {
     try {
       QuerySnapshot querySnapshot = await _firestore
-          .collection("Traffic_Laws")
-          .where("category", isEqualTo: "question") // Filter for exam questions
+          .collection("Traffic-Laws")
+          .where("Category", isEqualTo: "question") // Filter for exam questions
           .get();
 
       List<Map<String, dynamic>> fetchedQuestions = querySnapshot.docs
@@ -101,7 +100,7 @@ class _QuestionExamenState extends State<QuestionExamen> {
               ),
               SizedBox(height: 8),
 
-              // ✅ Question counter (current/total)
+              // Question counter (current/total)
               Text(
                 '${currentIndex + 1}/${questions.length}',
                 style: TextStyle(
