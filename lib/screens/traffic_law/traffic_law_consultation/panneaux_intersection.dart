@@ -78,7 +78,7 @@ class _PanneauxIntersectionScreenState extends State<PanneauxIntersectionScreen>
               const SizedBox(height: 70),
               Center(
                 child: Text(
-                  "Panneaux de Danger",
+                  "Panneaux d'intersection",
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,

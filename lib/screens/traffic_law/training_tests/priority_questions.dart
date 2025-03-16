@@ -102,7 +102,7 @@ class _PriorityQuestionsScreenState extends State<PriorityQuestionsScreen> {
                   children: [
                     SizedBox(height: screenHeight * 0.03),
                     Image.asset(
-                      'assets/images/preo1_2.png',
+                      'assets/images/priorities/preo1_2.png',
                       width: screenWidth * 0.75,
                       fit: BoxFit.fitWidth,
                     ),
