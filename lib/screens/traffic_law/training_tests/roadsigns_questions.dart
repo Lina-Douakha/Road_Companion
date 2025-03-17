@@ -134,7 +134,11 @@ class _RoadSignQuestionScreenState extends State<RoadSignQuestionScreen> {
 
 
                     Image.asset(
+<<<<<<< HEAD
                       'assets/images/${questions[currentQuestionIndex]['image']}',
+=======
+                      'assets/images/panels/panel01.png',
+>>>>>>> 49d9a48a743f8d1adb7a720f2098ab82fafef2cb
                       width: screenWidth * 0.4,
                       fit: BoxFit.fitWidth,
                     ),

@@ -3,14 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:road_companion/widgets/navigation_bar_widget.dart';
 
-class PanneauxScreen extends StatefulWidget {
-  const PanneauxScreen({super.key});
+class PanneauxDeDangerScreen extends StatefulWidget {
+  const PanneauxDeDangerScreen({super.key});
 
   @override
-  _PanneauxScreenState createState() => _PanneauxScreenState();
+  _PanneauxDeDangerScreenState createState() => _PanneauxDeDangerScreenState();
 }
 
-class _PanneauxScreenState extends State<PanneauxScreen> {
+class _PanneauxDeDangerScreenState extends State<PanneauxDeDangerScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> panneaux = [];
   List<Map<String, dynamic>> filteredPanneaux = [];
@@ -26,7 +26,7 @@ class _PanneauxScreenState extends State<PanneauxScreen> {
   Future<void> _fetchPanneaux() async {
     try {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection("Traffic_Laws")
+          .collection("Traffic-Laws")
           .where("Category", isEqualTo: "panels")
           .where("LawType", isEqualTo: "Danger")
           .get();
@@ -147,7 +147,7 @@ class _PanneauxScreenState extends State<PanneauxScreen> {
                         child: ListTile(
                           leading: imageName.isNotEmpty
                               ? Image.asset(
-                            "assets/images/$imageName",
+                            "assets/images/panels/$imageName",
                             width: 50,
                             height: 50,
                             fit: BoxFit.contain,

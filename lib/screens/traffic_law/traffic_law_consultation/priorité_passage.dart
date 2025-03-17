@@ -25,7 +25,7 @@ class _PriorityQuestionScreenState extends State<PriorityQuestionScreen> {
   Future<void> _fetchPriorityQuestions() async {
     try {
       QuerySnapshot querySnapshot = await _firestore
-          .collection("Traffic_Laws")
+          .collection("Traffic-Laws")
           .where("Category", isEqualTo: "priorities") // Filter for priority questions
           .get();
 
@@ -113,7 +113,7 @@ class _PriorityQuestionScreenState extends State<PriorityQuestionScreen> {
                       if (questions[currentIndex]["imageURL"] != null &&
                           questions[currentIndex]["imageURL"].isNotEmpty)
                         Image.asset(
-                          "assets/images/${questions[currentIndex]["imageURL"]}",
+                          "assets/images/priorities/${questions[currentIndex]["imageURL"]}",
                           height: 150,
                           fit: BoxFit.cover,
                         ),
@@ -127,7 +127,7 @@ class _PriorityQuestionScreenState extends State<PriorityQuestionScreen> {
                         height: 60,
                         child: TextField(
                           controller: TextEditingController(
-                            text: questions[currentIndex]["Category"] ??
+                            text: questions[currentIndex]["Question"] ??
                                 "Question non disponible",
                           ),
                           readOnly: true,
