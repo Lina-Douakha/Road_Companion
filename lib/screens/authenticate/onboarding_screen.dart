@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login.dart';
 import 'package:flutter/services.dart';
-
+import 'package:easy_localization/easy_localization.dart';
 class OnboardingScreen extends StatefulWidget {
   @override
   _OnboardingScreenState createState() => _OnboardingScreenState();
@@ -25,11 +25,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
   void goToLogin() {
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (context) => LoginScreen()),
-  );
-}
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+    );
+  }
 
   Widget buildOnboardingPage({
     required String imagePath,
@@ -68,9 +68,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 if (showSkip)
                   GestureDetector(
                     onTap: goToLogin,
-                    
-                    child: const Text(
-                      "Skip",
+
+                    child:  Text(
+                      "onboarding.skip".tr(),
                       style: TextStyle(
                         color: Color(0xFF1B9169),
                         fontSize: 16,
@@ -126,8 +126,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               padding: const EdgeInsets.symmetric(vertical: 14),
               minimumSize: const Size(290, 48),
             ),
-            child: const Text(
-              "Commencer",
+            child:  Text(
+              "onboarding.start_button".tr(),
               style: TextStyle(fontSize: 16, color: Colors.white),
             ),
           ),
@@ -140,44 +140,44 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-        value: const SystemUiOverlayStyle(
-          statusBarColor: Color(0xFF1B9169),
-          statusBarIconBrightness: Brightness.light,
-        ),
-    child: Scaffold(
-      backgroundColor: Colors.white,
-      body: PageView(
-        controller: _controller,
-        onPageChanged: (index) {
-          setState(() {
-            _currentPage = index;
-          });
-        },
-        children: [
-          buildOnboardingPage(
-            imagePath: 'Car_driving_bro.png',
-            text: 'Road Companion, ton allié \npour une conduite plus sûre et\nintelligente !',
-            showSkip: true,
-          ),
-          buildOnboardingPage(
-            imagePath: 'City_driver_bro.png',
-            text: 'Visualise tous les incidents \nsignalés et obtiens des informations \ntrafic en direct.',
-          ),
-          buildOnboardingPage(
-            imagePath: 'City_driver_pana.png',
-            text: 'Un GPS intelligent avec \nassistance routière pour des \ntrajets sans stress.',
-          ),
-          buildOnboardingPage(
-            imagePath: 'ORHG1K0_1.png',
-            text: 'Cours interactifs, quiz et tests\npour maîtriser le code de la \nroute.',
-          ),
-          buildOnboardingPage(
-            imagePath: 'Car_driving_pana_1.png',
-            isLastPage: true,
-          ),
-        ],
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Color(0xFF1B9169),
+        statusBarIconBrightness: Brightness.light,
       ),
-    ),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: PageView(
+          controller: _controller,
+          onPageChanged: (index) {
+            setState(() {
+              _currentPage = index;
+            });
+          },
+          children: [
+            buildOnboardingPage(
+              imagePath: 'Car_driving_bro.png',
+              text: "onboarding.title1".tr(),
+              showSkip: true,
+            ),
+            buildOnboardingPage(
+              imagePath: 'City_driver_bro.png',
+              text: "onboarding.title2".tr(),
+            ),
+            buildOnboardingPage(
+              imagePath: 'City_driver_pana.png',
+              text: "onboarding.title3".tr(),
+            ),
+            buildOnboardingPage(
+              imagePath: 'ORHG1K0_1.png',
+              text: "onboarding.title4".tr(),
+            ),
+            buildOnboardingPage(
+              imagePath: 'Car_driving_pana_1.png',
+              isLastPage: true,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

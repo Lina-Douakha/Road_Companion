@@ -1,62 +1,64 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 
 
 class PrivacyPolicyPage extends StatelessWidget {
   const PrivacyPolicyPage({super.key});
   void _showDeleteConfirmation(BuildContext context) {
-  showModalBottomSheet(
-    context: context,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (context) {
-      return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              "Voulez-vous vraiment supprimer votre compte?",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 10),
-            Text(
-              "Cette action entraînera la suppression définitive de votre compte ainsi que toutes les données relatives à celui-ci.",
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                // Ajoute ici la logique de suppression
-                Navigator.pop(context); // Ferme le pop-up
-                // Redirige vers la page de suppression si nécessaire
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF00D47E), // Couleur du bouton
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                minimumSize: Size(double.infinity, 48), // Largeur max
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "privacy.delete_confirmation_title".tr()
+                ,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
               ),
-              child: Text("Supprimer le compte", style: TextStyle(color: Colors.white)),
-            ),
-            const SizedBox(height: 10),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Ferme le pop-up
-              },
-              child: Text(
-                "Nous Contacter",
-                style: TextStyle(color: Color(0xFF00D47E), fontSize: 16),
+              const SizedBox(height: 10),
+              Text(
+                "privacy.delete_confirmation_message".tr(),
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                textAlign: TextAlign.center,
               ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  // Ajoute ici la logique de suppression
+                  Navigator.pop(context); // Ferme le pop-up
+                  // Redirige vers la page de suppression si nécessaire
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF00D47E), // Couleur du bouton
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  minimumSize: Size(double.infinity, 48), // Largeur max
+                ),
+                child: Text("privacy.delete_account".tr(), style: TextStyle(color: Colors.white)),
+              ),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // Ferme le pop-up
+                },
+                child: Text(
+                  "privacy.contact_us".tr(),
+                  style: TextStyle(color: Color(0xFF00D47E), fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
 
   @override
@@ -74,19 +76,19 @@ class PrivacyPolicyPage extends StatelessWidget {
               children: [
                 _buildOptionTile(
                   icon: Icons.article,
-                  text: "Termes et conditions",
+                  text: "privacy.terms_and_conditions".tr(),
                   onTap: () {
-                   
+
                   },
                 ),
                 const SizedBox(height: 10),
-_buildOptionTile(
-  icon: Icons.person_remove,
-  text: "Supprimer le compte",
-  onTap: () {
-    _showDeleteConfirmation(context);
-  },
-),
+                _buildOptionTile(
+                  icon: Icons.person_remove,
+                  text: "privacy.delete_account".tr(),
+                  onTap: () {
+                    _showDeleteConfirmation(context);
+                  },
+                ),
 
               ],
             ),
@@ -110,8 +112,8 @@ _buildOptionTile(
               onPressed: () => Navigator.pop(context),
             ),
           ),
-          const Text(
-            "Politique de confidentialité",
+          Text(
+            "privacy.title".tr(),
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,

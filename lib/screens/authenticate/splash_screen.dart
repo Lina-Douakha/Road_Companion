@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
-import 'onboarding_screen.dart'; // Import the OnboardingScreen
+import 'onboarding_screen.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -32,7 +33,7 @@ class _SplashScreenState extends State<SplashScreen> {
           _cycleCount++;
         }
 
-        if (_cycleCount == 2) {
+        if (_cycleCount == 1) {
           _timer.cancel();
           _goToOnboarding();
         }
@@ -50,45 +51,45 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-        value: const SystemUiOverlayStyle(
-          statusBarColor: Color(0xFF1B9169),
-          statusBarIconBrightness: Brightness.light,
-        ),
-    child: Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 100,
-              height: 250,
-              decoration: BoxDecoration(
-                color: Colors.grey[800],
-                borderRadius: BorderRadius.circular(20),
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Color(0xFF1B9169),
+        statusBarIconBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 100,
+                height: 250,
+                decoration: BoxDecoration(
+                  color: Colors.grey[800],
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildLight(0, Colors.red),
+                    _buildLight(1, Colors.orange),
+                    _buildLight(2, Colors.green),
+                  ],
+                ),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildLight(0, Colors.red),
-                  _buildLight(1, Colors.orange),
-                  _buildLight(2, Colors.green),
-                ],
+              const SizedBox(height: 20),
+              Text(
+                "splash.app_name".tr(),
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              "Road Companion",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 

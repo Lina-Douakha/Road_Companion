@@ -18,6 +18,13 @@ dependencies:
   firebase_storage: ^12.4.4
   google_sign_in: ^6.1.6
   image_picker: ^1.0.7
+  file_picker: ^9.0.2
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+  provider: any
+  shared_preferences: any
+  easy_localization: ^3.0.7+1
 
 dev_dependencies:
   flutter_test:
@@ -32,6 +39,8 @@ flutter:
     - assets/images/
     - assets/images/panels/
     - assets/images/priorities/
+    - assets/data/
+    - assets/lang/
   
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -1,0 +1,22 @@
+[
+  {
+    "service": "police",
+    "number": "1548",
+    "logo": "assets/images/Police.png"
+  },
+  {
+    "service": "gendarmerie",
+    "number": "1055",
+    "logo": "assets/images/Gendarmerie.png"
+  },
+  {
+    "service": "protection_civile",
+    "number": "1021",
+    "logo": "assets/images/Protection_civile.png"
+  },
+  {
+    "service": "foret_service",
+    "number": "1070",
+    "logo": "assets/images/Direction_generale_des_forets.png"
+  }
+]

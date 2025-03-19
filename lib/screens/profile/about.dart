@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -6,23 +7,20 @@ class AboutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, 
+      backgroundColor: Colors.white,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildCustomHeader(context), 
+          _buildCustomHeader(context),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "Road Companion est une application interactive et automatisée conçue pour améliorer la sécurité routière en Algérie. "
-                    "Face à l’un des taux d’accidents les plus élevés en Afrique du Nord, cette application répond aux défis liés au manque de sensibilisation "
-                    "au code de la route, à la signalisation insuffisante des incidents et à l’accès limité à une assistance routière en temps réel.\n\n"
-                    "Road Companion aide les conducteurs en fournissant des outils intelligents pour une conduite plus sûre et plus responsable.",
-                    style: TextStyle(fontSize: 16, height: 1.5),
+                  Text(
+                    "about_page.description".tr(), // Utilisation de tr pour la traduction
+                    style: const TextStyle(fontSize: 16, height: 1.5),
                   ),
                 ],
               ),
@@ -33,14 +31,14 @@ class AboutPage extends StatelessWidget {
     );
   }
 
-  
+
   Widget _buildCustomHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 70.0, left: 16.0, right: 16.0, bottom: 20.0),
       child: Stack(
         alignment: Alignment.center,
         children: [
-        
+
           Align(
             alignment: Alignment.centerLeft,
             child: IconButton(
@@ -49,8 +47,8 @@ class AboutPage extends StatelessWidget {
             ),
           ),
           // Titre centré
-          const Text(
-            "À propos de",
+          Text(
+            "about_page.title".tr(),
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,

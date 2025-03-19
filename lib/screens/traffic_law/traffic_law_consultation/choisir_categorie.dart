@@ -10,14 +10,14 @@ class ChoisirCategorie extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-
+    final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SizedBox(height: screenHeight * 0.2),
+          const SizedBox(height: 150),
           const Text(
             'Choisir une catégorie',
             style: TextStyle(
@@ -26,22 +26,22 @@ class ChoisirCategorie extends StatelessWidget {
               color: Color(0xFF1B9169),
             ),
           ),
-          SizedBox(height: screenHeight * 0.0001),
+          const SizedBox(height:10),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Center(
                 child: SizedBox(
-                  height: 400,
+                  height: 450, // Adjusted for larger images
                   child: GridView.count(
                     crossAxisCount: 2,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
-                    childAspectRatio: 1,
+                    childAspectRatio: 0.9, // Adjusted ratio for larger images
                     children: [
                       categorieItem(
                         context,
-                        'assets/images/priorité.jpg',
+                        'assets/images/priorités.png',
                         'Priorité de passage',
                             () => Navigator.push(
                           context,
@@ -52,7 +52,7 @@ class ChoisirCategorie extends StatelessWidget {
                       ),
                       categorieItem(
                         context,
-                        'assets/images/panneau.jpg',
+                        'assets/images/panneaux.png',
                         'Panneaux de signalisation',
                             () => Navigator.push(
                           context,
@@ -63,7 +63,7 @@ class ChoisirCategorie extends StatelessWidget {
                       ),
                       categorieItem(
                         context,
-                        'assets/images/exam.jpg',
+                        'assets/images/exam.png',
                         'Questions d\'examen',
                             () => Navigator.push(
                           context,
@@ -74,13 +74,11 @@ class ChoisirCategorie extends StatelessWidget {
                       ),
                       categorieItem(
                         context,
-                        'assets/images/penalties.jpg',
+                        'assets/images/penalties.png',
                         'Pénalités et amendes',
                             () => Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => Law(),
-                          ),
+                          MaterialPageRoute(builder: (context) => Law()),
                         ),
                       ),
                     ],
@@ -118,19 +116,19 @@ class ChoisirCategorie extends StatelessWidget {
                 borderRadius: BorderRadius.circular(200),
                 child: Image.asset(
                   imagePath,
-                  width: 60,
-                  height: 60,
-                  fit: BoxFit.cover,
+                  width: 95, // Increased size
+                  height: 95, // Increased size
+                  fit: BoxFit.contain, // Ensure full image visibility
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8), // Adjusted space between image and title
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Text(
                   title,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 16, // Increased text size
                     fontWeight: FontWeight.w500,
                     color: Colors.black87,
                   ),
@@ -143,4 +141,5 @@ class ChoisirCategorie extends StatelessWidget {
     );
   }
 }
+
 

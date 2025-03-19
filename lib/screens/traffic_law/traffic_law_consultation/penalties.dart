@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:convert'; // Pour parser le JSON
 import 'package:road_companion/widgets/navigation_bar_widget.dart';
 
 class Law extends StatefulWidget {
@@ -8,47 +9,76 @@ class Law extends StatefulWidget {
 }
 
 class _LawState extends State<Law> {
-  final List<Map<String, String>> questions = [
-    {
-      "passage":
-      "مقتطف من القانون 01-14 المؤرخ في 19 أوت 2001 المتعلق بتنظيم حركة المرور وسلامتها وأمنها",
-      "titre": "القسم الأول: المخالفات والعقوبات",
-      "contenue":
-      "المادة 66: تصنيف المخالفات\n"
-          "يتم تصنيف المخالفات الخاصة بحركة المرور إلى أربعة درجات:\n\n"
-          "1. مخالفات من الدرجة الأولى:\n"
-          " - غرامة مالية تتراوح بين 2000 و 2500 دج.\n"
-          " - عدم احترام قواعد الإشارة والفرملة الخاصة بالدراجات.\n"
-          " - عدم تقديم أو غياب وثائق السيارة أو رخصة السياقة المهنية.\n"
-          " - استخدام جهاز أو أداة غير مطابقة للقانون.\n"
-          " - عدم احترام قواعد عبور الممرات المحمية للمشاة.\n",
-    },
-  ];
-
+  Map<String, dynamic>? jsonData;
   int currentIndex = 0;
+  int _selectedIndex = 0;
+  String currentSection = "المخالفات";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadJsonData();
+  }
+
+  Future<void> _loadJsonData() async {
+    try {
+      final String jsonString = await rootBundle.loadString(
+        'assets/data/penalties.json',
+      );
+      setState(() {
+        jsonData = jsonDecode(jsonString);
+      });
+    } catch (e) {
+      print("Erreur lors du chargement ou du parsing du JSON : $e");
+    }
+  }
 
   void nextQuestion() {
     setState(() {
-      currentIndex = (currentIndex + 1) % questions.length;
+      currentIndex = (currentIndex + 1) % _getSectionLength();
     });
   }
 
   void previousQuestion() {
     setState(() {
-      currentIndex = (currentIndex - 1 + questions.length) % questions.length;
+      currentIndex =
+          (currentIndex - 1 + _getSectionLength()) % _getSectionLength();
     });
   }
 
-  int _selectedIndex = 0;
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
   }
 
+  void _changeSection(String section) {
+    setState(() {
+      currentSection = section;
+      currentIndex = 0;
+    });
+  }
+
+  int _getSectionLength() {
+    if (jsonData != null && jsonData!.containsKey(currentSection)) {
+      final sectionData = jsonData![currentSection];
+      if (sectionData is List) {
+        return sectionData.length;
+      } else if (sectionData is Map) {
+        return sectionData.length;
+      }
+    }
+    return 0;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final questionData = questions[currentIndex];
+    if (jsonData == null || !jsonData!.containsKey(currentSection)) {
+      return Scaffold(body: Center(child: Text("Chargement en cours...")));
+    }
+
+    final sectionData = jsonData![currentSection];
+    final currentData = _getCurrentData(sectionData);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -64,7 +94,6 @@ class _LawState extends State<Law> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(height: 70),
-
               const Text(
                 'القانون المروري',
                 style: TextStyle(
@@ -74,48 +103,59 @@ class _LawState extends State<Law> {
                 ),
               ),
               SizedBox(height: 30),
-
-              // Conteneur principal avec Expanded
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Color(0xFFD1FADF),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Color(0xFF1B9169)),
+                ),
+                child: DropdownButton<String>(
+                  value: currentSection,
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      _changeSection(newValue);
+                    }
+                  },
+                  items:
+                  jsonData!.keys.map((String key) {
+                    return DropdownMenuItem<String>(
+                      value: key,
+                      child: Text(
+                        key,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1B9169),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  underline: SizedBox(),
+                  icon: Icon(Icons.arrow_drop_down, color: Color(0xFF1B9169)),
+                  isExpanded: true,
+                ),
+              ),
+              SizedBox(height: 20),
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Passage
                       _buildTextField(
-                        questionData["passage"] ?? "Passage غير متوفر",
+                        "مقتطف من القانون 01-14 المؤرخ في 19 أوت 2001 المتعلق بتنظيم حركة المرور وسلامتها وأمنها",
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
-                        backgroundColor: Colors.white,
-                      ),
 
+                      ),
                       SizedBox(height: 20),
-
-                      // Titre avec style différent
-                      _buildTextField(
-                        questionData["titre"] ?? "Titre غير متوفر",
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        backgroundColor: Color(0xFFD1FADF), // Fond coloré
-                      ),
-
-                      SizedBox(height: 20),
-
-                      // Contenu principal
-                      _buildTextField(
-                        questionData["contenue"] ?? "Contenu غير متوفر",
-                        fontSize: 16,
-                        fontWeight: FontWeight.normal,
-                        backgroundColor: Colors.white,
-                      ),
-
+                      _buildTextField(_formatData(currentData), fontSize: 16),
                       SizedBox(height: 40),
                     ],
                   ),
                 ),
               ),
-
-              // Boutons pour naviguer entre les questions
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -123,13 +163,11 @@ class _LawState extends State<Law> {
                     onPressed: previousQuestion,
                     icon: Icon(Icons.arrow_circle_left_outlined, size: 30),
                     color: Color(0xFF1B9169),
-                    tooltip: "السؤال السابق",
                   ),
                   IconButton(
                     onPressed: nextQuestion,
                     icon: Icon(Icons.arrow_circle_right_outlined, size: 30),
                     color: Color(0xFF1B9169),
-                    tooltip: "السؤال التالي",
                   ),
                 ],
               ),
@@ -144,12 +182,27 @@ class _LawState extends State<Law> {
     );
   }
 
-  // Fonction pour générer les zones de texte
+  dynamic _getCurrentData(dynamic sectionData) {
+    if (sectionData is List) {
+      return sectionData[currentIndex];
+    } else if (sectionData is Map) {
+      final keys = sectionData.keys.toList()..sort();
+      return sectionData[keys[currentIndex]];
+    }
+    return null;
+  }
+
+  String _formatData(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      return data.entries.map((e) => "${e.key}: ${e.value}").join("\n");
+    }
+    return data?.toString() ?? "غير متوفر";
+  }
+
   Widget _buildTextField(
       String text, {
         double fontSize = 16,
         FontWeight fontWeight = FontWeight.normal,
-        Color backgroundColor = Colors.white,
       }) {
     return SizedBox(
       width: 350,
@@ -157,24 +210,16 @@ class _LawState extends State<Law> {
         controller: TextEditingController(text: text),
         readOnly: true,
         maxLines: null,
-        textAlign: TextAlign.right, // Texte aligné à droite pour l'arabe
-        decoration: InputDecoration(
-          border: OutlineInputBorder(),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Color(0xFF1B9169)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Color(0xFF1B9169)),
-          ),
-          filled: true,
-          fillColor: backgroundColor, // Fond coloré
-        ),
+        textAlign: TextAlign.right,
         style: TextStyle(
           fontSize: fontSize,
           fontWeight: fontWeight,
           color: Colors.black,
+        ),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(),
         ),
       ),
     );
