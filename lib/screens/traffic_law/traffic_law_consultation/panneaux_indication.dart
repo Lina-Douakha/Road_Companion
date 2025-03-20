@@ -147,7 +147,7 @@ class _PanneauxIndicationScreenState extends State<PanneauxIndicationScreen> {
                         child: ListTile(
                           leading: imageName.isNotEmpty
                               ? Image.asset(
-                            "assets/images/panels/$imageName",
+                            "assets/images/Panels/$imageName",
                             width: 50,
                             height: 50,
                             fit: BoxFit.contain,

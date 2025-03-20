@@ -77,7 +77,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
                     SizedBox(height: screenHeight * 0.04), // More space above image
                     Center(
                       child: Image.asset(
-                        'assets/images/panels/panel01.png',
+                        'assets/images/Panels/panel01.png',
                         width: screenWidth * 0.75, // Keep the image width balanced
                         fit: BoxFit.fitWidth,
                       ),

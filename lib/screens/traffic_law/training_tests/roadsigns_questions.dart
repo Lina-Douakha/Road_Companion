@@ -88,7 +88,7 @@ class _RoadSignQuestionScreenState extends State<RoadSignQuestionScreen> {
                     ),
                     SizedBox(height: screenHeight * 0.03),
                     Image.asset(
-                      'assets/images/panels/panel01.png',
+                      'assets/images/Panels/panel01.png',
                       width: screenWidth * 0.4,
                       fit: BoxFit.fitWidth,
                     ),
