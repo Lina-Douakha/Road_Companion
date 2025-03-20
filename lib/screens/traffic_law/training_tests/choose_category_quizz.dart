@@ -4,6 +4,7 @@ import 'package:road_companion/Theming/colors.dart';
 import 'package:road_companion/Theming/font_weight_helper.dart';
 import 'package:road_companion/screens/traffic_law/training_tests/priority_questions.dart';
 import 'package:road_companion/screens/traffic_law/training_tests/roadsigns_questions.dart';
+import 'package:road_companion/screens/traffic_law/training_tests/Questions.dart';
 
 class ChooseCategoryQuizScreen extends StatelessWidget {
   const ChooseCategoryQuizScreen({super.key});
@@ -43,7 +44,7 @@ class ChooseCategoryQuizScreen extends StatelessWidget {
                           color: ColorsManager.Green1,
                         ),
                       ),
-                      SizedBox(height: screenHeight * 0.1), // Dynamic space under title
+                      SizedBox(height: screenHeight * 0.09), // Dynamic space under title
                       Column(
                         children: [
                           CategoryCard(
@@ -64,6 +65,17 @@ class ChooseCategoryQuizScreen extends StatelessWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (context) => const RoadSignQuestionScreen()),
+                              );
+                            },
+                          ),
+                          SizedBox(height: screenHeight * 0.03),
+                          CategoryCard(
+                            imagePath: 'assets/images/exam.png',
+                            text: 'Questions Théoriques',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const TheoreticalQuestionsScreen()),
                               );
                             },
                           ),
@@ -118,16 +130,16 @@ class CategoryCard extends StatelessWidget {
                 // Image on the left*
                 Padding(
                   padding: const EdgeInsets.only(left: 8.0),
-                   child:ClipRRect(
-                     borderRadius: BorderRadius.circular(8),
-                     child: Image.asset(
-                     imagePath,
-                     width: cardHeight * 0.8, // Reduced image size
-                     height: cardHeight * 0.8,
-                     fit: BoxFit.cover,
-                     ),
-                   ),
-                 ),
+                  child:ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      imagePath,
+                      width: cardHeight * 0.6, // Reduced image size
+                      height: cardHeight * 0.6,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 12),
                 // Centered text
                 Expanded(
@@ -137,7 +149,7 @@ class CategoryCard extends StatelessWidget {
                       text,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        fontSize: 17,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

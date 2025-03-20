@@ -25,7 +25,6 @@ class _RoadSignQuestionScreenState extends State<RoadSignQuestionScreen> {
     super.initState();
     fetchQuestions();
   }
-
   /// **Fetch questions from Firestore where Category = "Panels"**
   Future<void> fetchQuestions() async {
     try {
@@ -34,15 +33,18 @@ class _RoadSignQuestionScreenState extends State<RoadSignQuestionScreen> {
           .where('Category', isEqualTo: 'Panels')
           .get();
 
+      List<Map<String, dynamic>> fetchedQuestions = querySnapshot.docs.map((doc) => {
+        "image": doc["ImageURL"],  // We only get the name (e.g., panel01.png)
+        "question": doc["QuestionText"],
+        "options": List<String>.from(doc["Options"]),
+        "correctAnswer": doc["CorrectAnswer"]
+      }).toList();
+
+      // Mélanger la liste pour un affichage aléatoire
+      fetchedQuestions.shuffle();
+
       setState(() {
-        questions = querySnapshot.docs
-            .map((doc) => {
-          "image": doc["ImageURL"],  // We only get the name (e.g., panel01.png)
-          "question": doc["QuestionText"],
-          "options": List<String>.from(doc["Options"]),
-          "correctAnswer": doc["CorrectAnswer"]
-        })
-            .toList();
+        questions = fetchedQuestions;
         isLoading = false;
       });
     } catch (e) {
@@ -134,11 +136,7 @@ class _RoadSignQuestionScreenState extends State<RoadSignQuestionScreen> {
 
 
                     Image.asset(
-<<<<<<< HEAD
-                      'assets/images/${questions[currentQuestionIndex]['image']}',
-=======
-                      'assets/images/panels/panel01.png',
->>>>>>> 49d9a48a743f8d1adb7a720f2098ab82fafef2cb
+                      'assets/images/panels/${questions[currentQuestionIndex]['image']}',
                       width: screenWidth * 0.4,
                       fit: BoxFit.fitWidth,
                     ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:road_companion/Theming/colors.dart';
 
 class PriorityQuestionsScreen extends StatefulWidget {
@@ -14,8 +15,46 @@ class _PriorityQuestionsScreenState extends State<PriorityQuestionsScreen> {
   bool showResult = false;
   bool showErrorMessage = false;
   bool isConfirmed = false;
+  bool isLoading = true;
 
-  final int correctAnswer = 1;
+  List<Map<String, dynamic>> questions = [];
+  int currentQuestionIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchQuestions();
+  }
+  /// **Fetch questions from Firestore where Category = "Priorities"**
+  Future<void> fetchQuestions() async {
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('Questions')
+          .where('Category', isEqualTo: 'priorities')
+          .get();
+
+      List<Map<String, dynamic>> fetchedQuestions = querySnapshot.docs.map((doc) => {
+        "image": doc["ImageURL"],  // We only get the name (e.g., panel01.png)
+        "question": doc["QuestionText"],
+        "options": List<String>.from(doc["Options"]),
+        "correctAnswer": doc["CorrectAnswer"]
+      }).toList();
+
+      // Mélanger la liste pour un affichage aléatoire
+      fetchedQuestions.shuffle();
+
+      setState(() {
+        questions = fetchedQuestions;
+        isLoading = false;
+      });
+    } catch (e) {
+      print("Error fetching questions: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
 
   void selectAnswer(int index) {
     if (!isConfirmed) {
@@ -25,7 +64,6 @@ class _PriorityQuestionsScreenState extends State<PriorityQuestionsScreen> {
       });
     }
   }
-
   void confirmAnswer() {
     if (selectedAnswer == null) {
       setState(() {
@@ -45,11 +83,14 @@ class _PriorityQuestionsScreenState extends State<PriorityQuestionsScreen> {
   }
 
   void nextQuestion() {
-    setState(() {
-      selectedAnswer = null;
-      showResult = false;
-      isConfirmed = false;
-    });
+    if (currentQuestionIndex < questions.length - 1) {
+      setState(() {
+        currentQuestionIndex++;
+        selectedAnswer = null;
+        showResult = false;
+        isConfirmed = false;
+      });
+    }
   }
 
   @override
@@ -64,25 +105,26 @@ class _PriorityQuestionsScreenState extends State<PriorityQuestionsScreen> {
       ),
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: Column(
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : questions.isEmpty
+            ? const Center(child: Text("No questions available"))
+            : Column(
           children: [
             Container(
               height: screenHeight * 0.04,
               color: const Color(0xFF1B9169),
             ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Color(0xFF1B9169)),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const SizedBox(height: 10),
-                  const Center(
-                    child: Text(
-                      'Les questions du Priorité de passage',
+            Expanded(
+              child: SingleChildScrollView(
+                padding:
+                EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(height: screenHeight * 0.04),
+                    const Text(
+                      'Les questions du priorites de passages ',
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -90,37 +132,44 @@ class _PriorityQuestionsScreenState extends State<PriorityQuestionsScreen> {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
                     SizedBox(height: screenHeight * 0.03),
+
+
                     Image.asset(
-                      'assets/images/priorities/preo1_2.png',
-                      width: screenWidth * 0.75,
-                      fit: BoxFit.fitWidth,
+                      'assets/images/priorities/${questions[currentQuestionIndex]['image']}',
+                      width: screenWidth * 0.7, // Augmenter la largeur de l'image
+                      //height: screenHeight * 0.3, // Ajouter une hauteur dynamique
+                      fit: BoxFit.contain, // Garder le ratio de l'image tout en la rendant plus grande
                     ),
+
+
                     SizedBox(height: screenHeight * 0.03),
-                    const Text(
-                      'Qui a la priorité ?',
-                      style: TextStyle(
+                    Text(
+                      questions[currentQuestionIndex]['question'],
+                      style: const TextStyle(
                         fontSize: 18.0,
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(height: screenHeight * 0.03),
-                    buildAnswerOption(0, 'La voiture rouge passe en premier', screenWidth),
-                    SizedBox(height: screenHeight * 0.02),
-                    buildAnswerOption(1, 'Les voitures jaune et bleue passent en même temps', screenWidth),
-                    SizedBox(height: screenHeight * 0.02),
-                    buildAnswerOption(2, 'La voiture rouge passe en dernier', screenWidth),
+                    Column(
+                      children: List.generate(
+                        questions[currentQuestionIndex]['options'].length,
+                            (index) => Padding(
+                          padding: const EdgeInsets.only(bottom: 15.0), // Espacement entre les options
+                          child: buildAnswerOption(
+                            index,
+                            questions[currentQuestionIndex]['options'][index],
+                            screenWidth,
+                            screenHeight,
+                            questions[currentQuestionIndex]['correctAnswer'],
+                          ),
+                        ),
+                      ),
+                    ),
+
+
                     SizedBox(height: screenHeight * 0.03),
                     ElevatedButton(
                       onPressed: confirmAnswer,
@@ -131,7 +180,8 @@ class _PriorityQuestionsScreenState extends State<PriorityQuestionsScreen> {
                         ),
                         minimumSize: Size(screenWidth * 0.85, 50),
                       ),
-                      child: const Text('Confirmer', style: TextStyle(color: Colors.white, fontSize: 16)),
+                      child: const Text('Confirmer',
+                          style: TextStyle(color: Colors.white, fontSize: 16)),
                     ),
                     if (showResult)
                       Column(
@@ -146,7 +196,8 @@ class _PriorityQuestionsScreenState extends State<PriorityQuestionsScreen> {
                               ),
                               minimumSize: Size(screenWidth * 0.85, 50),
                             ),
-                            child: const Text('Suivant', style: TextStyle(color: Color(0xFF1B9169), fontSize: 16)),
+                            child: const Text('Suivant',
+                                style: TextStyle(color: Color(0xFF1B9169), fontSize: 16)),
                           ),
                         ],
                       ),
@@ -160,7 +211,7 @@ class _PriorityQuestionsScreenState extends State<PriorityQuestionsScreen> {
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(10),
-                  color: ColorsManager.Red,
+                  color: Colors.red,
                   child: const Text(
                     'Veuillez sélectionner une réponse avant de confirmer.',
                     style: TextStyle(color: Colors.white, fontSize: 14),
@@ -174,51 +225,61 @@ class _PriorityQuestionsScreenState extends State<PriorityQuestionsScreen> {
     );
   }
 
-  Widget buildAnswerOption(int index, String text, double screenWidth) {
+  Widget buildAnswerOption(int index, String text, double screenWidth, double screenHeight, String correctAnswer) {
     bool isSelected = selectedAnswer == index;
-    bool isCorrect = index == correctAnswer;
+    bool isCorrect = text == correctAnswer;
     bool isWrongSelected = showResult && isSelected && !isCorrect;
 
     Color containerColor = Colors.white;
     Color borderColor = Colors.grey[300]!;
     IconData? icon;
+    Color iconColor = Colors.grey;
 
     if (showResult) {
       if (isCorrect) {
         containerColor = ColorsManager.Bgreen3;
         borderColor = ColorsManager.Bgreen;
         icon = Icons.check_circle;
+        iconColor = ColorsManager.Bgreen;
       } else if (isWrongSelected) {
         containerColor = ColorsManager.Red;
         borderColor = Colors.red;
         icon = Icons.cancel;
+        iconColor = Colors.red;
       }
     } else if (isSelected) {
       borderColor = Colors.grey[600]!;
       icon = Icons.radio_button_checked;
+      iconColor = ColorsManager.Gray6;
     }
-
-    return Align(
-      alignment: Alignment.center,
-      child: GestureDetector(
-        onTap: () => selectAnswer(index),
-        child: Container(
-          width: screenWidth * 0.85,
-          padding: EdgeInsets.all(screenWidth * 0.04),
-          decoration: BoxDecoration(
-            color: containerColor,
-            borderRadius: BorderRadius.circular(12.0),
-            border: Border.all(color: borderColor),
-          ),
-          child: Row(
-            children: [
-              Icon(icon ?? Icons.radio_button_unchecked, color: borderColor),
-              const SizedBox(width: 10),
-              Expanded(child: Text(text)),
-            ],
-          ),
+    return GestureDetector(
+      onTap: () => selectAnswer(index),
+      child: Container(
+        width: double.infinity, // Prend toute la largeur disponible
+        padding: EdgeInsets.symmetric(
+          vertical: screenHeight * 0.015, // Ajuste la hauteur dynamiquement
+          horizontal: screenWidth * 0.05, // Ajuste la largeur en fonction de l'écran
+        ),
+        decoration: BoxDecoration(
+          color: containerColor, // 🌟 Ajouté ici pour colorer tout le conteneur !
+          borderRadius: BorderRadius.circular(12.0),
+          border: Border.all(color: borderColor),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(
+              child: Text(
+                text,
+                style: TextStyle(fontSize: screenWidth * 0.04, color: Colors.black), // Assure-toi que le texte reste lisible
+              ),
+            ),
+            Icon(icon ?? Icons.radio_button_unchecked, color: iconColor),
+          ],
         ),
       ),
     );
+
   }
+
 }
