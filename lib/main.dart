@@ -18,7 +18,7 @@ void main() async {
       ],
       path: 'assets/lang', // Dossier où sont stockés les fichiers JSON
       fallbackLocale: Locale('fr'), // Langue par défaut
-      startLocale: Locale('fr'), // 🔹 Forcer le français au démarrage
+      startLocale: Locale('fr'), // Forcer le français au démarrage
       child: const RoadCompanionApp(),
     ),
   );

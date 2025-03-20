@@ -15,7 +15,7 @@ class IncidentReportScreen extends StatefulWidget {
 
 class _IncidentReportScreenState extends State<IncidentReportScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _descreptionController = TextEditingController();
   String? _selectedType;
   File? _selectedImage;
   bool _isButtonPressed = false;
@@ -28,7 +28,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
 
   @override
   void dispose() {
-    _descriptionController.dispose();
+    _descreptionController.dispose();
     super.dispose();
   }
 
@@ -157,9 +157,9 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
               hintText: hint,
             ),
             validator: isDropdown
-                ? null
-                : (value) => null,
-          ),
+              ? null
+              : (value) => null,
+                ),
       ],
     );
   }
@@ -185,170 +185,170 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
       ),
     );
   }
-  void _submitForm() {
-    if (_selectedType == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "incident_report.select_a_type".tr(),
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.red,
+void _submitForm() {
+  if (_selectedType == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+       SnackBar(
+        content: Text(
+          "incident_report.select_a_type".tr(),
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
+  if (_formKey.currentState!.validate()) {
+    _showSuccessBottomSheet();
+  }
+}
+
+
+void _showSuccessBottomSheet() {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.white,
+    isDismissible: false,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (BuildContext context) {
+      return Container(
+        width: MediaQuery.of(context).size.width,
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFF1B9169), width: 2),
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.check,
+                  size: 28,
+                  color: Color(0xFF1B9169),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Merci ! Votre rapport a été envoyé avec succès.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 24),
+            GestureDetector(
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/map');
+              },
+              child: const Text(
+                'OK',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1B9169),
+                ),
+              ),
+            ),
+          ],
         ),
       );
-      return;
-    }
-
-    if (_formKey.currentState!.validate()) {
-      _showSuccessBottomSheet();
-    }
-  }
-
-
-  void _showSuccessBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      isDismissible: false,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (BuildContext context) {
-        return Container(
-          width: MediaQuery.of(context).size.width,
-          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFF1B9169), width: 2),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.check,
-                    size: 28,
-                    color: Color(0xFF1B9169),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Merci ! Votre rapport a été envoyé avec succès.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Colors.black,
-                ),
-              ),
-              const SizedBox(height: 24),
-              GestureDetector(
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamed(context, '/map');
-                },
-                child: const Text(
-                  'OK',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1B9169),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+    },
+  );
+}
 
 
 
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Color(0xFF1B9169),
-        statusBarIconBrightness: Brightness.light,
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: Padding(
-          padding: const EdgeInsets.only(top: 100, left: 16, right: 16, bottom: 16),
-          child: SingleChildScrollView(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Text(
-                      'incident_report.title'.tr(),
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1B9169)),
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Color(0xFF1B9169),
+          statusBarIconBrightness: Brightness.light,
+        ),
+    child: Scaffold(
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.only(top: 100, left: 16, right: 16, bottom: 16),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                 Center(
+                  child: Text(
+                    'incident_report.title'.tr(),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1B9169)),
+                  ),
+                ),
+                const SizedBox(height: 30),
+                _buildTextField(
+                  label: "incident_report.incident_type".tr(),
+                  hint: _selectedType ?? "incident_report.select_type".tr(),
+                  onTap: _showIncidentTypeMenu,
+                  isDropdown: true,
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  label:"incident_report.descreption".tr(),
+                  hint: "incident_report.select_describe_incident".tr(),
+                  maxLines: 3,
+                  controller: _descreptionController,
+                ),
+                const SizedBox(height: 16),
+                 Text("incident_report.photo".tr()),
+                const SizedBox(height: 8),
+                _buildPhotoUploadField(),
+if (_selectedImage != null)
+  Container(
+    alignment: Alignment.center,
+    child: Image.file(
+      _selectedImage!,
+      width: 200,
+      height: 200,
+      fit: BoxFit.cover,
+    ),
+  ),
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTapDown: (_) => setState(() => _isButtonPressed = true),
+onTapUp: (_) {
+  setState(() => _isButtonPressed = false);
+  _submitForm();
+},
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: _isButtonPressed ? const Color(0xFF61E9C4) : const Color(0xFF00D47E),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ),
-                  const SizedBox(height: 30),
-                  _buildTextField(
-                    label: "incident_report.incident_type".tr(),
-                    hint: _selectedType ?? "incident_report.select_type".tr(),
-                    onTap: _showIncidentTypeMenu,
-                    isDropdown: true,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    label:"incident_report.descreption".tr(),
-                    hint: "incident_report.select_describe_incident".tr(),
-                    maxLines: 3,
-                    controller: _descriptionController,
-                  ),
-                  const SizedBox(height: 16),
-                  Text("incident_report.photo".tr()),
-                  const SizedBox(height: 8),
-                  _buildPhotoUploadField(),
-                  if (_selectedImage != null)
-                    Container(
-                      alignment: Alignment.center,
-                      child: Image.file(
-                        _selectedImage!,
-                        width: 200,
-                        height: 200,
-                        fit: BoxFit.cover,
+                    child:  Center(
+                      child: Text(
+                        "incident_report.submit".tr(),
+                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),
-                  const SizedBox(height: 16),
-                  GestureDetector(
-                    onTapDown: (_) => setState(() => _isButtonPressed = true),
-                    onTapUp: (_) {
-                      setState(() => _isButtonPressed = false);
-                      _submitForm();
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      decoration: BoxDecoration(
-                        color: _isButtonPressed ? const Color(0xFF61E9C4) : const Color(0xFF00D47E),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child:  Center(
-                        child: Text(
-                          "incident_report.submit".tr(),
-                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
       ),
+     ),
     );
   }
 

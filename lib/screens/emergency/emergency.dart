@@ -31,7 +31,7 @@ class _EmergencyCallPageState extends State<EmergencyCallPage> {
         emergencyNumbers = jsonData.cast<Map<String, dynamic>>();
       });
     } catch (e) {
-      print("Erreur de chargement des numéros d'urgence : $e");
+       print("emergency.load_error".tr(args: [e.toString()]));
     }
   }
 
@@ -42,8 +42,8 @@ class _EmergencyCallPageState extends State<EmergencyCallPage> {
       await launchUrl(phoneUri);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("error_phone".tr())),
-      );
+  SnackBar(content: Text("error_phone".tr())),
+);
 
     }
   }
@@ -63,56 +63,56 @@ class _EmergencyCallPageState extends State<EmergencyCallPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 70),
-              Text(
-                "emergency_title".tr(),
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1B9169),
-                ),
-                textAlign: TextAlign.center,
-              ),
+               Text(
+  "emergency_title".tr(),
+  style: const TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.bold,
+    color: Color(0xFF1B9169),
+  ),
+  textAlign: TextAlign.center,
+),
               const SizedBox(height: 10),
               Expanded(
                 child: emergencyNumbers.isEmpty
                     ? const Center(child: CircularProgressIndicator())
                     : ListView.builder(
-                  itemCount: emergencyNumbers.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: Card(
-                        color: const Color(0xFFECFDF3),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
-                          leading: Image.asset(
-                            emergencyNumbers[index]['logo']!,
-                            width: 60,
-                            height: 60,
-                            fit: BoxFit.contain,
-                          ),
-                          title: Text(
-                            tr(emergencyNumbers[index]['service']!),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
-                          ),
-                          subtitle: Text(
-                            emergencyNumbers[index]['number']!,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.phone_outlined, color: Color(0xFF00D47E), size: 32),
-                            onPressed: () => _makePhoneCall(emergencyNumbers[index]['number']!),
-                          ),
-                        ),
+                        itemCount: emergencyNumbers.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16.0),
+                            child: Card(
+                              color: const Color(0xFFECFDF3),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+                                leading: Image.asset(
+                                  emergencyNumbers[index]['logo']!,
+                                  width: 60,
+                                  height: 60,
+                                  fit: BoxFit.contain,
+                                ),
+                                title: Text(
+                                  tr(emergencyNumbers[index]['service']!),
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                  textAlign: TextAlign.center,
+                                ),
+                                subtitle: Text(
+                                  emergencyNumbers[index]['number']!,
+                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  textAlign: TextAlign.center,
+                                ),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.phone_outlined, color: Color(0xFF00D47E), size: 32),
+                                  onPressed: () => _makePhoneCall(emergencyNumbers[index]['number']!),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
             ],
           ),

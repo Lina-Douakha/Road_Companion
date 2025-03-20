@@ -25,11 +25,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
   void goToLogin() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => LoginScreen()),
-    );
-  }
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => LoginScreen()),
+  );
+}
 
   Widget buildOnboardingPage({
     required String imagePath,
@@ -140,44 +140,44 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Color(0xFF1B9169),
-        statusBarIconBrightness: Brightness.light,
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: PageView(
-          controller: _controller,
-          onPageChanged: (index) {
-            setState(() {
-              _currentPage = index;
-            });
-          },
-          children: [
-            buildOnboardingPage(
-              imagePath: 'Car_driving_bro.png',
-              text: "onboarding.title1".tr(),
-              showSkip: true,
-            ),
-            buildOnboardingPage(
-              imagePath: 'City_driver_bro.png',
-              text: "onboarding.title2".tr(),
-            ),
-            buildOnboardingPage(
-              imagePath: 'City_driver_pana.png',
-              text: "onboarding.title3".tr(),
-            ),
-            buildOnboardingPage(
-              imagePath: 'ORHG1K0_1.png',
-              text: "onboarding.title4".tr(),
-            ),
-            buildOnboardingPage(
-              imagePath: 'Car_driving_pana_1.png',
-              isLastPage: true,
-            ),
-          ],
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Color(0xFF1B9169),
+          statusBarIconBrightness: Brightness.light,
         ),
+    child: Scaffold(
+      backgroundColor: Colors.white,
+      body: PageView(
+        controller: _controller,
+        onPageChanged: (index) {
+          setState(() {
+            _currentPage = index;
+          });
+        },
+        children: [
+          buildOnboardingPage(
+            imagePath: 'Car_driving_bro.png',
+            text: "onboarding.title1".tr(),
+            showSkip: true,
+          ),
+          buildOnboardingPage(
+            imagePath: 'City_driver_bro.png',
+            text: "onboarding.title2".tr(),
+          ),
+          buildOnboardingPage(
+            imagePath: 'City_driver_pana.png',
+            text: "onboarding.title3".tr(),
+          ),
+          buildOnboardingPage(
+            imagePath: 'ORHG1K0_1.png',
+             text: "onboarding.title4".tr(),
+          ),
+          buildOnboardingPage(
+            imagePath: 'Car_driving_pana_1.png',
+            isLastPage: true,
+          ),
+        ],
       ),
+    ),
     );
   }
 }

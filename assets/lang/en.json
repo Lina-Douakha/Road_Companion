@@ -164,7 +164,10 @@
     "or_sign_in_with": "Or sign in with",
     "google": "Google",
     "no_account": "Don't have an account?",
-    "register_now": "Sign up"
+    "register_now": "Sign up",
+    "error_fill_fields": "Please fill in all fields.",
+    "error_invalid_email": "Please enter a valid email address.",
+    "error_google_sign_in": "Failed to sign in with Google."
   },
   "reset_password": {
     "title": "Password Reset",
@@ -175,6 +178,15 @@
     "error_message": "Error: ",
     "back": "Back"
   },
+  "auth": {
+    "invalid_email": "The email address is improperly formatted.",
+    "user_not_found": "No user found with this email.",
+    "wrong_password": "Incorrect password. Please try again.",
+    "user_disabled": "This account has been disabled.",
+    "unexpected_error": "An unexpected error occurred. Please try again.",
+    "email_already_in_use": "This email is already registered.",
+    "weak_password": "The password must be at least 6 characters long."
+  },
   "emergency_title": "Emergency Call",
   "error_phone": "Unable to open the Phone application",
   "police": "National Police",
@@ -182,4 +194,6 @@
   "protection_civile": "Civil Protection",
   "foret_service": "Forestry Service"
 }
+
+
 

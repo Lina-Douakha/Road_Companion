@@ -109,7 +109,7 @@
     "error": "Erreur"
   },
   "splash": {
-    "app_name": "Compagnon de Route"
+    "app_name": "Road Companion"
   },
   "onboarding": {
     "title1": "Road Companion, ton allié \npour une conduite plus sûre et\nintelligente !",
@@ -160,7 +160,10 @@
     "or_sign_in_with": "Ou connectez-vous avec",
     "google": "Google",
     "no_account": "Vous n'avez pas de compte ?",
-    "register_now": "Inscrivez-vous"
+    "register_now": "Inscrivez-vous",
+    "error_fill_fields": "Veuillez remplir tous les champs.",
+    "error_invalid_email": "Veuillez entrer une adresse email valide.",
+    "error_google_sign_in": "Échec de la connexion avec Google."
   },
   "reset_password": {
     "title": "Réinitialisation du mot de passe",
@@ -170,6 +173,16 @@
     "success_message": "L'email de réinitialisation a été envoyé ! Vérifiez votre boîte de réception.",
     "error_message": "Erreur : ",
     "back": "Retour"
+  },
+
+  "auth": {
+    "invalid_email": "L'adresse e-mail est mal formatée.",
+    "user_not_found": "Aucun utilisateur trouvé avec cet e-mail.",
+    "wrong_password": "Mot de passe incorrect. Veuillez réessayer.",
+    "user_disabled": "Ce compte a été désactivé.",
+    "unexpected_error": "Une erreur inattendue s'est produite. Veuillez réessayer.",
+    "email_already_in_use": "Cet e-mail est déjà enregistré.",
+    "weak_password": "Le mot de passe doit contenir au moins 6 caractères."
   },
   "emergency_title": "Numéros d'urgence",
   "error_phone": "Impossible de passer l'appel",
