@@ -26,6 +26,7 @@ dependencies:
   shared_preferences: any
   easy_localization: ^3.0.7+1
 
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

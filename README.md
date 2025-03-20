@@ -18,7 +18,6 @@ a mobile app designed to assist drivers, improve road safety, and simplify traff
 - Run `flutter pub get` to install dependencies.
 - Run `flutter run` to start the app.
 - Set Up Firebase (you will use the firebase project I've shared with you)
-
 ## How the Team Should Work (To Avoid Issues):
 - Before making changes, always pull the latest updates: git pull origin
 - Work on a separate branch (not directly on the main!!):  git checkout -b feature-branch-name

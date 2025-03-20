@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:road_companion/Theming/colors.dart';
 
 class RoadSignQuestionScreen extends StatefulWidget {
@@ -14,8 +15,45 @@ class _RoadSignQuestionScreenState extends State<RoadSignQuestionScreen> {
   bool showResult = false;
   bool showErrorMessage = false;
   bool isConfirmed = false;
+  bool isLoading = true;
 
-  final int correctAnswer = 1;
+  List<Map<String, dynamic>> questions = [];
+  int currentQuestionIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchQuestions();
+  }
+  /// **Fetch questions from Firestore where Category = "Panels"**
+  Future<void> fetchQuestions() async {
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('Questions')
+          .where('Category', isEqualTo: 'Panels')
+          .get();
+
+      List<Map<String, dynamic>> fetchedQuestions = querySnapshot.docs.map((doc) => {
+        "image": doc["ImageURL"],  // We only get the name (e.g., panel01.png)
+        "question": doc["QuestionText"],
+        "options": List<String>.from(doc["Options"]),
+        "correctAnswer": doc["CorrectAnswer"]
+      }).toList();
+
+      // Mélanger la liste pour un affichage aléatoire
+      fetchedQuestions.shuffle();
+
+      setState(() {
+        questions = fetchedQuestions;
+        isLoading = false;
+      });
+    } catch (e) {
+      print("Error fetching questions: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   void selectAnswer(int index) {
     if (!isConfirmed) {
@@ -45,11 +83,14 @@ class _RoadSignQuestionScreenState extends State<RoadSignQuestionScreen> {
   }
 
   void nextQuestion() {
-    setState(() {
-      selectedAnswer = null;
-      showResult = false;
-      isConfirmed = false;
-    });
+    if (currentQuestionIndex < questions.length - 1) {
+      setState(() {
+        currentQuestionIndex++;
+        selectedAnswer = null;
+        showResult = false;
+        isConfirmed = false;
+      });
+    }
   }
 
   @override
@@ -64,7 +105,11 @@ class _RoadSignQuestionScreenState extends State<RoadSignQuestionScreen> {
       ),
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: Column(
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : questions.isEmpty
+            ? const Center(child: Text("No questions available"))
+            : Column(
           children: [
             Container(
               height: screenHeight * 0.04,
@@ -72,7 +117,8 @@ class _RoadSignQuestionScreenState extends State<RoadSignQuestionScreen> {
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+                padding:
+                EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -87,26 +133,41 @@ class _RoadSignQuestionScreenState extends State<RoadSignQuestionScreen> {
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(height: screenHeight * 0.03),
+
+
                     Image.asset(
-                      'assets/images/Panels/panel01.png',
+                      'assets/images/Panels/${questions[currentQuestionIndex]['image']}',
                       width: screenWidth * 0.4,
                       fit: BoxFit.fitWidth,
                     ),
+
                     SizedBox(height: screenHeight * 0.03),
-                    const Text(
-                      'Que signifie ce panneau ?',
-                      style: TextStyle(
+                    Text(
+                      questions[currentQuestionIndex]['question'],
+                      style: const TextStyle(
                         fontSize: 18.0,
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(height: screenHeight * 0.03),
-                    buildAnswerOption(0, 'Arrêtez-vous immédiatement et attendez les instructions.', screenWidth),
-                    SizedBox(height: screenHeight * 0.02),
-                    buildAnswerOption(1, 'Danger général à venir – soyez prudent.', screenWidth),
-                    SizedBox(height: screenHeight * 0.02),
-                    buildAnswerOption(2, 'Accès interdit aux véhicules.', screenWidth),
+                    Column(
+                      children: List.generate(
+                        questions[currentQuestionIndex]['options'].length,
+                            (index) => Padding(
+                          padding: const EdgeInsets.only(bottom: 15.0), // Espacement entre les options
+                          child: buildAnswerOption(
+                            index,
+                            questions[currentQuestionIndex]['options'][index],
+                            screenWidth,
+                            screenHeight,
+                            questions[currentQuestionIndex]['correctAnswer'],
+                          ),
+                        ),
+                      ),
+                    ),
+
+
                     SizedBox(height: screenHeight * 0.03),
                     ElevatedButton(
                       onPressed: confirmAnswer,
@@ -117,7 +178,8 @@ class _RoadSignQuestionScreenState extends State<RoadSignQuestionScreen> {
                         ),
                         minimumSize: Size(screenWidth * 0.85, 50),
                       ),
-                      child: const Text('Confirmer', style: TextStyle(color: Colors.white, fontSize: 16)),
+                      child: const Text('Confirmer',
+                          style: TextStyle(color: Colors.white, fontSize: 16)),
                     ),
                     if (showResult)
                       Column(
@@ -132,7 +194,8 @@ class _RoadSignQuestionScreenState extends State<RoadSignQuestionScreen> {
                               ),
                               minimumSize: Size(screenWidth * 0.85, 50),
                             ),
-                            child: const Text('Suivant', style: TextStyle(color: Color(0xFF1B9169), fontSize: 16)),
+                            child: const Text('Suivant',
+                                style: TextStyle(color: Color(0xFF1B9169), fontSize: 16)),
                           ),
                         ],
                       ),
@@ -159,10 +222,9 @@ class _RoadSignQuestionScreenState extends State<RoadSignQuestionScreen> {
       ),
     );
   }
-
-  Widget buildAnswerOption(int index, String text, double screenWidth) {
+  Widget buildAnswerOption(int index, String text, double screenWidth, double screenHeight, String correctAnswer) {
     bool isSelected = selectedAnswer == index;
-    bool isCorrect = index == correctAnswer;
+    bool isCorrect = text == correctAnswer;
     bool isWrongSelected = showResult && isSelected && !isCorrect;
 
     Color containerColor = Colors.white;
@@ -183,33 +245,38 @@ class _RoadSignQuestionScreenState extends State<RoadSignQuestionScreen> {
         iconColor = Colors.red;
       }
     } else if (isSelected) {
-
       borderColor = Colors.grey[600]!;
       icon = Icons.radio_button_checked;
       iconColor = ColorsManager.Gray6;
     }
-
-    return Align(
-      alignment: Alignment.center,
-      child: GestureDetector(
-        onTap: () => selectAnswer(index),
-        child: Container(
-          width: screenWidth * 0.85,
-          padding: EdgeInsets.all(screenWidth * 0.04),
-          decoration: BoxDecoration(
-            color: containerColor,
-            borderRadius: BorderRadius.circular(12.0),
-            border: Border.all(color: borderColor),
-          ),
-          child: Row(
-            children: [
-              Icon(icon ?? Icons.radio_button_unchecked, color: iconColor),
-              const SizedBox(width: 10),
-              Expanded(child: Text(text)),
-            ],
-          ),
+    return GestureDetector(
+      onTap: () => selectAnswer(index),
+      child: Container(
+        width: double.infinity, // Prend toute la largeur disponible
+        padding: EdgeInsets.symmetric(
+          vertical: screenHeight * 0.015, // Ajuste la hauteur dynamiquement
+          horizontal: screenWidth * 0.05, // Ajuste la largeur en fonction de l'écran
+        ),
+        decoration: BoxDecoration(
+          color: containerColor, // 🌟 Ajouté ici pour colorer tout le conteneur !
+          borderRadius: BorderRadius.circular(12.0),
+          border: Border.all(color: borderColor),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(
+              child: Text(
+                text,
+                style: TextStyle(fontSize: screenWidth * 0.04, color: Colors.black), // Assure-toi que le texte reste lisible
+              ),
+            ),
+            Icon(icon ?? Icons.radio_button_unchecked, color: iconColor),
+          ],
         ),
       ),
     );
+
   }
-}
+
+}     
