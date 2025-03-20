@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:road_companion/widgets/navigation_bar_widget.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class IncidentReportScreen extends StatefulWidget {
   final int selectedIndex;
@@ -15,42 +15,23 @@ class IncidentReportScreen extends StatefulWidget {
 
 class _IncidentReportScreenState extends State<IncidentReportScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _descreptionController = TextEditingController();
   String? _selectedType;
-  int _selectedIndex = 4;
   File? _selectedImage;
   bool _isButtonPressed = false;
 
   @override
   void initState() {
     super.initState();
-    _selectedIndex = widget.selectedIndex;
   }
 
 
   @override
   void dispose() {
-    _descriptionController.dispose();
+    _descreptionController.dispose();
     super.dispose();
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    switch (index) {
-      case 0:
-        Navigator.pushNamed(context, '/map');
-        break;
-      case 1:
-        Navigator.pushNamed(context, '/emergency');
-        break;
-      case 3:
-        Navigator.pushNamed(context, '/profile');
-        break;
-    }
-  }
 
   Future<void> _pickImage(ImageSource source) async {
     final pickedFile = await ImagePicker().pickImage(source: source);
@@ -72,7 +53,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.camera_alt),
-              title: const Text('Prendre une photo'),
+              title:  Text('incident_report.take_a_pic'.tr()),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.camera);
@@ -80,7 +61,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.photo_library),
-              title: const Text('Choisir depuis la galerie'),
+              title:  Text("incident_report.from_gallery".tr()),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.gallery);
@@ -102,28 +83,28 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
         return Wrap(
           children: [
             ListTile(
-              title: const Text('Accident'),
+              title:  Text("incident_report.accident".tr()),
               onTap: () {
                 setState(() {
-                  _selectedType = 'Accident';
+                  _selectedType = "incident_report.accident".tr();
                 });
                 Navigator.pop(context);
               },
             ),
             ListTile(
-              title: const Text('Panne'),
+              title:  Text("incident_report.breakdown".tr()),
               onTap: () {
                 setState(() {
-                  _selectedType = 'Panne';
+                  _selectedType = "incident_report.breakdown".tr();
                 });
                 Navigator.pop(context);
               },
             ),
             ListTile(
-              title: const Text('Autre'),
+              title:  Text("incident_report.other".tr()),
               onTap: () {
                 setState(() {
-                  _selectedType = 'Autre';
+                  _selectedType = "incident_report.other".tr();
                 });
                 Navigator.pop(context);
               },
@@ -147,7 +128,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
       children: [
         Text(label),
         const SizedBox(height: 8),
-        if (isDropdown) // Si c'est un champ sélectionnable
+        if (isDropdown)
           TextButton(
             onPressed: onTap,
             style: TextButton.styleFrom(
@@ -167,7 +148,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
               ],
             ),
           )
-        else // Sinon, c'est un champ de texte normal
+        else
           TextFormField(
             controller: controller,
             maxLines: maxLines,
@@ -176,7 +157,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
               hintText: hint,
             ),
             validator: isDropdown
-              ? null // Pas de validation pour les dropdowns ici
+              ? null
               : (value) => null,
                 ),
       ],
@@ -197,7 +178,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(_selectedImage == null ? "Télécharger une photo" : "Photo sélectionnée"),
+            Text(_selectedImage == null ? "incident_report.import_a_pic".tr() : "incident_report.pic_selected".tr()),
             const Icon(Icons.cloud_upload, color: Colors.grey),
           ],
         ),
@@ -207,9 +188,9 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
 void _submitForm() {
   if (_selectedType == null) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+       SnackBar(
         content: Text(
-          "Veuillez sélectionner un type d'incident",
+          "incident_report.select_a_type".tr(),
           style: TextStyle(color: Colors.white),
         ),
         backgroundColor: Colors.red,
@@ -306,28 +287,28 @@ void _showSuccessBottomSheet() {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Center(
+                 Center(
                   child: Text(
-                    'Signaler un incident',
+                    'incident_report.title'.tr(),
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1B9169)),
                   ),
                 ),
                 const SizedBox(height: 30),
                 _buildTextField(
-                  label: 'Type d’incident',
-                  hint: _selectedType ?? 'Sélectionner un type',
+                  label: "incident_report.incident_type".tr(),
+                  hint: _selectedType ?? "incident_report.select_type".tr(),
                   onTap: _showIncidentTypeMenu,
                   isDropdown: true,
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
-                  label: 'Description',
-                  hint: 'Décrivez l’incident',
+                  label:"incident_report.descreption".tr(),
+                  hint: "incident_report.select_describe_incident".tr(),
                   maxLines: 3,
-                  controller: _descriptionController,
+                  controller: _descreptionController,
                 ),
                 const SizedBox(height: 16),
-                const Text('Photo'),
+                 Text("incident_report.photo".tr()),
                 const SizedBox(height: 8),
                 _buildPhotoUploadField(),
 if (_selectedImage != null)
@@ -345,7 +326,7 @@ if (_selectedImage != null)
                   onTapDown: (_) => setState(() => _isButtonPressed = true),
 onTapUp: (_) {
   setState(() => _isButtonPressed = false);
-  _submitForm(); // Appelle la nouvelle fonction
+  _submitForm();
 },
                   child: Container(
                     width: double.infinity,
@@ -354,9 +335,9 @@ onTapUp: (_) {
                       color: _isButtonPressed ? const Color(0xFF61E9C4) : const Color(0xFF00D47E),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Center(
+                    child:  Center(
                       child: Text(
-                        'Envoyer',
+                        "incident_report.submit".tr(),
                         style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -367,8 +348,8 @@ onTapUp: (_) {
           ),
         ),
       ),
-      //bottomNavigationBar: NavigationBarWidget(selectedIndex: _selectedIndex, onItemTapped: _onItemTapped),
-    ),
+     ),
     );
   }
+
 }

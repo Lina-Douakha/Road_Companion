@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:road_companion/screens/authenticate/email_verification_screen.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 
 class AuthService {
@@ -35,15 +36,15 @@ class AuthService {
   String _getErrorMessageSignIn(String errorCode) {
     switch (errorCode) {
       case "invalid-email":
-        return "L'adresse e-mail est mal formatée.";
+        return "auth.invalid_email".tr();
       case "user-not-found":
-        return "Aucun utilisateur trouvé avec cet e-mail.";
+        return  "auth.user_not_found".tr();
       case "wrong-password":
-        return "Mot de passe incorrect. Veuillez réessayer.";
+        return "auth.wrong_password".tr();
       case "user-disabled":
-        return "Ce compte a été désactivé.";
+        return "auth.user_disabled".tr();
       default:
-        return "Une erreur inattendue s'est produite. Veuillez réessayer.";
+        return  "auth.unexpected_error".tr();
     }
   }
 
@@ -112,13 +113,13 @@ Future<String?> registerUser(String email, String password, String name, String 
 String _getErrorMessageRegister(String errorCode) {
   switch (errorCode) {
     case "email-already-in-use":
-      return "This email is already registered.";
+      return "auth.email_already_in_use".tr();
     case "invalid-email":
-      return "Invalid email format.";
+      return "auth.invalid_email".tr();
     case "weak-password":
-      return "Password must be at least 6 characters long.";
+      return "auth.weak_password".tr();
     default:
-      return "An unexpected error occurred. Please try again.";
+      return "auth.unexpected_error".tr();
   }
 }
 }

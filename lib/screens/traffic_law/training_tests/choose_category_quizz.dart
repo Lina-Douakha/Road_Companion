@@ -43,12 +43,12 @@ class ChooseCategoryQuizScreen extends StatelessWidget {
                           color: ColorsManager.Green1,
                         ),
                       ),
-                      SizedBox(height: screenHeight * 0.09), // Dynamic space under title
+                      SizedBox(height: screenHeight * 0.1), // Dynamic space under title
                       Column(
                         children: [
                           CategoryCard(
                             text: 'Priorité de passage',
-                            imagePath: 'assets/images/priorité1.png',
+                            imagePath: 'assets/images/priorités.png',
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -122,8 +122,8 @@ class CategoryCard extends StatelessWidget {
                      borderRadius: BorderRadius.circular(8),
                      child: Image.asset(
                      imagePath,
-                     width: cardHeight * 0.6, // Reduced image size
-                     height: cardHeight * 0.6,
+                     width: cardHeight * 0.8, // Reduced image size
+                     height: cardHeight * 0.8,
                      fit: BoxFit.cover,
                      ),
                    ),
@@ -137,7 +137,7 @@ class CategoryCard extends StatelessWidget {
                       text,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 17,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

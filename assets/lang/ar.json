@@ -1,0 +1,191 @@
+{
+  "profile": {
+    "title": "الملف الشخصي",
+    "edit": "تعديل معلومات الملف الشخصي",
+    "notifications": "الإشعارات",
+    "language": "اللغة",
+    "security": "الأمان",
+    "send_feedback": "إرسال ملاحظات",
+    "help": "المساعدة والدعم",
+    "about": "معلومات عنا",
+    "privacy_policy": "سياسة الخصوصية",
+    "logout": "تسجيل الخروج",
+    "name": "ليلى خان",
+    "job": "مطور الواجهة الأمامية (React)",
+    "contact": "youremail@domain.com | +01 234 567 89"
+  },
+  "language_options": {
+    "fr": "الفرنسية",
+    "en": "الإنجليزية",
+    "ar": "العربية"
+  },
+  "privacy": {
+    "delete_confirmation_title": "هل تريد حقًا حذف حسابك؟",
+    "delete_confirmation_message": "سيؤدي هذا الإجراء إلى حذف حسابك وجميع البيانات المتعلقة به نهائيًا.",
+    "delete_account": "حذف الحساب",
+    "contact_us": "اتصل بنا",
+    "title": "سياسة الخصوصية",
+    "terms_and_conditions": "الشروط والأحكام"
+  },
+  "help": {
+    "center": "مركز المساعدة",
+    "title": "المساعدة",
+    "phone_support": "الدعم الهاتفي",
+    "email": "البريد الإلكتروني",
+    "faq": "الأسئلة الشائعة",
+    "faq_desc": "ابحث عن إجابات لأسئلتك",
+    "links": "رابط",
+    "facebook": "الأكاديمية الوطنية للسلامة المرورية",
+    "facebook_desc": "انضم إلى مجتمعنا على فيسبوك"
+  },
+
+  "edit_profile": {
+    "title": "تعديل معلومات الملف الشخصي",
+    "name": "الاسم",
+    "phone_number": "رقم الهاتف",
+    "email": "البريد الإلكتروني",
+    "gender": "الجنس",
+    "male": "ذكر",
+    "female": "أنثى",
+    "save": "حفظ",
+    "success_message": "تم حفظ المعلومات بنجاح!",
+    "profile_picture": "صورة الملف الشخصي",
+    "choose_gallery": "اختيار من المعرض",
+    "take_photo": "التقاط صورة",
+    "required_field": "هذا الحقل مطلوب"
+  },
+  "change_password": {
+    "title": "تغيير كلمة المرور",
+    "current_password": "كلمة المرور الحالية",
+    "new_password": "كلمة المرور الجديدة",
+    "confirm_password": "تأكيد كلمة المرور",
+    "update_button": "تحديث",
+    "success_message": "تم تغيير كلمة المرور بنجاح",
+    "required_field": "هذا الحقل مطلوب",
+    "min_length": "على الأقل 6 أحرف",
+    "password_mismatch": "كلمات المرور غير متطابقة"
+  },"about_page": {
+  "title": "حول التطبيق",
+  "description": "تعد Road Companion تطبيقًا تفاعليًا ومؤتمتًا مصممًا لتحسين السلامة المرورية في الجزائر. مع أحد أعلى معدلات الحوادث في شمال إفريقيا، يعالج هذا التطبيق التحديات المتعلقة بنقص الوعي بقوانين المرور، وعدم كفاية الإبلاغ عن الحوادث، وصعوبة الوصول إلى المساعدة الفورية على الطريق.\n\nيساعد Road Companion السائقين من خلال توفير أدوات ذكية لقيادة أكثر أمانًا ومسؤولية."
+},
+  "auth": {
+    "invalid_email": "عنوان البريد الإلكتروني غير صالح.",
+    "user_not_found": "لم يتم العثور على مستخدم بهذا البريد الإلكتروني.",
+    "wrong_password": "كلمة المرور غير صحيحة. يرجى المحاولة مرة أخرى.",
+    "user_disabled": "تم تعطيل هذا الحساب.",
+    "unexpected_error": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
+    "email_already_in_use": "هذا البريد الإلكتروني مسجل بالفعل.",
+    "weak_password": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل."
+  },
+
+  "incident_report": {
+    "title": "الإبلاغ عن حادث",
+    "incident_type": "نوع الحادث",
+    "select_type": "اختر نوعًا",
+    "accident": "حادث",
+    "breakdown": "عطل",
+    "other": "آخر",
+    "descreption": "الوصف",
+    "describe_incident": "وصف الحادث",
+    "photo": "صورة",
+    "upload_photo": "تحميل صورة",
+    "photo_selected": "تم تحديد الصورة",
+    "take_photo": "التقاط صورة",
+    "choose_gallery": "اختر من المعرض",
+    "submit": "إرسال",
+    "success_message": "شكرًا لك! تم إرسال تقريرك بنجاح.",
+    "ok": "موافق",
+    "select_incident_type_error": "يرجى تحديد نوع الحادث",
+    "select_describe_incident": "صف الحادث هنا",
+    "import_a_pic": "قم بتحميل صورة",
+    "pic_selected": "تم تحديد الصورة",
+    "select_a_type": "يرجى تحديد نوع الحادث",
+    "from_gallery": "اختر من المعرض",
+    "take_a_pic": "التقط صورة"
+  },
+
+  "nav": {
+    "map": "الخريطة",
+    "emergency": "الطوارئ",
+    "road_code": "قانون السير",
+    "profile": "الملف الشخصي"
+  },
+  "email_verification": {
+    "title": "تحقق من بريدك الإلكتروني 📩",
+    "description": "لقد أرسلنا رسالة تحقق عبر البريد الإلكتروني. يرجى التحقق من صندوق الوارد لديك وتأكيد بريدك الإلكتروني.",
+    "resend_button": "إعادة إرسال البريد الإلكتروني",
+    "resent_success": "تمت إعادة إرسال بريد التحقق! تحقق من صندوق الوارد لديك.",
+    "error": "خطأ"
+  },
+  "splash": {
+    "app_name": "رفيق الطريق"
+  },
+  "onboarding": {
+    "title1": "رفيق الطريق، شريكك \nلرحلة قيادة أكثر أمانًا وذكاءً!",
+    "title2": "عرض جميع الحوادث المبلغ عنها \nواحصل على تحديثات مباشرة عن حالة المرور.",
+    "title3": "نظام GPS ذكي مع \nمساعدة على الطريق لرحلات خالية من التوتر.",
+    "title4": "دورات تفاعلية واختبارات \nلإتقان قواعد المرور.",
+    "start_button": "ابدأ",
+    "skip": "تخطي"
+  },"registration": {
+  "oui":"نعم",
+  "non":"لا",
+  "num": "رقم الهاتف",
+  "welcome": "مرحبًا بك في Road Companion",
+  "title": "إنشاء حساب",
+  "username": "اسم المستخدم",
+  "email": " البريد الإلكتروني",
+  "phone": "رقم الهاتف",
+  "password": "كلمة المرور",
+  "confirm_password": "تأكيد كلمة المرور",
+  "offer_service": "هل تقدم خدمة؟",
+  "service_type": "ما نوع الخدمة التي تقدمها؟",
+  "mechanic": "ميكانيكي",
+  "towing": "خدمة السحب",
+  "spare_parts": "قطع غيار",
+  "required_documents": "يرجى إضافة الوثائق المطلوبة:",
+  "id_card": "بطاقة الهوية (PDF)",
+  "commercial_register": "السجل التجاري (PDF)",
+  "accept_terms": "بإنشاء حساب، فإنك توافق على ",
+  "terms_conditions": "الشروط والأحكام الخاصة بنا",
+  "continue": "متابعة",
+  "all_fields_required": "جميع الحقول مطلوبة",
+  "password_mismatch": "كلمتا المرور غير متطابقتين"
+},
+  "file_upload": {
+    "upload_file": "تحميل ملف",
+    "file_selected": "تم تحديد الملف",
+    "select_file": "اختر ملفًا",
+    "upload_icon": "📂"
+  },"login": {
+  "welcome": "مرحبًا بك في Road Companion",
+  "sign_in": "تسجيل الدخول",
+  "please_login": "يرجى تسجيل الدخول باستخدام حسابك",
+  "email": "البريد الإلكتروني",
+  "password": "كلمة المرور",
+  "forgot_password": "هل نسيت كلمة المرور؟",
+  "sign_in_button": "تسجيل الدخول",
+  "or_sign_in_with": "أو تسجيل الدخول باستخدام",
+  "google": "جوجل",
+  "no_account": "ليس لديك حساب؟",
+  "register_now": "سجّل الآن",
+  "error_fill_fields": "يرجى ملء جميع الحقول.",
+  "error_invalid_email": "يرجى إدخال بريد إلكتروني صحيح.",
+  "error_google_sign_in": "فشل تسجيل الدخول باستخدام جوجل."
+},
+  "reset_password": {
+    "title": "إعادة تعيين كلمة المرور",
+    "instruction": "أدخل عنوان بريدك الإلكتروني\nللحصول على رابط إعادة التعيين",
+    "email_label": "البريد الإلكتروني",
+    "send_button": "إرسال",
+    "success_message": "تم إرسال البريد الإلكتروني لإعادة التعيين! تحقق من صندوق الوارد.",
+    "error_message": "خطأ: ",
+    "back": "رجوع"
+  },
+  "emergency_title": "مكالمة الطوارئ",
+  "error_phone": "تعذر فتح تطبيق الهاتف",
+  "police": "الشرطة الوطنية",
+  "gendarmerie": "الدرك الوطني",
+  "protection_civile": "الحماية المدنية",
+  "foret_service": "خدمة الغابات"
+}

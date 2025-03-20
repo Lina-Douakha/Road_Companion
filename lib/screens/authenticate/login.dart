@@ -4,6 +4,7 @@ import 'package:road_companion/screens/authenticate/reset_password.dart';
 import 'package:road_companion/screens/authenticate/registration.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -15,7 +16,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final AuthService _authService = AuthService();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final GlobalKey<ScaffoldMessengerState> _scaffoldKey = GlobalKey<ScaffoldMessengerState>();
 
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -31,12 +31,12 @@ class _LoginScreenState extends State<LoginScreen> {
     String password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      _showSnackBar("Veuillez remplir tous les champs.", isError: true);
+     _showSnackBar("login.error_fill_fields".tr(), isError: true);
       return;
     }
 
     if (!_isValidEmail(email)) {
-      _showSnackBar("Veuillez entrer une adresse email valide.", isError: true);
+      _showSnackBar("login.error_invalid_email".tr(), isError: true);
       return;
     }
 
@@ -65,16 +65,16 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signInWithGoogle() async {
-    setState(() => _isLoading = true); 
+    setState(() => _isLoading = true);
 
     UserCredential? userCredential = await _authService.signInWithGoogle();
 
-    setState(() => _isLoading = false); 
+    setState(() => _isLoading = false);
     if (userCredential != null) {
-     
+
       Navigator.pushReplacementNamed(context, '/home');
     } else {
-      _showSnackBar("Échec de la connexion avec Google.", isError: true);
+      _showSnackBar("login.error_google_sign_in".tr(), isError: true);
     }
   }
 
@@ -90,14 +90,14 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Padding(
-          
+
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 80), 
-              const Text(
-                "Bienvenue à Road Companion",
+              const SizedBox(height: 80),
+               Text(
+                "login.welcome".tr(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 22,
@@ -108,8 +108,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 4),
 
-              const Text(
-                "Se connecter",
+               Text(
+                "login.sign_in".tr(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 22,
@@ -120,8 +120,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 8),
 
-              const Text(
-                "Veuillez vous connecter avec votre compte\n\n",
+               Text(
+                "login.please_login".tr(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -131,13 +131,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 30),
 
-             
+
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 cursorColor: Colors.black,
                 decoration: InputDecoration(
-                  labelText: "Adresse email",
+                  labelText: "login.email".tr(),
                   floatingLabelBehavior: FloatingLabelBehavior.always,
                   labelStyle: const TextStyle(
                     color: Colors.black87,
@@ -160,13 +160,13 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
 
-             
+
               TextField(
                 controller: _passwordController,
                 cursorColor: Colors.black,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
-                  labelText: "Mot de passe",
+                  labelText: "login.password".tr(),
                   floatingLabelBehavior: FloatingLabelBehavior.always,
                   labelStyle: const TextStyle(
                     color: Colors.black87,
@@ -189,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
                     onPressed: () {
                       setState(() {
-                        _obscurePassword = !_obscurePassword; 
+                        _obscurePassword = !_obscurePassword;
                       });
                     },
                   ),
@@ -206,14 +206,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       MaterialPageRoute(builder: (context) => ResetPasswordScreen()),
                     );
                   },
-                  child: const Text("Mot de passe oublié ?", style: TextStyle(color: Colors.grey)),
+                  child:  Text("login.forgot_password".tr(), style: TextStyle(color: Colors.grey)),
                 ),
               ),
 
               const SizedBox(height: 12),
 
 
-           
+
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -226,9 +226,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white) 
-                      : const Text(
-                    "Se Connecter",
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      :  Text(
+                    "login.sign_in_button".tr(),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -240,8 +240,8 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 20),
 
 
-              const Text(
-                "Ou connectez-vous avec",
+               Text(
+                "login.or_sign_in_with".tr(),
                 style: TextStyle(
                   fontSize: 14,
                   color: Color(0xFF1B9169),
@@ -249,7 +249,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 12),
 
-             
+
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
@@ -266,8 +266,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       Image.asset('assets/images/google_icon.png', height: 24),
                       const SizedBox(width: 8),
-                      const Text(
-                        "Google",
+                       Text(
+                        "login.google".tr(),
                         style: TextStyle(color: Colors.black),
                       ),
                     ],
@@ -278,8 +278,8 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    "Vous n'avez pas de compte ? ",
+                   Text(
+                    "login.no_account".tr(),
                     style: TextStyle(color: Colors.black54),
                   ),
                   GestureDetector(
@@ -289,8 +289,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         MaterialPageRoute(builder: (context) => RegistrationScreen()),
                       );
                     },
-                    child: const Text(
-                      "Inscrivez-vous",
+                    child:  Text(
+                      "login.register_now".tr(),
                       style: TextStyle(
                         color: Color(0xFF00D47E),
                         fontWeight: FontWeight.bold,

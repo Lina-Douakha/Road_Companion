@@ -67,6 +67,7 @@ class _QuestionExamenState extends State<QuestionExamen> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -79,9 +80,9 @@ class _QuestionExamenState extends State<QuestionExamen> {
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: isLoading
-              ? Center(child: CircularProgressIndicator()) // Loading
+              ? const Center(child: CircularProgressIndicator()) // Loading
               : questions.isEmpty
-              ? Center(child: Text("Aucune question trouvée."))
+              ? const Center(child: Text("Aucune question trouvée."))
               : Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -90,7 +91,7 @@ class _QuestionExamenState extends State<QuestionExamen> {
               // Title
               const Center(
                 child: Text(
-                  'Question d\'examen',
+                  'Question théorique',
                   style: TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.bold,
@@ -98,19 +99,32 @@ class _QuestionExamenState extends State<QuestionExamen> {
                   ),
                 ),
               ),
-              SizedBox(height: 8),
+              //const SizedBox(height: 8),
+              SizedBox(height: screenHeight * 0.04),
 
-              // Question counter (current/total)
-              Text(
-                '${currentIndex + 1}/${questions.length}',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[700],
+              // Question counter (Styled Container)
+              Center(
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.03,
+                    vertical: screenHeight * 0.008,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFD1FADF), // Light green background
+                    borderRadius: BorderRadius.circular(20.0), // Rounded shape
+                  ),
+                  child: Text(
+                    'Question ${currentIndex + 1}/${questions.length}', // Dynamic question number
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.04,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF1B9169), // Dark green text
+                    ),
+                  ),
                 ),
               ),
 
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
 
               // Main container
               Expanded(
@@ -120,44 +134,44 @@ class _QuestionExamenState extends State<QuestionExamen> {
                     children: [
                       // Question display (auto-size)
                       Container(
-                        padding: EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          border: Border.all(color: Color(0xFFCBD5E1)),
+                          border: Border.all(color: const Color(0xFFCBD5E1)),
                           borderRadius: BorderRadius.circular(12),
                           color: Colors.white,
                         ),
                         child: Text(
                           questions[currentIndex]["QuestionText"] ??
                               "Question non disponible",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
                           textAlign: TextAlign.center,
                         ),
                       ),
-                      SizedBox(height: 30),
+                      const SizedBox(height: 30),
 
                       // Answer display (auto-size)
                       Container(
-                        padding: EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          border: Border.all(color: Color(0xFFCBD5E1)),
+                          border: Border.all(color: const Color(0xFFCBD5E1)),
                           borderRadius: BorderRadius.circular(12),
-                          color: Color.fromARGB(255, 255, 255, 255),
+                          color: const Color.fromARGB(255, 255, 255, 255),
                         ),
                         child: Text(
                           questions[currentIndex]["Answer"] ??
                               "Réponse non disponible",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                             color: Colors.black,
                           ),
-                          textAlign: TextAlign.center,
+                          textAlign: TextAlign.left,
                         ),
                       ),
-                      SizedBox(height: 40),
+                      const SizedBox(height: 40),
                     ],
                   ),
                 ),
@@ -169,14 +183,14 @@ class _QuestionExamenState extends State<QuestionExamen> {
                 children: [
                   IconButton(
                     onPressed: previousQuestion,
-                    icon: Icon(Icons.arrow_circle_left_outlined, size: 30),
-                    color: Color(0xFF1B9169),
+                    icon: const Icon(Icons.arrow_circle_left_outlined, size: 30),
+                    color: const Color(0xFF1B9169),
                     tooltip: "Question précédente",
                   ),
                   IconButton(
                     onPressed: nextQuestion,
-                    icon: Icon(Icons.arrow_circle_right_outlined, size: 30),
-                    color: Color(0xFF1B9169),
+                    icon: const Icon(Icons.arrow_circle_right_outlined, size: 30),
+                    color: const Color(0xFF1B9169),
                     tooltip: "Question suivante",
                   ),
                 ],
@@ -194,6 +208,7 @@ class _QuestionExamenState extends State<QuestionExamen> {
     );
   }
 }
+
 
 
 

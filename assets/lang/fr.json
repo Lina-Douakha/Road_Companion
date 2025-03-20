@@ -1,0 +1,194 @@
+{
+  "profile": {
+    "title": "Profil",
+    "edit": "Modifier les informations du profil",
+    "notifications": "Notifications",
+    "language": "Langue",
+    "security": "Sécurité",
+    "send_feedback": "Envoyer des commentaires",
+    "help": "Aide et support",
+    "about": "À propos de l'application",
+    "privacy_policy": "Politique de confidentialité",
+    "logout": "Se déconnecter",
+    "name": "Laila Khan",
+    "job": "Développeuse Frontend (React)",
+    "contact": "youremail@domain.com | +01 234 567 89"
+  },
+  "language_options": {
+    "fr": "Français",
+    "en": "Anglais",
+    "ar": "Arabe"
+  },
+  "privacy": {
+    "delete_confirmation_title": "Voulez-vous vraiment supprimer votre compte ?",
+    "delete_confirmation_message": "Cette action supprimera définitivement votre compte et toutes les données associées.",
+    "delete_account": "Supprimer le compte",
+    "contact_us": "Contactez-nous",
+    "title": "Politique de confidentialité",
+    "terms_and_conditions": "Termes et conditions"
+  },
+  "help": {
+    "center": "Centre d'aide",
+    "title": "Aide",
+    "phone_support": "Support téléphonique",
+    "email": "Email",
+    "faq": "FAQ",
+    "faq_desc": "Trouvez des réponses à vos questions",
+    "links": "Liens",
+    "facebook": "Académie Nationale de la Sécurité Routière et de la Sécurité",
+    "facebook_desc": "Rejoignez notre communauté sur Facebook"
+  },
+  "edit_profile": {
+    "title": "Modifier les informations du profil",
+    "name": "Nom",
+    "phone_number": "Numéro de téléphone",
+    "email": "Email",
+    "gender": "Sexe",
+    "male": "Homme",
+    "female": "Femme",
+    "save": "Enregistrer",
+    "success_message": "Informations enregistrées avec succès !",
+    "profile_picture": "Photo de profil",
+    "choose_gallery": "Choisir depuis la galerie",
+    "take_photo": "Prendre une photo",
+    "required_field": "Ce champ est obligatoire"
+  },"change_password": {
+  "title": "Modifier le mot de passe",
+  "current_password": "Mot de passe actuel",
+  "new_password": "Nouveau mot de passe",
+  "confirm_password": "Confirmer le mot de passe",
+  "update_button": "Modifier",
+  "success_message": "Mot de passe modifié avec succès",
+  "required_field": "Champ obligatoire",
+  "min_length": "Minimum 6 caractères",
+  "password_mismatch": "Les mots de passe ne correspondent pas"
+},
+
+
+  "about_page": {
+    "title": "À propos de",
+    "description": "Road Companion est une application interactive et automatisée conçue pour améliorer la sécurité routière en Algérie. Face à lun des taux d'accidents les plus élevés en Afrique du Nord, cette application répond aux défis liés au manque de sensibilisation au code de la route, à la signalisation insuffisante des incidents et à l'accès limité à une assistance routière en temps réel.\n\nRoad Companion aide les conducteurs en fournissant des outils intelligents pour une conduite plus sûre et plus responsable."
+  },
+
+  "incident_report": {
+    "title": "Signaler un incident",
+    "incident_type": "Type d'incident",
+    "select_type": "Sélectionnez un type",
+    "accident": "Accident",
+    "breakdown": "Panne",
+    "other": "Autre",
+    "descreption": "Description",
+    "describe_incident": "Décrivez l'incident",
+    "photo": "Photo",
+    "upload_photo": "Télécharger une photo",
+    "photo_selected": "Photo sélectionnée",
+    "take_photo": "Prendre une photo",
+    "choose_gallery": "Choisir depuis la galerie",
+    "submit": "Soumettre",
+    "success_message": "Merci ! Votre signalement a été soumis avec succès.",
+    "ok": "OK",
+    "select_incident_type_error": "Veuillez sélectionner un type d'incident",
+    "select_describe_incident": "Décrivez l'incident ici",
+    "import_a_pic": "Téléchargez une image",
+    "pic_selected": "Image sélectionnée",
+    "select_a_type": "Veuillez sélectionner le type de l'incident",
+    "from_gallery": "Choisir depuis la galerie",
+    "take_a_pic": "Prendre une photo"
+  },
+  "nav": {
+    "map": "Carte",
+    "emergency": "Urgence",
+    "road_code": "Code",
+    "profile": "Profil"
+  },
+  "email_verification": {
+    "title": "Vérifiez votre email 📩",
+    "description": "Nous avons envoyé un e-mail de vérification. Veuillez vérifier votre boîte de réception et confirmer votre e-mail.",
+    "resend_button": "Renvoyer l'email",
+    "resent_success": "E-mail de vérification renvoyé ! Vérifiez votre boîte de réception.",
+    "error": "Erreur"
+  },
+  "splash": {
+    "app_name": "Road Companion"
+  },
+  "onboarding": {
+    "title1": "Road Companion, ton allié \npour une conduite plus sûre et\nintelligente !",
+    "title2": "Visualise tous les incidents \nsignalés et obtiens des informations \ntrafic en direct.",
+    "title3": "Un GPS intelligent avec \nassistance routière pour des \ntrajets sans stress.",
+    "title4": "Cours interactifs, quiz et tests\npour maîtriser le code de la \nroute.",
+    "start_button": "Commencer",
+    "skip": "Passer"
+  },
+  "registration": {
+    "oui":"Oui",
+    "non":"Non",
+    "num":"Numéro de téléphone",
+    "welcome": "Bienvenue à Road Companion",
+    "title": "S'inscrire",
+    "username": "Nom d'utilisateur",
+    "email": "Adresse Email",
+    "phone": "Numéro de téléphone",
+    "password": "Mot de passe",
+    "confirm_password": "Confirmez le mot de passe",
+    "offer_service": "Offrez-vous un service ?",
+    "service_type": "Quel type de service offrez-vous ?",
+    "mechanic": "Mécanicien",
+    "towing": "Service de remorquage",
+    "spare_parts": "Pièces de rechange",
+    "required_documents": "Veuillez ajouter les documents (obligatoires) :",
+    "id_card": "Carte d’identité (PDF)",
+    "commercial_register": "Registre de commerce (PDF)",
+    "accept_terms": "En créant un compte, vous acceptez ",
+    "terms_conditions": "nos conditions générales",
+    "continue": "Continuer",
+    "all_fields_required": "Tous les champs sont obligatoires",
+    "password_mismatch": "Les mots de passe ne correspondent pas"
+  },"file_upload": {
+  "upload_file": "Télécharger un fichier",
+  "file_selected": "Fichier sélectionné",
+  "select_file": "Sélectionnez un fichier",
+  "upload_icon": "📂"
+},
+  "login": {
+    "welcome": "Bienvenue à Road Companion",
+    "sign_in": "Se connecter",
+    "please_login": "Veuillez vous connecter avec votre compte",
+    "email": "Adresse email",
+    "password": "Mot de passe",
+    "forgot_password": "Mot de passe oublié ?",
+    "sign_in_button": "Se Connecter",
+    "or_sign_in_with": "Ou connectez-vous avec",
+    "google": "Google",
+    "no_account": "Vous n'avez pas de compte ?",
+    "register_now": "Inscrivez-vous",
+    "error_fill_fields": "Veuillez remplir tous les champs.",
+    "error_invalid_email": "Veuillez entrer une adresse email valide.",
+    "error_google_sign_in": "Échec de la connexion avec Google."
+  },
+  "reset_password": {
+    "title": "Réinitialisation du mot de passe",
+    "instruction": "Entrez votre adresse email\npour recevoir un lien de réinitialisation",
+    "email_label": "Adresse Email",
+    "send_button": "Envoyer",
+    "success_message": "L'email de réinitialisation a été envoyé ! Vérifiez votre boîte de réception.",
+    "error_message": "Erreur : ",
+    "back": "Retour"
+  },
+
+  "auth": {
+    "invalid_email": "L'adresse e-mail est mal formatée.",
+    "user_not_found": "Aucun utilisateur trouvé avec cet e-mail.",
+    "wrong_password": "Mot de passe incorrect. Veuillez réessayer.",
+    "user_disabled": "Ce compte a été désactivé.",
+    "unexpected_error": "Une erreur inattendue s'est produite. Veuillez réessayer.",
+    "email_already_in_use": "Cet e-mail est déjà enregistré.",
+    "weak_password": "Le mot de passe doit contenir au moins 6 caractères."
+  },
+  "emergency_title": "Numéros d'urgence",
+  "error_phone": "Impossible de passer l'appel",
+  "police": "Police",
+  "gendarmerie": "Gendarmerie",
+  "protection_civile": "Protection Civile",
+  "foret_service": "Service des Forêts"
+
+}

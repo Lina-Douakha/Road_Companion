@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
   const EmailVerificationScreen({Key? key}) : super(key: key);
@@ -14,11 +15,11 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     try {
       await FirebaseAuth.instance.currentUser?.sendEmailVerification();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Verification email resent! Check your inbox."), backgroundColor: Colors.green),
+        SnackBar(content: Text("email_verification.description".tr()), backgroundColor: Colors.green),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: ${e.toString()}"), backgroundColor: Colors.red),
+        SnackBar(content: Text("${"email_verification.error".tr()}: ${e.toString()}"), backgroundColor: Colors.red),
       );
     }
   }
@@ -35,13 +36,13 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
             children: [
               const Icon(Icons.email, size: 80, color:Color(0xFF00d47e)),
               const SizedBox(height: 20),
-              const Text(
-                "Verify Your Email 📩",
+              Text(
+                "email_verification.title".tr(),
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
-              const Text(
-                "We have sent an email verification. Please check your inbox and verify your email.",
+              Text(
+                "email_verification.resent_success".tr(),
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16),
               ),
@@ -49,7 +50,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
               ElevatedButton(
                 onPressed: _resendVerificationEmail,
                 style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF00d47e)),
-                child: const Text("Resend Email", style: TextStyle(color: Colors.white)),
+                child:  Text( "email_verification.resend_button".tr(), style: TextStyle(color: Colors.white)),
               ),
             ],
           ),

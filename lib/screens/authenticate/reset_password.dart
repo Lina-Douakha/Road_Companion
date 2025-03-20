@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   @override
@@ -21,7 +22,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
       // Show success message
       _showSnackBar(
-        "L'email de réinitialisation a été envoyé ! Vérifiez votre boîte de réception.",
+        "reset_password.success_message".tr(),
         isError: false,
       );
 
@@ -34,7 +35,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         MaterialPageRoute(builder: (context) => LoginScreen()),
       );
     } catch (e) {
-      _showSnackBar("Erreur : ${e.toString()}", isError: true);
+      _showSnackBar("${tr('reset_password.error_message')}${e.toString()}", isError: true);
     }
   }
 
@@ -72,7 +73,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             children: [
               const SizedBox(height: 40),
 
-              // Back button + title
+
               Align(
                 alignment: Alignment.centerLeft,
                 child: Row(
@@ -82,8 +83,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       icon: const Icon(Icons.arrow_back, color: Colors.black, size: 28),
                       onPressed: _goToOnboarding,
                     ),
-                    const Text(
-                      "Réinitialisation du mot de passe",
+                    Text(
+                      "reset_password.title".tr(),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -106,8 +107,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               const SizedBox(height: 16),
 
               // Instruction Text
-              const Text(
-                "Entrez votre adresse email\npour recevoir un lien de réinitialisation",
+              Text(
+                "reset_password.instruction".tr(),
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Colors.black),
               ),
@@ -120,7 +121,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 cursorColor: Colors.black,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
-                  labelText: "Adresse Email",
+                  labelText: "reset_password.email_label".tr(),
                   labelStyle: const TextStyle(
                     color: Colors.black,
                   ),
@@ -153,8 +154,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     ),
                   ),
                   onPressed: resetPassword,
-                  child: const Text(
-                    "Envoyer",
+                  child:  Text(
+                    "reset_password.send_button".tr(),
                     style: TextStyle(fontSize: 16, color: Colors.white),
                   ),
                 ),

@@ -21,46 +21,48 @@ class _PriorityQuestionScreenState extends State<PriorityQuestionScreen> {
     _fetchPriorityQuestions();
   }
 
-  //Fetch priority questions from Firestore
+  // ✅ Fetch priority questions from Firestore
   Future<void> _fetchPriorityQuestions() async {
     try {
       QuerySnapshot querySnapshot = await _firestore
           .collection("Traffic-Laws")
-          .where("Category", isEqualTo: "priorities") // Filter for priority questions
+          .where("Category", isEqualTo: "priorities")
           .get();
 
       List<Map<String, dynamic>> fetchedQuestions = querySnapshot.docs
           .map((doc) => doc.data() as Map<String, dynamic>)
           .toList();
 
-      setState(() {
-        questions = fetchedQuestions;
-        isLoading = false; // Stop loading indicator
-      });
+      if (mounted) {
+        setState(() {
+          questions = fetchedQuestions;
+          isLoading = false; // ✅ Stop loading once questions are fetched
+        });
+      }
     } catch (e) {
       print("Error fetching priority questions: $e");
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
-  // Go to next question
   void nextQuestion() {
     if (questions.isNotEmpty) {
       setState(() {
         currentIndex = (currentIndex + 1) % questions.length;
-        showAnswer = false; // Hide answer when switching
+        showAnswer = false;
       });
     }
   }
 
-  // Go to previous question
   void previousQuestion() {
     if (questions.isNotEmpty) {
       setState(() {
         currentIndex = (currentIndex - 1 + questions.length) % questions.length;
-        showAnswer = false; // Hide answer when switching
+        showAnswer = false;
       });
     }
   }
@@ -75,6 +77,7 @@ class _PriorityQuestionScreenState extends State<PriorityQuestionScreen> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -86,143 +89,156 @@ class _PriorityQuestionScreenState extends State<PriorityQuestionScreen> {
         resizeToAvoidBottomInset: true,
         body: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: isLoading
-              ? Center(child: CircularProgressIndicator()) // Show loading indicator
-              : questions.isEmpty
-              ? Center(child: Text("Aucune question de priorité trouvée."))
-              : Column(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(height: screenHeight * 0.09),
-                      const Text(
-                        'Priorité de passage',
-                        style: TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1B9169),
-                        ),
-                      ),
-                      SizedBox(height: 20),
-
-                      // Show image if exists (Load from assets instead of network)
-                      if (questions[currentIndex]["imageURL"] != null &&
-                          questions[currentIndex]["imageURL"].isNotEmpty)
-                        Image.asset(
-                          "assets/images/priorities/${questions[currentIndex]["imageURL"]}",
-                          height: 150,
-                          fit: BoxFit.cover,
-                        ),
-
-
-                      SizedBox(height: 40),
-
-                      // Show Question
-                      SizedBox(
-                        width: 350,
-                        height: 60,
-                        child: TextField(
-                          controller: TextEditingController(
-                            text: questions[currentIndex]["Question"] ??
-                                "Question non disponible",
-                          ),
-                          readOnly: true,
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Color(0xFFCBD5E1)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Color(0xFFCBD5E1)),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(height: 30),
-
-                      // Show Answer Button
-                      SizedBox(
-                        width: 300,
-                        height: 55,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            setState(() {
-                              showAnswer = !showAnswer;
-                            });
-                          },
-                          label: Text(
-                            "Afficher la réponse",
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFD1FADF),
-                            foregroundColor: Colors.black,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          icon: Icon(
-                            showAnswer ? Icons.expand_less : Icons.expand_more,
-                            color: Color(0xFF00D47E),
-                            size: 30,
-                          ),
-                        ),
-                      ),
-
-                      // Show Answer if button is pressed
-                      if (showAnswer)
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            questions[currentIndex]["Description"] ?? "Réponse non disponible",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF000000),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-
-                      SizedBox(height: 40),
-                    ],
-                  ),
+              const SizedBox(height: 70),
+              const Text(
+                'Priorité de passage',
+                style: TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1B9169),
                 ),
               ),
+              const SizedBox(height: 10),
 
-              // Navigation Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  IconButton(
-                    onPressed: previousQuestion,
-                    icon: Icon(Icons.arrow_circle_left_outlined, size: 30),
-                    color: Color(0xFF1B9169),
-                    tooltip: "Question précédente",
+              // Show loading indicator if data is still loading
+              if (isLoading)
+                const Expanded(
+                  child: Center(
+                    child: CircularProgressIndicator(),
                   ),
-                  IconButton(
-                    onPressed: nextQuestion,
-                    icon: Icon(Icons.arrow_circle_right_outlined, size: 30),
-                    color: Color(0xFF1B9169),
-                    tooltip: "Question suivante",
+                )
+              // Show content only if questions are available
+              else if (questions.isNotEmpty)
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        if (questions[currentIndex]["imageURL"] != null &&
+                            questions[currentIndex]["imageURL"].isNotEmpty)
+                          Image.asset(
+                            "assets/images/priorities/${questions[currentIndex]["imageURL"]}",
+                            width: screenWidth * 0.8,
+                            height: screenHeight * 0.3,
+                            fit: BoxFit.contain,
+                          ),
+
+                        const SizedBox(height: 10),
+
+                        // Dynamic Question Container
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: 60,
+                            maxHeight: screenHeight * 0.4,
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            width: screenWidth * 0.9,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFCBD5E1)),
+                            ),
+                            child: SingleChildScrollView(
+                              child: Text(
+                                questions[currentIndex]["Question"] ?? "Question non disponible",
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 30),
+
+                        // Show Answer Button
+                        SizedBox(
+                          width: 300,
+                          height: 55,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                showAnswer = !showAnswer;
+                              });
+                            },
+                            label: const Text(
+                              "Afficher la réponse",
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFD1FADF),
+                              foregroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            icon: Icon(
+                              showAnswer ? Icons.expand_less : Icons.expand_more,
+                              color: const Color(0xFF00D47E),
+                              size: 30,
+                            ),
+                          ),
+                        ),
+
+                        // Show Answer if button is pressed
+                        if (showAnswer)
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              width: screenWidth * 0.9,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                color: Colors.white,
+                              ),
+                              child: Text(
+                                questions[currentIndex]["Description"] ?? "Réponse non disponible",
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+
+                        const SizedBox(height: 30),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+
+              // Fixed Navigation Buttons
+              if (!isLoading && questions.isNotEmpty)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    IconButton(
+                      onPressed: previousQuestion,
+                      icon: const Icon(Icons.arrow_circle_left_outlined, size: 30),
+                      color: const Color(0xFF1B9169),
+                      tooltip: "Question précédente",
+                    ),
+                    IconButton(
+                      onPressed: nextQuestion,
+                      icon: const Icon(Icons.arrow_circle_right_outlined, size: 30),
+                      color: const Color(0xFF1B9169),
+                      tooltip: "Question suivante",
+                    ),
+                  ],
+                ),
             ],
           ),
         ),
 
+        // ✅ Bottom Navigation Bar
         bottomNavigationBar: NavigationBarWidget(
           selectedIndex: _selectedIndex,
           onItemTapped: _onItemTapped,
@@ -231,4 +247,9 @@ class _PriorityQuestionScreenState extends State<PriorityQuestionScreen> {
     );
   }
 }
+
+
+
+
+
 
