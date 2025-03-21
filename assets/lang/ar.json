@@ -10,6 +10,9 @@
     "about": "معلومات عنا",
     "privacy_policy": "سياسة الخصوصية",
     "logout": "تسجيل الخروج",
+    "logout_confirmation_title": "تأكيد تسجيل الخروج",
+    "logout_confirmation_message": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
+    "logout_cancel": "إلغاء",
     "name": "ليلى خان",
     "job": "مطور الواجهة الأمامية (React)",
     "contact": "youremail@domain.com | +01 234 567 89"

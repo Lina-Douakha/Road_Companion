@@ -10,6 +10,9 @@
     "about": "About",
     "privacy_policy": "Privacy Policy",
     "logout": "Log out",
+    "logout_confirmation_title": "Confirm Log Out",
+    "logout_confirmation_message": "Are you sure you want to log out?",
+    "logout_cancel": "Cancel",
     "name": "Laila Khan",
     "job": "Frontend Developer (React)",
     "contact": "youremail@domain.com | +01 234 567 89"

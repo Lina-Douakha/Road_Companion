@@ -7,7 +7,10 @@ import 'package:road_companion/screens/profile/about.dart';
 import 'package:road_companion/screens/profile/help.dart';
 import 'package:road_companion/screens/profile/privacyPolicy.dart';
 import 'package:road_companion/screens/profile/ChangePasswordPage.dart';
-
+import 'package:road_companion/services/auth_service.dart'; // Import AuthService
+import 'package:road_companion/screens/authenticate/login.dart'; // Import LoginScreen
+import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 
 class ProfilePage extends StatefulWidget {
   final int selectedIndex;
@@ -21,10 +24,40 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final ValueNotifier<String> selectedLanguage = ValueNotifier<String>("Français");
   final ValueNotifier<bool> notificationsEnabled = ValueNotifier<bool>(true);
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance; // Firestore instance
+  Map<String, dynamic>? _userData; // To store user data
+  bool _isLoading = true; // To handle loading state
 
   @override
   void initState() {
     super.initState();
+    _fetchUserData(); // Fetch user data when the page loads
+  }
+
+  // Fetch user data from Firestore
+  Future<void> _fetchUserData() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser; // Get the current user
+
+      if (user != null) {
+        DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+          setState(() {
+            _userData = userDoc.data() as Map<String, dynamic>; // Store user data
+            _isLoading = false; // Data fetched, stop loading
+          });
+        } else {
+          setState(() {
+            _isLoading = false; // No data found, stop loading
+          });
+        }
+      }
+    } catch (e) {
+      print("Error fetching user data: $e");
+      setState(() {
+        _isLoading = false; // Stop loading on error
+      });
+    }
   }
 
   void _showLanguageSelection(BuildContext context) {
@@ -68,7 +101,7 @@ class _ProfilePageState extends State<ProfilePage> {
       onTap: () {
         context.setLocale(Locale(langCode));
         setState(() {});
-        debugPrint("Langue actuelle: ${context.locale.languageCode}");  // ✅ Vérification
+        debugPrint("Langue actuelle: ${context.locale.languageCode}");  // Vérification
         Navigator.pop(context);
       },
       child: Container(
@@ -101,6 +134,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
   Widget _buildTopIcons() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -111,70 +145,81 @@ class _ProfilePageState extends State<ProfilePage> {
             icon: Icon(Icons.notifications, color: Colors.black),
             onPressed: () {},
           ),
-
         ],
       ),
     );
   }
 
-  @override
+@override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[200],
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            SizedBox(height: 40),
-            _buildTopIcons(),
-            _buildProfileHeader(),
-            _buildSettingsOptions(),
-          ],
-        ),
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          // Background with Curved Grey Section
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ClipPath(
+              clipper: CurvedBackgroundClipper(),
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.3,
+                color: Color(0xFFF1F5F9),
+              ),
+            ),
+          ),
+
+          // Content (unchanged)
+          Column(
+            children: [
+              SizedBox(height: 40),
+              _buildTopIcons(),
+              _buildProfileHeader(),
+              Expanded(
+                child: _buildSettingsOptions(),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildProfileHeader() {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
-        ),
-      ),
-      child: Column(
-        children: [
-          Stack(
-            alignment: Alignment.bottomRight,
-            children: [
-              CircleAvatar(
-                radius: 50,
-                backgroundImage: AssetImage('assets/images/photo_de_profile.png'),
-              ),
+    if (_isLoading) {
+      return Center(
+        child: CircularProgressIndicator(), // Show loading indicator
+      );
+    }
 
-            ],
-          ),
+    if (_userData == null) {
+      return Center(
+        child: Text("profile.no_user_data".tr()), // Show error message if no data
+      );
+    }
+
+    return Column(
+      children: [
+        CircleAvatar(
+          radius: 50,
+          backgroundImage: AssetImage('assets/images/photo_de_profile.png'),
+        ),
           SizedBox(height: 10),
           Text(
-            "Laila Khan",
+            _userData!['Name'] ?? "profile.no_name".tr(), // Display user name
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            "Frontend Developer (React)",
-            style: TextStyle(color: Colors.grey[600]),
           ),
           SizedBox(height: 5),
           Text(
-            "youremail@domain.com | +01 234 567 89",
+            "${_userData!['Email'] ?? "profile.no_email".tr()} | ${_userData!['Phone'] ?? "profile.no_phone".tr()}", // Display email and phone
             style: TextStyle(color: Colors.grey[700]),
           ),
           SizedBox(height: 10),
-        ],
-      ),
+      ],
     );
   }
+
   Widget _buildSettingsOptions() {
     return Padding(
       padding: EdgeInsets.all(16),
@@ -242,7 +287,7 @@ class _ProfilePageState extends State<ProfilePage> {
             mainAxisAlignment: MainAxisAlignment.start, // Alignement à droite
             children: [
               TextButton.icon(
-                onPressed: () {},
+                onPressed: _logout, // Call the logout function
                 icon: Icon(Icons.logout, color: Colors.red),
                 label: Text("profile.logout".tr(), style: TextStyle(color: Colors.red)),
               ),
@@ -252,8 +297,10 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
   Widget _buildSettingsCard(List<Widget> children) {
     return Card(
+      color: Color(0xFFF1F5F9),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Column(children: children),
     );
@@ -262,15 +309,38 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildListTile(IconData icon, String title, {String? value, VoidCallback? onTap}) {
     return ListTile(
       leading: Icon(icon, color: Colors.black87),
-      title: Text(title),
-      trailing: value != null ? Text(value, style: TextStyle(color: Colors.green)) : null,
+      title: Text(
+        title,
+        style: TextStyle(
+          fontSize: 14, // Reduced text size
+          fontWeight: FontWeight.w500, // Medium font weight
+          color: Colors.black87, // Custom text color
+        ),
+      ),
+      trailing: value != null
+          ? Text(
+              value,
+              style: TextStyle(
+                color: Colors.green,
+                fontSize: 14, // Reduced text size
+                fontWeight: FontWeight.w500, // Medium font weight
+              ),
+            )
+          : null,
       onTap: onTap,
     );
   }
+
   Widget _buildListTileWithSwitch(IconData icon, String title, bool value, {required ValueChanged<bool> onChanged}) {
     return ListTile(
       leading: Icon(icon, color: Colors.black87),
-      title: Text(title),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontSize: 14, // Set the desired text size
+          fontWeight: FontWeight.w500, // Optional: Adjust font weight
+        ),
+      ),
       trailing: Switch(
         value: value,
         onChanged: onChanged,
@@ -278,4 +348,61 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
+  // ================== LOGOUT FUNCTIONALITY ==================
+
+  Future<void> _logout() async {
+    final AuthService _authService = AuthService(); // Create an instance of AuthService
+
+    // Show a confirmation dialog before logging out
+    bool confirmLogout = await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("profile.logout_confirmation_title".tr()),
+          content: Text("profile.logout_confirmation_message".tr()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text("profile.logout_cancel".tr()),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text("profile.logout".tr(), style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmLogout == true) {
+      // Log out the user
+      await _authService.signOut();
+
+      // Navigate to the LoginScreen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+      );
+    }
+  }
+}
+
+// Curved Background Clipper
+class CurvedBackgroundClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final Path path = Path();
+    path.lineTo(0, size.height * 0.7); // Move to the left bottom corner
+    path.quadraticBezierTo(
+      size.width / 2, size.height * 0.9, // Control point for the curve
+      size.width, size.height * 0.7, // End at bottom right
+    );
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

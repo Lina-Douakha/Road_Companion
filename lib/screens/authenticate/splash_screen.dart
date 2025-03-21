@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
-import 'onboarding_screen.dart';
+import 'onboarding_screen.dart'; // Assuming this is your onboarding screen
 import 'package:easy_localization/easy_localization.dart';
+import 'package:road_companion/services/auth_service.dart'; // Import AuthService
+import 'package:road_companion/screens/home/home.dart'; // Import HomePage
+import 'package:road_companion/screens/authenticate/login.dart'; // Import LoginScreen
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,6 +18,7 @@ class _SplashScreenState extends State<SplashScreen> {
   int _currentLight = 0; // 0 = Rouge, 1 = Orange, 2 = Vert
   late Timer _timer;
   int _cycleCount = 0; // Compte combien de fois la séquence a tourné
+  final AuthService _authService = AuthService(); // Add AuthService instance
 
   @override
   void initState() {
@@ -35,17 +39,29 @@ class _SplashScreenState extends State<SplashScreen> {
 
         if (_cycleCount == 1) {
           _timer.cancel();
-          _goToOnboarding();
+          _checkLoginStatus(); // Check login status after animation
         }
       });
     });
   }
 
-  void _goToOnboarding() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => OnboardingScreen()),
-    );
+  // Check if the user is logged in
+  Future<void> _checkLoginStatus() async {
+    bool isLoggedIn = await _authService.isLoggedIn();
+
+    if (isLoggedIn) {
+      // Navigate to HomePage if logged in
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
+    } else {
+      // Navigate to OnboardingScreen or LoginScreen if not logged in
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => OnboardingScreen()),
+      );
+    }
   }
 
   @override
