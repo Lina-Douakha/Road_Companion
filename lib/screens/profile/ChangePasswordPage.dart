@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   @override
@@ -12,13 +13,68 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   final TextEditingController _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isObscured = true;
+  bool _isLoading = false;
 
-  void _changePassword() {
+  Future<void> _changePassword() async {
     if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("change_password.success_message".tr())),
-      );
+      setState(() => _isLoading = true);
 
+      final User? user = FirebaseAuth.instance.currentUser;
+
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("change_password.no_user".tr())),
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      try {
+        // Step 1: Reauthenticate the user with their current password
+        final AuthCredential credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: _currentPasswordController.text,
+        );
+
+        await user.reauthenticateWithCredential(credential);
+
+        // Step 2: Update the password
+        await user.updatePassword(_newPasswordController.text);
+
+        // Success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("change_password.success_message".tr()),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // ✅ **Navigate back to Profile Page**
+        Navigator.pop(context); // Return to the previous page (Profile Page)
+
+      } on FirebaseAuthException catch (e) {
+        // Handle errors
+        String errorMessage;
+        switch (e.code) {
+          case "wrong-password":
+            errorMessage = "change_password.wrong_current_password".tr();
+            break;
+          case "weak-password":
+            errorMessage = "change_password.min_length".tr();
+            break;
+          default:
+            errorMessage = "change_password.error".tr();
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } finally {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -32,7 +88,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 40), // Augmenté pour descendre la flèche et le texte
+              const SizedBox(height: 40),
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -42,9 +98,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 20), // Ajouté pour descendre le texte
+              const SizedBox(height: 20),
               Center(
-                child:  Text(
+                child: Text(
                   "change_password.title".tr(),
                   style: TextStyle(
                     fontSize: 22,
@@ -53,8 +109,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                   ),
                 ),
               ),
-
-              const SizedBox(height: 50), // Espace avant les champs de formulaire
+              const SizedBox(height: 50),
               Form(
                 key: _formKey,
                 child: Column(
@@ -64,12 +119,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     _buildPasswordField("change_password.new_password".tr(), _newPasswordController),
                     const SizedBox(height: 16),
                     _buildPasswordField("change_password.confirm_password".tr(), _confirmPasswordController, confirm: true),
-
                     const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: _changePassword,
+                        onPressed: _isLoading ? null : _changePassword,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF00D47E),
                           shape: RoundedRectangleBorder(
@@ -77,15 +131,16 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
-                        child: Text(
-                          "change_password.update_button".tr(),
-
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : Text(
+                                "change_password.update_button".tr(),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
                       ),
                     ),
                   ],
@@ -106,7 +161,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         if (value == null || value.isEmpty) return "change_password.required_field".tr();
         if (!confirm && value.length < 6) return "change_password.min_length".tr();
         if (confirm && value != _newPasswordController.text) return "change_password.password_mismatch".tr();
-
         return null;
       },
       decoration: InputDecoration(

@@ -38,7 +38,7 @@
     "faq": "FAQ",
     "faq_desc": "Trouvez des réponses à vos questions",
     "links": "Liens",
-    "facebook": "Académie Nationale de la Sécurité Routière et de la Sécurité",
+    "facebook": "Académie Nationale de la Sécurité Routière",
     "facebook_desc": "Rejoignez notre communauté sur Facebook"
   },
   "edit_profile": {
@@ -55,7 +55,9 @@
     "choose_gallery": "Choisir depuis la galerie",
     "take_photo": "Prendre une photo",
     "required_field": "Ce champ est obligatoire"
-  },"change_password": {
+  },
+
+  "change_password": {
   "title": "Modifier le mot de passe",
   "current_password": "Mot de passe actuel",
   "new_password": "Nouveau mot de passe",
@@ -64,7 +66,9 @@
   "success_message": "Mot de passe modifié avec succès",
   "required_field": "Champ obligatoire",
   "min_length": "Minimum 6 caractères",
-  "password_mismatch": "Les mots de passe ne correspondent pas"
+  "password_mismatch": "Les mots de passe ne correspondent pas",
+  "wrong_current_password": "Mot de passe actuel incorrect",
+  "unexpected_error": "Une erreur inattendue s'est produite"
 },
 
 

@@ -154,7 +154,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       SizedBox(height: 20),
                       _buildTextField("edit_profile.phone_number".tr(), _telephoneController, keyboardType: TextInputType.phone),
                       SizedBox(height: 20),
-                      // ✅ Email is now READ-ONLY
+                      // Email is READ-ONLY
                       _buildTextField("edit_profile.email".tr(), _emailController, keyboardType: TextInputType.emailAddress, isReadOnly: true),
                       SizedBox(height: 30),
                       _buildSaveButton(),

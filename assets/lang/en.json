@@ -66,7 +66,9 @@
     "success_message": "Password changed successfully",
     "required_field": "This field is required",
     "min_length": "At least 6 characters",
-    "password_mismatch": "Passwords do not match"
+    "password_mismatch": "Passwords do not match",
+    "wrong_current_password": "Incorrect current password",
+    "unexpected_error": "An unexpected error occurred"
   },
   "about_page": {
     "title": "About",

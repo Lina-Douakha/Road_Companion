@@ -53,25 +53,49 @@ class AuthService {
   }
 
   // Google Sign-In
-  Future<UserCredential?> signInWithGoogle() async {
-    try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return null; // User canceled login
+    Future<UserCredential?> signInWithGoogle() async {
+      try {
+        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+        if (googleUser == null) return null; // User canceled login
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final AuthCredential credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
 
-      UserCredential userCredential = await _auth.signInWithCredential(credential);
-      await saveLoginState(userCredential.user!); // Save login state after Google sign-in
-      return userCredential;
-    } catch (e) {
-      print("Google Sign-In failed: $e");
-      return null;
+        UserCredential userCredential = await _auth.signInWithCredential(credential);
+        User? user = userCredential.user;
+
+        if (user != null) {
+          // Check if the user already has a Firestore document
+          final userDoc = await _firestore.collection('users').doc(user.uid).get();
+
+          if (!userDoc.exists) {
+            // Create a new Firestore document for the user
+            await _firestore.collection('users').doc(user.uid).set({
+              'UserID': user.uid,
+              'Email': user.email,
+              'Name': user.displayName ?? 'No Name',
+              'Phone': '', // Default empty phone number
+              'Role': 'User', // Default role
+            });
+
+            print("New user profile created in Firestore for Google sign-in.");
+          } else {
+            print("User profile already exists in Firestore.");
+          }
+
+          await saveLoginState(user); // Save login state after Google sign-in
+        }
+
+        return userCredential;
+      } catch (e) {
+        print("Google Sign-In failed: $e");
+        return null;
+      }
     }
-  }
+
 
   // Register User
   Future<String?> registerUser(String email, String password, String name, String phone, String role, BuildContext context) async {
