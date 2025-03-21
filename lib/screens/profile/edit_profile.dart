@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EditProfilePage extends StatefulWidget {
   @override
@@ -11,14 +12,37 @@ class EditProfilePage extends StatefulWidget {
 
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
-
   final TextEditingController _nomController = TextEditingController();
   final TextEditingController _telephoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
 
-  String _selectedGender = "edit_profile.female".tr();
-
+  bool _isEdited = false;
   File? _imageFile;
+  String? _currentUserId;
+  Map<String, dynamic>? _userData;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _currentUserId = user.uid;
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (userDoc.exists) {
+        setState(() {
+          _userData = userDoc.data() as Map<String, dynamic>;
+          _nomController.text = _userData?['Name'] ?? "";
+          _telephoneController.text = _userData?['Phone'] ?? "";
+          _emailController.text = _userData?['Email'] ?? "";
+        });
+      }
+    }
+  }
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -30,6 +54,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (pickedFile != null) {
       setState(() {
         _imageFile = File(pickedFile.path);
+        _isEdited = true;
       });
     }
   }
@@ -40,7 +65,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ListTile(
           leading: Icon(Icons.photo_library),
           title: Text("edit_profile.choose_gallery".tr()),
-
           onTap: () async {
             Navigator.pop(context, await picker.pickImage(source: ImageSource.gallery));
           },
@@ -48,7 +72,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ListTile(
           leading: Icon(Icons.camera_alt),
           title: Text("edit_profile.take_photo".tr()),
-
           onTap: () async {
             Navigator.pop(context, await picker.pickImage(source: ImageSource.camera));
           },
@@ -57,54 +80,89 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
+  void _onFieldChanged() {
+    setState(() {
+      _isEdited = true;
+    });
+  }
+
+  Future<void> _saveChanges() async {
+    if (_currentUserId == null) return;
+
+    Map<String, dynamic> updatedData = {};
+
+    if (_nomController.text.isNotEmpty && _nomController.text != _userData?['Name']) {
+      updatedData['Name'] = _nomController.text;
+    }
+    if (_telephoneController.text.isNotEmpty && _telephoneController.text != _userData?['Phone']) {
+      updatedData['Phone'] = _telephoneController.text;
+    }
+
+    if (updatedData.isNotEmpty) {
+      await FirebaseFirestore.instance.collection('users').doc(_currentUserId).update(updatedData);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("edit_profile.success_message".tr()),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.pop(context, true); // Return true to indicate changes were made
+    } else {
+      Navigator.pop(context, false); // Return false if no changes were made
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(height: 50),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_back, color: Color(0xFF1B9169)),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    SizedBox(width: 10),
-                    Flexible(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          "edit_profile.title".tr(),
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1B9169)),
-                        ),
+      backgroundColor: Colors.white,
+      body: _userData == null
+          ? Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(height: 50),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.arrow_back, color: Color(0xFF1B9169)),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          SizedBox(width: 10),
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                "edit_profile.title".tr(),
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1B9169)),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                      SizedBox(height: 30),
+                      _buildProfilePicture(),
+                      SizedBox(height: 30),
+                      _buildTextField("edit_profile.name".tr(), _nomController),
+                      SizedBox(height: 20),
+                      _buildTextField("edit_profile.phone_number".tr(), _telephoneController, keyboardType: TextInputType.phone),
+                      SizedBox(height: 20),
+                      // ✅ Email is now READ-ONLY
+                      _buildTextField("edit_profile.email".tr(), _emailController, keyboardType: TextInputType.emailAddress, isReadOnly: true),
+                      SizedBox(height: 30),
+                      _buildSaveButton(),
+                    ],
+                  ),
                 ),
-                SizedBox(height: 30),
-                _buildProfilePicture(),
-                SizedBox(height: 30),
-                _buildTextField("edit_profile.name".tr(), _nomController),
-                SizedBox(height: 20),
-                _buildTextField("edit_profile.phone_number".tr(), _telephoneController, keyboardType: TextInputType.phone),
-                SizedBox(height: 20),
-                _buildTextField("edit_profile.email".tr(), _emailController, keyboardType: TextInputType.emailAddress),
-                SizedBox(height: 20),
-                _buildDropdownField("edit_profile.gender".tr(), ["edit_profile.male".tr(), "edit_profile.female".tr()]),
-
-                SizedBox(height: 30),
-                _buildSaveButton(),
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -134,72 +192,65 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller,
-      {TextInputType keyboardType = TextInputType.text}) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    TextInputType keyboardType = TextInputType.text,
+    bool isReadOnly = false,
+  }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-        focusedBorder: OutlineInputBorder(
-
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Color(0xFF1B9169), width: 2),
-        ),
+      readOnly: isReadOnly,
+      onChanged: isReadOnly ? null : (value) => _onFieldChanged(),
+      style: TextStyle(
+        color: isReadOnly ? Colors.grey[600] : Colors.black, // ✅ Black for editable fields, gray for read-only
       ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return "edit_profile.required_field".tr();
-
-        }
-        return null;
-      },
-    );
-  }
-
-  Widget _buildDropdownField(String label, List<String> options) {
-    return DropdownButtonFormField<String>(
-      value: _selectedGender,
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Color(0xFF1B9169), width: 2),
+     decoration: InputDecoration(
+           labelText: label,
+           labelStyle: TextStyle(
+             color: Colors.black, // ✅ Label text always black
+           ),
+        suffixIcon: isReadOnly ? null : Icon(Icons.edit, color: Color(0xFF1B9169)), // ✅ No edit icon for email
+        border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: isReadOnly ? Colors.black : Colors.black, width: 1), //Light gray border for read-only
         ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: isReadOnly ? Colors.black! : Colors.black, width: 1), // ✅ Light gray for read-only
+        ),
+        focusedBorder: isReadOnly
+            ? OutlineInputBorder( // No focus effect for read-only fields
+               borderRadius: BorderRadius.circular(10),
+               borderSide: BorderSide(color: Colors.black!, width: 1),
+             )
+            : OutlineInputBorder(
+               borderRadius: BorderRadius.circular(10),
+               borderSide: BorderSide(color: Color(0xFF1B9169), width: 2),
+              ),
+        filled: isReadOnly,
+        fillColor: isReadOnly ? Colors.white : Colors.white,
       ),
-      items: options.map((String gender) {
-        return DropdownMenuItem(value: gender, child: Text(gender));
-      }).toList(),
-      onChanged: (String? newValue) {
-        setState(() {
-          _selectedGender = newValue!;
-        });
-      },
     );
   }
 
   Widget _buildSaveButton() {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.green,
+        backgroundColor: _isEdited ? Colors.green : Colors.grey,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
       ),
-      onPressed: () {
-        if (_formKey.currentState!.validate()) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("edit_profile.success_message".tr()),
-              backgroundColor: Colors.green,
-            ),
-
-          );
-        }
-      },
+      onPressed: _isEdited ? _saveChanges : null,
       child: Text("edit_profile.save".tr(), style: TextStyle(color: Colors.white, fontSize: 16)),
-
     );
   }
 }
+
+
+
+
+
+
+

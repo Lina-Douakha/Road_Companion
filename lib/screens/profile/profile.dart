@@ -35,34 +35,34 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   // Fetch user data from Firestore
-  Future<void> _fetchUserData() async {
-    try {
-      User? user = FirebaseAuth.instance.currentUser; // Get the current user
-
-      if (user != null) {
-        DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
-        if (userDoc.exists) {
-          setState(() {
-            _userData = userDoc.data() as Map<String, dynamic>; // Store user data
-            _isLoading = false; // Data fetched, stop loading
-          });
-        } else {
-          setState(() {
-            _isLoading = false; // No data found, stop loading
-          });
-        }
-      }
-    } catch (e) {
-      print("Error fetching user data: $e");
-      setState(() {
-        _isLoading = false; // Stop loading on error
-      });
-    }
-  }
+ Future<void> _fetchUserData() async {
+   try {
+     User? user = FirebaseAuth.instance.currentUser;
+     if (user != null) {
+       DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+       if (userDoc.exists) {
+         setState(() {
+           _userData = userDoc.data() as Map<String, dynamic>;
+           _isLoading = false;
+         });
+       } else {
+         setState(() {
+           _isLoading = false;
+         });
+       }
+     }
+   } catch (e) {
+     print("Error fetching user data: $e");
+     setState(() {
+       _isLoading = false;
+     });
+   }
+ }
 
   void _showLanguageSelection(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -113,6 +113,10 @@ class _ProfilePageState extends State<ProfilePage> {
               ? Color(0xFFECFDF3)
               : Color(0xFFF3F5F7),
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: Colors.grey[300]!, // Border color
+              width: 1, // Border width
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -128,7 +132,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             if (context.locale.languageCode == langCode)
-              Icon(Icons.check, color: Colors.black),
+              Icon(Icons.check, color: Color(0xFF00D47E)),
           ],
         ),
       ),
@@ -150,38 +154,38 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-@override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          // Background with Curved Grey Section
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: ClipPath(
-              clipper: CurvedBackgroundClipper(),
-              child: Container(
-                height: MediaQuery.of(context).size.height * 0.3,
-                color: Color(0xFFF1F5F9),
+      body: SingleChildScrollView(
+        child: Stack(
+          children: [
+            // Background with Curved Grey Section
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: ClipPath(
+                clipper: CurvedBackgroundClipper(),
+                child: Container(
+                  height: MediaQuery.of(context).size.height * 0.3,
+                  color: Color(0xFFF1F5F9),
+                ),
               ),
             ),
-          ),
 
-          // Content (unchanged)
-          Column(
-            children: [
-              SizedBox(height: 40),
-              _buildTopIcons(),
-              _buildProfileHeader(),
-              Expanded(
-                child: _buildSettingsOptions(),
-              ),
-            ],
-          ),
-        ],
+            // Content (unchanged)
+            Column(
+              children: [
+                SizedBox(height: 40),
+                _buildTopIcons(),
+                _buildProfileHeader(),
+                _buildSettingsOptions(),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -205,17 +209,17 @@ class _ProfilePageState extends State<ProfilePage> {
           radius: 50,
           backgroundImage: AssetImage('assets/images/photo_de_profile.png'),
         ),
-          SizedBox(height: 10),
-          Text(
-            _userData!['Name'] ?? "profile.no_name".tr(), // Display user name
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 5),
-          Text(
-            "${_userData!['Email'] ?? "profile.no_email".tr()} | ${_userData!['Phone'] ?? "profile.no_phone".tr()}", // Display email and phone
-            style: TextStyle(color: Colors.grey[700]),
-          ),
-          SizedBox(height: 10),
+        SizedBox(height: 10),
+        Text(
+          _userData!['Name'] ?? "profile.no_name".tr(), // Display user name
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 5),
+        Text(
+          "${_userData!['Email'] ?? "profile.no_email".tr()} | ${_userData!['Phone'] ?? "profile.no_phone".tr()}", // Display email and phone
+          style: TextStyle(color: Colors.grey[700]),
+        ),
+        SizedBox(height: 10),
       ],
     );
   }
@@ -226,11 +230,17 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         children: [
           _buildSettingsCard([
-            _buildListTile(Icons.edit, "profile.edit".tr(), onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => EditProfilePage()),
-              );
+            _buildListTile(Icons.edit, "profile.edit".tr(), onTap: () async {
+               final bool? isUpdated = await Navigator.push(
+                 context,
+                 MaterialPageRoute(builder: (context) => EditProfilePage()),
+               );
+
+               if (isUpdated == true) { // Refresh data instantly when changes are made
+                  setState(() {
+                    _fetchUserData();
+                  });
+               }
             }),
             ValueListenableBuilder<bool>(
               valueListenable: notificationsEnabled,
@@ -301,8 +311,13 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildSettingsCard(List<Widget> children) {
     return Card(
       color: Color(0xFFF1F5F9),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Column(children: children),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min, // Reduces the height of the Column
+        children: children,
+      ),
     );
   }
 
@@ -314,7 +329,6 @@ class _ProfilePageState extends State<ProfilePage> {
         style: TextStyle(
           fontSize: 14, // Reduced text size
           fontWeight: FontWeight.w500, // Medium font weight
-          color: Colors.black87, // Custom text color
         ),
       ),
       trailing: value != null
@@ -328,6 +342,8 @@ class _ProfilePageState extends State<ProfilePage> {
             )
           : null,
       onTap: onTap,
+      dense: true, // Makes the ListTile more compact
+      contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0), // Reduces internal padding
     );
   }
 
@@ -337,8 +353,8 @@ class _ProfilePageState extends State<ProfilePage> {
       title: Text(
         title,
         style: TextStyle(
-          fontSize: 14, // Set the desired text size
-          fontWeight: FontWeight.w500, // Optional: Adjust font weight
+          fontSize: 14, // Reduced text size
+          fontWeight: FontWeight.w500, // Medium font weight
         ),
       ),
       trailing: Switch(
@@ -346,6 +362,8 @@ class _ProfilePageState extends State<ProfilePage> {
         onChanged: onChanged,
         activeColor: Colors.green,
       ),
+      dense: true, // Makes the ListTile more compact
+      contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0), // Reduces internal padding
     );
   }
 
@@ -359,12 +377,16 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: Text("profile.logout_confirmation_title".tr()),
           content: Text("profile.logout_confirmation_message".tr()),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text("profile.logout_cancel".tr()),
+              child: Text(
+                "profile.logout_cancel".tr(),
+                style: TextStyle(color: Color(0xFF0D92F4)),
+              ),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
