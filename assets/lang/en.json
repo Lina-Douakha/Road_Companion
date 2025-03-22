@@ -30,7 +30,10 @@
     "cancel": "Cancel",
     "contact_us": "Contact Us",
     "no_user_found": "No user found",
+    "password_required": "The password is required to continue",
     "wrong_password": "The password is either incorrect or missing. Please check and try again",
+    "delete_error": "An error occurred while deleting. Please try again later",
+    "reauthenticate": "This action requires a recent login for security reasons. Please log in again and try",
     "title": "Privacy Policy",
     "terms_and_conditions": "Terms and Conditions"
   },
