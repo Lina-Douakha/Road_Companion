@@ -25,8 +25,12 @@
   "privacy": {
     "delete_confirmation_title": "Do you really want to delete your account?",
     "delete_confirmation_message": "This action will permanently delete your account and all related data.",
+    "enter_password": "Enter your password",
     "delete_account": "Delete Account",
+    "cancel": "Cancel",
     "contact_us": "Contact Us",
+    "no_user_found": "No user found",
+    "wrong_password": "The password is either incorrect or missing. Please check and try again",
     "title": "Privacy Policy",
     "terms_and_conditions": "Terms and Conditions"
   },

@@ -264,6 +264,9 @@ class _ProfilePageState extends State<ProfilePage> {
               },
             ),
           ]),
+
+           SizedBox(height: 16),
+
           _buildSettingsCard([
             _buildListTile(Icons.lock, "profile.security".tr(), onTap: () {
               Navigator.push(
@@ -273,6 +276,9 @@ class _ProfilePageState extends State<ProfilePage> {
             }),
             _buildListTile(Icons.send, "profile.send_feedback".tr()),
           ]),
+
+          SizedBox(height: 16),
+
           _buildSettingsCard([
             _buildListTile(Icons.help, "profile.help".tr(), onTap: () {
               Navigator.push(
@@ -293,6 +299,9 @@ class _ProfilePageState extends State<ProfilePage> {
               );
             }),
           ]),
+
+          SizedBox(height: 16),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.start, // Alignement à droite
             children: [

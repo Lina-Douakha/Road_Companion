@@ -49,7 +49,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           ),
         );
 
-        // ✅ **Navigate back to Profile Page**
+        // **Navigate back to Profile Page**
         Navigator.pop(context); // Return to the previous page (Profile Page)
 
       } on FirebaseAuthException catch (e) {

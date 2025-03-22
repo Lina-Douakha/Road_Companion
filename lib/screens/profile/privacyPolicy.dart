@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:road_companion/screens/authenticate/login.dart';
+import 'package:road_companion/services/auth_service.dart';
 import 'package:road_companion/screens/authenticate/splash_screen.dart';
 
 class PrivacyPolicyPage extends StatelessWidget {
@@ -10,6 +12,7 @@ class PrivacyPolicyPage extends StatelessWidget {
   void _showDeleteConfirmation(BuildContext context) {
     TextEditingController passwordController = TextEditingController();
     bool isLoading = false;
+    String? errorMessage; // To store error messages
 
     showModalBottomSheet(
       context: context,
@@ -18,9 +21,13 @@ class PrivacyPolicyPage extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return StatefulBuilder( // To update UI inside modal
+        return StatefulBuilder(
           builder: (context, setState) {
-            return Padding(
+            return Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFFF5F5F5),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
               padding: EdgeInsets.only(
                 left: 16,
                 right: 16,
@@ -47,11 +54,29 @@ class PrivacyPolicyPage extends StatelessWidget {
                   TextField(
                     controller: passwordController,
                     obscureText: true,
+                    cursorColor: Colors.black,
+                    style: const TextStyle(color: Colors.black),
                     decoration: InputDecoration(
                       labelText: "privacy.enter_password".tr(),
+                      labelStyle: const TextStyle(color: Colors.black),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: Colors.black),
+                      ),
                     ),
+                    selectionControls: MaterialTextSelectionControls(),
                   ),
+
+                  // Display error message if any
+                  if (errorMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Text(
+                        errorMessage!,
+                        style: const TextStyle(color: Colors.red, fontSize: 14),
+                      ),
+                    ),
 
                   const SizedBox(height: 20),
 
@@ -59,16 +84,23 @@ class PrivacyPolicyPage extends StatelessWidget {
                     onPressed: isLoading
                         ? null
                         : () async {
-                            setState(() => isLoading = true);
+                            setState(() {
+                              isLoading = true;
+                              errorMessage = null; // Reset error message
+                            });
                             bool success = await _deleteAccount(context, passwordController.text);
                             setState(() => isLoading = false);
 
-                            if (success) {
+                            if (!success) {
+                              setState(() {
+                                errorMessage = "privacy.wrong_password".tr(); // Set error message
+                              });
+                            } else {
                               Navigator.pop(context); // Close modal only if successful
                             }
                           },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF00D47E),
+                      backgroundColor: const Color(0xFFF44336),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       minimumSize: const Size(double.infinity, 48),
                     ),
@@ -109,6 +141,7 @@ class PrivacyPolicyPage extends StatelessWidget {
     }
 
     try {
+      final AuthService _authService = AuthService(); // Create an instance of AuthService
       // Step 1: Re-authenticate the user
       final AuthCredential credential = EmailAuthProvider.credential(
         email: user.email!,
@@ -126,30 +159,20 @@ class PrivacyPolicyPage extends StatelessWidget {
       debugPrint("User deleted from Firebase Auth!");
 
       // Step 4: Force sign out
-      await FirebaseAuth.instance.signOut();
-      debugPrint("User signed out!");
+      await _authService.signOut();
 
-      // Step 5: Verify that the user is signed out
-      if (FirebaseAuth.instance.currentUser == null) {
-        debugPrint("User is successfully signed out.");
-      } else {
-        debugPrint("User is still signed in!");
-      }
-
-      // Step 6: Close the modal bottom sheet
-      Navigator.pop(context);
-
-      // Step 7: Clear the navigation stack and navigate to the splash screen
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => SplashScreen()),
-        (route) => false, // Remove all routes
-      );
+      FirebaseAuth.instance.signOut().then((_) {
+        debugPrint("User signed out!");
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => SplashScreen()),
+          (route) => false, // This clears all previous routes
+        );
+      });
 
       return true;
-
     } on FirebaseAuthException catch (e) {
-      debugPrint("❌ Error deleting account: ${e.code}");
+      debugPrint("Error deleting account: ${e.code}");
 
       String errorMessage = "privacy.delete_error".tr();
       if (e.code == 'wrong-password') {
@@ -165,7 +188,7 @@ class PrivacyPolicyPage extends StatelessWidget {
         ),
       );
 
-      return false; // Return false so the modal doesn't close
+      return false;
     }
   }
 
@@ -201,7 +224,7 @@ class PrivacyPolicyPage extends StatelessWidget {
     );
   }
 
-  /// 🟢 Custom Header (Back Button + Title)
+  /// Custom Header (Back Button + Title)
   Widget _buildCustomHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 70.0, left: 16.0, right: 16.0, bottom: 20.0),
@@ -228,7 +251,7 @@ class PrivacyPolicyPage extends StatelessWidget {
     );
   }
 
-  /// 🟢 Option Tiles (Terms & Delete Account)
+  /// Option Tiles (Terms & Delete Account)
   Widget _buildOptionTile({required IconData icon, required String text, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
@@ -256,5 +279,6 @@ class PrivacyPolicyPage extends StatelessWidget {
     );
   }
 }
+
 
 

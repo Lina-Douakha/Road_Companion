@@ -25,8 +25,12 @@
   "privacy": {
     "delete_confirmation_title": "هل تريد حقًا حذف حسابك؟",
     "delete_confirmation_message": "سيؤدي هذا الإجراء إلى حذف حسابك وجميع البيانات المتعلقة به نهائيًا.",
+    "enter_password": "أدخل كلمة المرور",
     "delete_account": "حذف الحساب",
+    "cancel": "إلغاء",
     "contact_us": "اتصل بنا",
+    "no_user_found": "لم يتم العثور على مستخدم",
+    "wrong_password": "كلمة المرور غير صحيحة أو مفقودة. يرجى التحقق والمحاولة مرة أخرى",
     "title": "سياسة الخصوصية",
     "terms_and_conditions": "الشروط والأحكام"
   },
