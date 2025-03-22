@@ -14,6 +14,9 @@ class PrivacyPolicyPage extends StatelessWidget {
     bool isLoading = false;
     String? errorMessage; // To store error messages
 
+    final user = FirebaseAuth.instance.currentUser;
+    final isGoogleUser = user?.providerData.any((userInfo) => userInfo.providerId == 'google.com') ?? false;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true, // Allows keyboard to push UI up
@@ -50,23 +53,24 @@ class PrivacyPolicyPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // Password Input
-                  TextField(
-                    controller: passwordController,
-                    obscureText: true,
-                    cursorColor: Colors.black,
-                    style: const TextStyle(color: Colors.black),
-                    decoration: InputDecoration(
-                      labelText: "privacy.enter_password".tr(),
-                      labelStyle: const TextStyle(color: Colors.black),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Colors.black),
+                  // Password Input (only for email/password users)
+                  if (!isGoogleUser)
+                    TextField(
+                      controller: passwordController,
+                      obscureText: true,
+                      cursorColor: Colors.black,
+                      style: const TextStyle(color: Colors.black),
+                      decoration: InputDecoration(
+                        labelText: "privacy.enter_password".tr(),
+                        labelStyle: const TextStyle(color: Colors.black),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: Colors.black),
+                        ),
                       ),
+                      selectionControls: MaterialTextSelectionControls(),
                     ),
-                    selectionControls: MaterialTextSelectionControls(),
-                  ),
 
                   // Display error message if any
                   if (errorMessage != null)
@@ -88,12 +92,14 @@ class PrivacyPolicyPage extends StatelessWidget {
                               isLoading = true;
                               errorMessage = null; // Reset error message
                             });
-                            bool success = await _deleteAccount(context, passwordController.text);
+                            bool success = await _deleteAccount(context, isGoogleUser ? null : passwordController.text);
                             setState(() => isLoading = false);
 
                             if (!success) {
                               setState(() {
-                                errorMessage = "privacy.wrong_password".tr(); // Set error message
+                                errorMessage = isGoogleUser
+                                    ? "privacy.delete_error".tr()
+                                    : "privacy.wrong_password".tr(); // Set error message
                               });
                             } else {
                               Navigator.pop(context); // Close modal only if successful
@@ -127,7 +133,7 @@ class PrivacyPolicyPage extends StatelessWidget {
   }
 
   /// Function to Delete Account (Handles Wrong Password & Logout)
-  Future<bool> _deleteAccount(BuildContext context, String password) async {
+  Future<bool> _deleteAccount(BuildContext context, String? password) async {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
@@ -142,13 +148,32 @@ class PrivacyPolicyPage extends StatelessWidget {
 
     try {
       final AuthService _authService = AuthService(); // Create an instance of AuthService
-      // Step 1: Re-authenticate the user
-      final AuthCredential credential = EmailAuthProvider.credential(
-        email: user.email!,
-        password: password,
-      );
-      await user.reauthenticateWithCredential(credential);
-      debugPrint("User re-authenticated!");
+
+      // Check if the user signed in with Google
+      final isGoogleUser = user.providerData.any((userInfo) => userInfo.providerId == 'google.com');
+
+      if (isGoogleUser) {
+        // Skip password verification for Google users
+        debugPrint("User signed in with Google. Skipping password verification.");
+      } else {
+        // For email/password users, re-authenticate with the provided password
+        if (password == null || password.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("privacy.password_required".tr()),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return false;
+        }
+
+        final AuthCredential credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: password,
+        );
+        await user.reauthenticateWithCredential(credential);
+        debugPrint("User re-authenticated!");
+      }
 
       // Step 2: Delete from Firestore
       await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();

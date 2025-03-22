@@ -7,10 +7,10 @@ import 'package:road_companion/screens/profile/about.dart';
 import 'package:road_companion/screens/profile/help.dart';
 import 'package:road_companion/screens/profile/privacyPolicy.dart';
 import 'package:road_companion/screens/profile/ChangePasswordPage.dart';
-import 'package:road_companion/services/auth_service.dart'; // Import AuthService
-import 'package:road_companion/screens/authenticate/login.dart'; // Import LoginScreen
-import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
-import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+import 'package:road_companion/services/auth_service.dart';
+import 'package:road_companion/screens/authenticate/login.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfilePage extends StatefulWidget {
   final int selectedIndex;
@@ -24,40 +24,40 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final ValueNotifier<String> selectedLanguage = ValueNotifier<String>("Français");
   final ValueNotifier<bool> notificationsEnabled = ValueNotifier<bool>(true);
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance; // Firestore instance
-  Map<String, dynamic>? _userData; // To store user data
-  bool _isLoading = true; // To handle loading state
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  Map<String, dynamic>? _userData;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchUserData(); // Fetch user data when the page loads
+    _fetchUserData();
   }
 
   // Fetch user data from Firestore
- Future<void> _fetchUserData() async {
-   try {
-     User? user = FirebaseAuth.instance.currentUser;
-     if (user != null) {
-       DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
-       if (userDoc.exists) {
-         setState(() {
-           _userData = userDoc.data() as Map<String, dynamic>;
-           _isLoading = false;
-         });
-       } else {
-         setState(() {
-           _isLoading = false;
-         });
-       }
-     }
-   } catch (e) {
-     print("Error fetching user data: $e");
-     setState(() {
-       _isLoading = false;
-     });
-   }
- }
+  Future<void> _fetchUserData() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+          setState(() {
+            _userData = userDoc.data() as Map<String, dynamic>;
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      print("Error fetching user data: $e");
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   void _showLanguageSelection(BuildContext context) {
     showModalBottomSheet(
@@ -76,7 +76,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "profile.language".tr(), // Utiliser la clé JSON
+                    "profile.language".tr(),
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   IconButton(
@@ -101,7 +101,7 @@ class _ProfilePageState extends State<ProfilePage> {
       onTap: () {
         context.setLocale(Locale(langCode));
         setState(() {});
-        debugPrint("Langue actuelle: ${context.locale.languageCode}");  // Vérification
+        debugPrint("Langue actuelle: ${context.locale.languageCode}");
         Navigator.pop(context);
       },
       child: Container(
@@ -114,15 +114,15 @@ class _ProfilePageState extends State<ProfilePage> {
               : Color(0xFFF3F5F7),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-              color: Colors.grey[300]!, // Border color
-              width: 1, // Border width
+            color: Colors.grey[300]!,
+            width: 1,
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "language_options.$langCode".tr(), // Utiliser la clé JSON
+              "language_options.$langCode".tr(),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -175,7 +175,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
 
-            // Content (unchanged)
+            // Content
             Column(
               children: [
                 SizedBox(height: 40),
@@ -207,7 +207,28 @@ class _ProfilePageState extends State<ProfilePage> {
       children: [
         CircleAvatar(
           radius: 50,
-          backgroundImage: AssetImage('assets/images/photo_de_profile.png'),
+          backgroundImage: _userData?['ProfilePhoto'] != null
+              ? AssetImage(_userData!['ProfilePhoto']) as ImageProvider
+              : null, // No default image
+          backgroundColor: _userData?['ProfilePhoto'] == null
+              ? Colors.grey[400] // Background color for fallback
+              : Colors.transparent, // Transparent if profile photo exists
+          child: _userData?['ProfilePhoto'] == null
+              ? (_userData?['Name'] != null && _userData!['Name'].isNotEmpty
+                  ? Text(
+                      _userData!['Name'][0].toUpperCase(), // First letter of the name
+                      style: TextStyle(
+                        fontSize: 50,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white, // Text color
+                      ),
+                    )
+                  : Icon(
+                      Icons.person, // Fallback icon
+                      size: 50,
+                      color: Colors.white,
+                    ))
+              : null, // No child if profile photo exists
         ),
         SizedBox(height: 10),
         Text(
@@ -231,16 +252,17 @@ class _ProfilePageState extends State<ProfilePage> {
         children: [
           _buildSettingsCard([
             _buildListTile(Icons.edit, "profile.edit".tr(), onTap: () async {
-               final bool? isUpdated = await Navigator.push(
-                 context,
-                 MaterialPageRoute(builder: (context) => EditProfilePage()),
-               );
+              final bool? isUpdated = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => EditProfilePage()),
+              );
 
-               if (isUpdated == true) { // Refresh data instantly when changes are made
-                  setState(() {
-                    _fetchUserData();
-                  });
-               }
+              if (isUpdated == true) {
+                // Refresh data instantly when changes are made
+                setState(() {
+                  _fetchUserData();
+                });
+              }
             }),
             ValueListenableBuilder<bool>(
               valueListenable: notificationsEnabled,
@@ -265,7 +287,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ]),
 
-           SizedBox(height: 16),
+          SizedBox(height: 16),
 
           _buildSettingsCard([
             _buildListTile(Icons.lock, "profile.security".tr(), onTap: () {
@@ -303,10 +325,10 @@ class _ProfilePageState extends State<ProfilePage> {
           SizedBox(height: 16),
 
           Row(
-            mainAxisAlignment: MainAxisAlignment.start, // Alignement à droite
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               TextButton.icon(
-                onPressed: _logout, // Call the logout function
+                onPressed: _logout,
                 icon: Icon(Icons.logout, color: Colors.red),
                 label: Text("profile.logout".tr(), style: TextStyle(color: Colors.red)),
               ),
@@ -324,7 +346,7 @@ class _ProfilePageState extends State<ProfilePage> {
         borderRadius: BorderRadius.circular(15),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min, // Reduces the height of the Column
+        mainAxisSize: MainAxisSize.min,
         children: children,
       ),
     );
@@ -336,8 +358,8 @@ class _ProfilePageState extends State<ProfilePage> {
       title: Text(
         title,
         style: TextStyle(
-          fontSize: 14, // Reduced text size
-          fontWeight: FontWeight.w500, // Medium font weight
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
         ),
       ),
       trailing: value != null
@@ -345,14 +367,14 @@ class _ProfilePageState extends State<ProfilePage> {
               value,
               style: TextStyle(
                 color: Colors.green,
-                fontSize: 14, // Reduced text size
-                fontWeight: FontWeight.w500, // Medium font weight
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
               ),
             )
           : null,
       onTap: onTap,
-      dense: true, // Makes the ListTile more compact
-      contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0), // Reduces internal padding
+      dense: true,
+      contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
     );
   }
 
@@ -362,8 +384,8 @@ class _ProfilePageState extends State<ProfilePage> {
       title: Text(
         title,
         style: TextStyle(
-          fontSize: 14, // Reduced text size
-          fontWeight: FontWeight.w500, // Medium font weight
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
         ),
       ),
       trailing: Switch(
@@ -371,15 +393,15 @@ class _ProfilePageState extends State<ProfilePage> {
         onChanged: onChanged,
         activeColor: Colors.green,
       ),
-      dense: true, // Makes the ListTile more compact
-      contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0), // Reduces internal padding
+      dense: true,
+      contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
     );
   }
 
   // ================== LOGOUT FUNCTIONALITY ==================
 
   Future<void> _logout() async {
-    final AuthService _authService = AuthService(); // Create an instance of AuthService
+    final AuthService _authService = AuthService();
 
     // Show a confirmation dialog before logging out
     bool confirmLogout = await showDialog(
@@ -424,10 +446,10 @@ class CurvedBackgroundClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     final Path path = Path();
-    path.lineTo(0, size.height * 0.7); // Move to the left bottom corner
+    path.lineTo(0, size.height * 0.7);
     path.quadraticBezierTo(
-      size.width / 2, size.height * 0.9, // Control point for the curve
-      size.width, size.height * 0.7, // End at bottom right
+      size.width / 2, size.height * 0.9,
+      size.width, size.height * 0.7,
     );
     path.lineTo(size.width, 0);
     path.close();

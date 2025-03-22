@@ -15,71 +15,51 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   bool _isObscured = true;
   bool _isLoading = false;
 
-  Future<void> _changePassword() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
-
-      final User? user = FirebaseAuth.instance.currentUser;
-
-      if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("change_password.no_user".tr())),
-        );
-        setState(() => _isLoading = false);
-        return;
-      }
-
-      try {
-        // Step 1: Reauthenticate the user with their current password
-        final AuthCredential credential = EmailAuthProvider.credential(
-          email: user.email!,
-          password: _currentPasswordController.text,
-        );
-
-        await user.reauthenticateWithCredential(credential);
-
-        // Step 2: Update the password
-        await user.updatePassword(_newPasswordController.text);
-
-        // Success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("change_password.success_message".tr()),
-            backgroundColor: Colors.green,
-          ),
-        );
-
-        // **Navigate back to Profile Page**
-        Navigator.pop(context); // Return to the previous page (Profile Page)
-
-      } on FirebaseAuthException catch (e) {
-        // Handle errors
-        String errorMessage;
-        switch (e.code) {
-          case "wrong-password":
-            errorMessage = "change_password.wrong_current_password".tr();
-            break;
-          case "weak-password":
-            errorMessage = "change_password.min_length".tr();
-            break;
-          default:
-            errorMessage = "change_password.error".tr();
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-          ),
-        );
-      } finally {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final User? user = FirebaseAuth.instance.currentUser;
+    final isGoogleUser = user?.providerData.any((userInfo) => userInfo.providerId == 'google.com') ?? false;
+
+    // If the user is a Google user, show a message
+    if (isGoogleUser) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.info_outline, color: Colors.red, size: 48),
+                const SizedBox(height: 20),
+                Text(
+                  "change_password.google_user_message".tr(),
+                  style: TextStyle(fontSize: 16, color: Colors.black87),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00D47E),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  child: Text(
+                    "change_password.go_back".tr(),
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // For email/password users, show the change password form
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -151,6 +131,69 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _changePassword() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() => _isLoading = true);
+
+      final User? user = FirebaseAuth.instance.currentUser;
+
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("change_password.no_user".tr())),
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      try {
+        // Step 1: Reauthenticate the user with their current password
+        final AuthCredential credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: _currentPasswordController.text,
+        );
+
+        await user.reauthenticateWithCredential(credential);
+
+        // Step 2: Update the password
+        await user.updatePassword(_newPasswordController.text);
+
+        // Success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("change_password.success_message".tr()),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Navigate back to Profile Page
+        Navigator.pop(context);
+
+      } on FirebaseAuthException catch (e) {
+        // Handle errors
+        String errorMessage;
+        switch (e.code) {
+          case "wrong-password":
+            errorMessage = "change_password.wrong_current_password".tr();
+            break;
+          case "weak-password":
+            errorMessage = "change_password.min_length".tr();
+            break;
+          default:
+            errorMessage = "change_password.error".tr();
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } finally {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   Widget _buildPasswordField(String label, TextEditingController controller, {bool confirm = false}) {

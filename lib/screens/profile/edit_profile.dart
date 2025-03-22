@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'profile_photo_selection.dart'; // Import the profile photo selection screen
 
 class EditProfilePage extends StatefulWidget {
   @override
@@ -17,9 +18,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController _emailController = TextEditingController();
 
   bool _isEdited = false;
-  File? _imageFile;
   String? _currentUserId;
   Map<String, dynamic>? _userData;
+  String? _selectedProfilePhoto; // Stores the selected profile photo
 
   @override
   void initState() {
@@ -39,45 +40,38 @@ class _EditProfilePageState extends State<EditProfilePage> {
           _nomController.text = _userData?['Name'] ?? "";
           _telephoneController.text = _userData?['Phone'] ?? "";
           _emailController.text = _userData?['Email'] ?? "";
+          _selectedProfilePhoto = _userData?['ProfilePhoto']; // Get the profile photo
         });
       }
     }
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await showModalBottomSheet<XFile?>(
-      context: context,
-      builder: (context) => _buildImagePickerOptions(picker),
+    final selectedPhoto = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ProfilePhotoSelectionPage()),
     );
 
-    if (pickedFile != null) {
+    if (selectedPhoto != null) {
       setState(() {
-        _imageFile = File(pickedFile.path);
+        _selectedProfilePhoto = selectedPhoto;
         _isEdited = true;
       });
     }
   }
 
-  Widget _buildImagePickerOptions(ImagePicker picker) {
-    return Wrap(
-      children: [
-        ListTile(
-          leading: Icon(Icons.photo_library),
-          title: Text("edit_profile.choose_gallery".tr()),
-          onTap: () async {
-            Navigator.pop(context, await picker.pickImage(source: ImageSource.gallery));
-          },
-        ),
-        ListTile(
-          leading: Icon(Icons.camera_alt),
-          title: Text("edit_profile.take_photo".tr()),
-          onTap: () async {
-            Navigator.pop(context, await picker.pickImage(source: ImageSource.camera));
-          },
-        ),
-      ],
-    );
+  Future<void> _deleteProfilePhoto() async {
+    if (_currentUserId == null) return;
+
+    setState(() {
+      _selectedProfilePhoto = null; // Remove the profile photo
+      _isEdited = true;
+    });
+
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(_currentUserId)
+        .update({'ProfilePhoto': null});
   }
 
   void _onFieldChanged() {
@@ -96,6 +90,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
     if (_telephoneController.text.isNotEmpty && _telephoneController.text != _userData?['Phone']) {
       updatedData['Phone'] = _telephoneController.text;
+    }
+    if (_selectedProfilePhoto != _userData?['ProfilePhoto']) {
+      updatedData['ProfilePhoto'] = _selectedProfilePhoto;
     }
 
     if (updatedData.isNotEmpty) {
@@ -149,12 +146,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ),
                       SizedBox(height: 30),
                       _buildProfilePicture(),
+                      SizedBox(height: 10),
+                      if (_selectedProfilePhoto != null)
+                        TextButton(
+                          onPressed: _deleteProfilePhoto,
+                          child: Text(
+                            "edit_profile.delete_photo".tr(),
+                            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                          ),
+                        ),
                       SizedBox(height: 30),
                       _buildTextField("edit_profile.name".tr(), _nomController),
                       SizedBox(height: 20),
                       _buildTextField("edit_profile.phone_number".tr(), _telephoneController, keyboardType: TextInputType.phone),
                       SizedBox(height: 20),
-                      // Email is READ-ONLY
                       _buildTextField("edit_profile.email".tr(), _emailController, keyboardType: TextInputType.emailAddress, isReadOnly: true),
                       SizedBox(height: 30),
                       _buildSaveButton(),
@@ -172,9 +177,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
       children: [
         CircleAvatar(
           radius: 50,
-          backgroundImage: _imageFile != null
-              ? FileImage(_imageFile!) as ImageProvider
-              : AssetImage('assets/images/photo_de_profile.png'),
+          backgroundImage: _selectedProfilePhoto != null
+              ? AssetImage(_selectedProfilePhoto!) as ImageProvider
+              : null,
+          backgroundColor: _userData?['ProfilePhoto'] == null ? Colors.grey[400] : Colors.transparent,
+          child: _userData?['ProfilePhoto'] == null
+              ? (_userData?['Name'] != null && _userData!['Name'].isNotEmpty
+                  ? Text(
+                      _userData!['Name'][0].toUpperCase(),
+                      style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold, color: Colors.white),
+                    )
+                  : Icon(Icons.person, size: 50, color: Colors.white))
+              : null,
         ),
         Positioned(
           right: 4,
@@ -203,34 +217,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
       keyboardType: keyboardType,
       readOnly: isReadOnly,
       onChanged: isReadOnly ? null : (value) => _onFieldChanged(),
-      style: TextStyle(
-        color: isReadOnly ? Colors.grey[600] : Colors.black, // ✅ Black for editable fields, gray for read-only
-      ),
-     decoration: InputDecoration(
-           labelText: label,
-           labelStyle: TextStyle(
-             color: Colors.black, // ✅ Label text always black
-           ),
-        suffixIcon: isReadOnly ? null : Icon(Icons.edit, color: Color(0xFF1B9169)), // ✅ No edit icon for email
+      style: TextStyle(color: isReadOnly ? Colors.grey[600] : Colors.black),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.black),
+        suffixIcon: isReadOnly ? null : Icon(Icons.edit, color: Color(0xFF1B9169)),
         border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: isReadOnly ? Colors.black : Colors.black, width: 1), //Light gray border for read-only
-        ),
-        enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: isReadOnly ? Colors.black! : Colors.black, width: 1), // ✅ Light gray for read-only
+          borderSide: BorderSide(color: Colors.black, width: 1),
         ),
-        focusedBorder: isReadOnly
-            ? OutlineInputBorder( // No focus effect for read-only fields
-               borderRadius: BorderRadius.circular(10),
-               borderSide: BorderSide(color: Colors.black!, width: 1),
-             )
-            : OutlineInputBorder(
-               borderRadius: BorderRadius.circular(10),
-               borderSide: BorderSide(color: Color(0xFF1B9169), width: 2),
-              ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Color(0xFF1B9169), width: 2),
+        ),
         filled: isReadOnly,
-        fillColor: isReadOnly ? Colors.white : Colors.white,
+        fillColor: Colors.white,
       ),
     );
   }
@@ -247,6 +248,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 }
+
 
 
 

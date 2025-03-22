@@ -59,7 +59,9 @@
     "profile_picture": "صورة الملف الشخصي",
     "choose_gallery": "اختيار من المعرض",
     "take_photo": "التقاط صورة",
-    "required_field": "هذا الحقل مطلوب"
+    "required_field": "هذا الحقل مطلوب",
+    "choose_photo": "تغيير صورة الملف الشخصي",
+    "delete_photo": "حذف صورة الملف الشخصي"
   },
   "change_password": {
     "title": "تغيير كلمة المرور",
@@ -72,7 +74,9 @@
     "min_length": "على الأقل 6 أحرف",
     "password_mismatch": "كلمات المرور غير متطابقة",
     "wrong_current_password": "كلمة المرور الحالية غير صحيحة",
-    "unexpected_error": "حدث خطأ غير متوقع"
+    "unexpected_error": "حدث خطأ غير متوقع",
+    "google_user_message": "لقد قمت بتسجيل الدخول باستخدام جوجل. لتغيير كلمة المرور، يرجى تحديثها من إعدادات حساب جوجل الخاص بك",
+    "go_back": "العودة"
   },
   "about_page": {
   "title": "حول التطبيق",
