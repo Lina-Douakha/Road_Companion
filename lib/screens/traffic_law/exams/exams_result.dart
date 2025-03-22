@@ -289,7 +289,7 @@ bool resultsFetched = false;
                 ),
               ),
 
-              // 🔹 Display single-answer and multiple-answer questions
+              // Display single-answer and multiple-answer questions
               SliverList(
                 delegate: SliverChildBuilderDelegate(
                       (context, index) {
@@ -298,13 +298,26 @@ bool resultsFetched = false;
                         ? multiAnswerPairs[index - answerPairs.length]
                         : answerPairs[index];
 
-                    List<String> selectedOptions = currentPair["SelectedOption"] != null
-                        ? currentPair["SelectedOption"]!.split(", ")
-                        : [];
+                    List<String> selectedOptions = [];
+                    List<String> correctOptions = [];
 
-                    List<String> correctOptions = currentPair["CorrectAnswer"] != null
-                        ? currentPair["CorrectAnswer"]!.split(", ")
-                        : [];
+                    if (isMultiAnswer) {
+                      selectedOptions = currentPair["SelectedOption"] != null
+                          ? currentPair["SelectedOption"]!.split(", ")
+                          : [];
+
+                      correctOptions = currentPair["CorrectAnswer"] != null
+                          ? currentPair["CorrectAnswer"]!.split(", ")
+                          : [];
+                    } else {
+                      selectedOptions = currentPair["SelectedOption"] != null
+                          ? [currentPair["SelectedOption"]!.trim()]
+                          : [];
+
+                      correctOptions = currentPair["CorrectAnswer"] != null
+                          ? [currentPair["CorrectAnswer"]!.trim()]
+                          : [];
+                    }
 
                     bool isFullyCorrect = Set<String>.from(selectedOptions)
                         .containsAll(correctOptions) &&
