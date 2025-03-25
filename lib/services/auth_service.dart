@@ -1,31 +1,56 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:road_companion/screens/authenticate/email_verification_screen.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Add this import
+import 'package:shared_preferences/shared_preferences.dart';// Add this import
+import 'package:firebase_core/firebase_core.dart';
+
+
+
+
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Sign in with Email and Password
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+
   Future<String?> signIn(String email, String password) async {
     try {
+      // Check if the email exists in Firestore
+      final userQuery = await _firestore.collection('users').where('Email', isEqualTo: email).get();
+
+      if (userQuery.docs.isEmpty) {
+        // Email not found in database
+        return "auth.user_not_found".tr();
+      }
+
+      // Try signing in with Firebase Auth
       UserCredential result = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      await saveLoginState(result.user!); // Save login state after successful login
-      return null; // Login successful, return null (no error)
+
+      return null; // Login successful
     } on FirebaseAuthException catch (e) {
-      return _getErrorMessageSignIn(e.code); // Return readable error message
+
+      if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        return "auth.wrong_password".tr();
+      } else if (e.code == 'invalid-email') {
+        return "auth.invalid_email".tr();
+      } else if (e.code == 'too-many-requests') {
+        return "login.error_too_many_attempts".tr();
+      } else {
+        return "auth.unexpected_error".tr();
+      }
     }
   }
+
+
+
+
 
   // Sign out
   Future<void> signOut() async {
@@ -35,22 +60,6 @@ class AuthService {
 
   // Get current user
   User? get currentUser => _auth.currentUser;
-
-  // Handle Login Errors
-  String _getErrorMessageSignIn(String errorCode) {
-    switch (errorCode) {
-      case "invalid-email":
-        return "auth.invalid_email".tr();
-      case "user-not-found":
-        return "auth.user_not_found".tr();
-      case "wrong-password":
-        return "auth.wrong_password".tr();
-      case "user-disabled":
-        return "auth.user_disabled".tr();
-      default:
-        return "auth.unexpected_error".tr();
-    }
-  }
 
   // Google Sign-In
     Future<UserCredential?> signInWithGoogle() async {
@@ -96,10 +105,37 @@ class AuthService {
       }
     }
 
-
-  // Register User
-  Future<String?> registerUser(String email, String password, String name, String phone, String role, BuildContext context) async {
+    // regiter a user
+  Future<String?> registerUser(
+      String email,
+      String password,
+      String name,
+      String phone,
+      String role,
+      BuildContext context) async {
     try {
+      // Step 1: Check if the email exists in 'users' (already verified users)
+      final userQuery = await _firestore.collection('users').where('Email', isEqualTo: email).get();
+      if (userQuery.docs.isNotEmpty) {
+        return "auth.email_already_in_use".tr();
+      }
+
+      // Step 2: Check if the email exists in 'unverified_users'
+      final pendingQuery = await _firestore.collection('unverified_users').where('Email', isEqualTo: email).get();
+      if (pendingQuery.docs.isNotEmpty) {
+        // Delete the unverified user from Firestore
+        for (var doc in pendingQuery.docs) {
+          await _firestore.collection('unverified_users').doc(doc.id).delete();
+        }
+
+        // Delete the unverified user from FirebaseAuth
+        User? existingUser = FirebaseAuth.instance.currentUser;
+        if (existingUser != null && !existingUser.emailVerified) {
+          await existingUser.delete();
+        }
+      }
+
+      // Step 3: Register the user in FirebaseAuth
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -107,37 +143,59 @@ class AuthService {
 
       User? user = userCredential.user;
       if (user != null) {
-        // Store user info in Firestore
-        await _firestore.collection('users').doc(user.uid).set({
-          'UserID': user.uid,
+        // Step 4: Store the user in 'unverified_users' (waiting for email verification)
+        await _firestore.collection('unverified_users').doc(user.uid).set({
           'Email': email,
           'Name': name,
           'Phone': phone,
-          'Role': role, // New field added
+          'Role': role,
+          'CreatedAt': FieldValue.serverTimestamp(),
         });
 
-        if (!user.emailVerified) {
-          await user.sendEmailVerification();
-          if (context.mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const EmailVerificationScreen()),
-            );
-          }
-        }
-      }
+        // Step 5: Send email verification
+        await user.sendEmailVerification();
 
-      return null; // Success
+        // Redirect to verification screen
+        if (context.mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EmailVerificationScreen(
+                name: name,
+                phone: phone,
+                role: role,
+              ),
+            ),
+          );
+        }
+
+        return null; // Successfully registered, waiting for verification
+      }
     } on FirebaseAuthException catch (e) {
       return _getErrorMessageRegister(e.code);
+    }
+    return "auth.unknown_error".tr(); // Unknown error
+  }
+
+  Future<void> moveUserToVerified(String userId) async {
+    try {
+      DocumentSnapshot userDoc = await _firestore.collection('unverified_users').doc(userId).get();
+      if (userDoc.exists) {
+        // Move to 'users' collection
+        await _firestore.collection('users').doc(userId).set(userDoc.data() as Map<String, dynamic>);
+
+        // Remove from 'unverified_users'
+        await _firestore.collection('unverified_users').doc(userId).delete();
+      }
+    } catch (e) {
+      print("Error moving user to verified: $e");
     }
   }
 
   // Handle Registration Errors
   String _getErrorMessageRegister(String errorCode) {
     switch (errorCode) {
-      case "email-already-in-use":
-        return "auth.email_already_in_use".tr();
+
       case "invalid-email":
         return "auth.invalid_email".tr();
       case "weak-password":
