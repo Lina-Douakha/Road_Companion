@@ -118,7 +118,16 @@
     "pic_selected": "تم تحديد الصورة",
     "select_a_type": "يرجى تحديد نوع الحادث",
     "from_gallery": "اختر من المعرض",
-    "take_a_pic": "التقط صورة"
+    "take_a_pic": "التقط صورة",
+    "historique_des_incidents": "سجل الحوادث",
+    "Close": "إغلاق",
+    "Total": "الإجمالي",
+    "Pending": "قيد الانتظار",
+    "Resolved": "تم الحل",
+    "Description": "الوصف",
+    "Reported-on": "تم الإبلاغ عنه في",
+    "Location": "الموقع",
+    "Attached Image": "صورة مرفقة"
   },
 
   "nav": {

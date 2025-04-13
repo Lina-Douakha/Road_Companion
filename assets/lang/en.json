@@ -109,7 +109,16 @@
     "pic_selected":"Picture selected ",
     "select_a_type":"Please select the type of the incident",
     "from_gallery": "Choose from gallery",
-    "take_a_pic": "Take a picture"
+    "take_a_pic": "Take a picture",
+    "historique_des_incidents": "Incident History",
+    "Close": "Close",
+    "Total": "Total",
+    "Pending": "Pending",
+    "Resolved": "Resolved",
+    "Description": "Description",
+    "Reported-on": "Reported on",
+    "Location": "Location",
+    "Attached Image": "Attached Image"
 
 
   },

@@ -111,7 +111,16 @@
     "pic_selected": "Image sélectionnée",
     "select_a_type": "Veuillez sélectionner le type de l'incident",
     "from_gallery": "Choisir depuis la galerie",
-    "take_a_pic": "Prendre une photo"
+    "take_a_pic": "Prendre une photo",
+    "historique_des_incidents": "Historique des Incidents",
+    "Close": "Fermer",
+    "Total": "Total",
+    "Pending": "En attente",
+    "Resolved": "Résolu",
+    "Description": "Description",
+    "Reported-on": "Signalé le",
+    "Location": "Localisation",
+    "Attached Image": "Image jointe"
   },
   "nav": {
     "map": "Carte",
