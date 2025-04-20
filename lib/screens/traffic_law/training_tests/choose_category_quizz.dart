@@ -5,6 +5,8 @@ import 'package:road_companion/Theming/font_weight_helper.dart';
 import 'package:road_companion/screens/traffic_law/training_tests/priority_questions.dart';
 import 'package:road_companion/screens/traffic_law/training_tests/roadsigns_questions.dart';
 import 'package:road_companion/screens/traffic_law/training_tests/Questions.dart';
+import 'package:easy_localization/easy_localization.dart';
+
 
 class ChooseCategoryQuizScreen extends StatelessWidget {
   const ChooseCategoryQuizScreen({super.key});
@@ -37,7 +39,7 @@ class ChooseCategoryQuizScreen extends StatelessWidget {
                     children: [
                       SizedBox(height: screenHeight * 0.07), // Dynamic space above title
                       Text(
-                        'Choisir une catégorie',
+                        tr("Categories.Choose"),
                         style: TextStyle(
                           fontSize: screenWidth * 0.07,
                           fontWeight: FontWeightHelper.bold,
@@ -48,7 +50,7 @@ class ChooseCategoryQuizScreen extends StatelessWidget {
                       Column(
                         children: [
                           CategoryCard(
-                            text: 'Priorité de passage',
+                            text: tr("Categories.Prio"),
                             imagePath: 'assets/images/priorités.png',
                             onTap: () {
                               Navigator.push(
@@ -59,7 +61,7 @@ class ChooseCategoryQuizScreen extends StatelessWidget {
                           ),
                           SizedBox(height: screenHeight * 0.03),
                           CategoryCard(
-                            text: 'Panneaux de signalisation',
+                            text: tr("Categories.Panels"),
                             imagePath: 'assets/images/panel.png',
                             onTap: () {
                               Navigator.push(
@@ -71,7 +73,7 @@ class ChooseCategoryQuizScreen extends StatelessWidget {
                           SizedBox(height: screenHeight * 0.03),
                           CategoryCard(
                             imagePath: 'assets/images/exam.png',
-                            text: 'Questions Théoriques',
+                            text: tr("Categories.Questions_theorique"),
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -163,5 +165,4 @@ class CategoryCard extends StatelessWidget {
     );
   }
 }
-
 

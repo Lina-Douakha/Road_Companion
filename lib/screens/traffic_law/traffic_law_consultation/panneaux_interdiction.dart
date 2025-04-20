@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:road_companion/widgets/navigation_bar_widget.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class PanneauxInterdictionScreen extends StatefulWidget {
   const PanneauxInterdictionScreen({super.key});
@@ -26,7 +27,7 @@ class _PanneauxInterdictionScreenState extends State<PanneauxInterdictionScreen>
   Future<void> _fetchPanneaux() async {
     try {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection("Traffic-Laws")
+          .collection(tr("database.courses"))
           .where("Category", isEqualTo: "panels")
           .where("LawType", isEqualTo: "interdiction")
           .get();
@@ -78,7 +79,7 @@ class _PanneauxInterdictionScreenState extends State<PanneauxInterdictionScreen>
               const SizedBox(height: 70),
               Center(
                 child: Text(
-                  "Panneaux d'interdiction",
+                  tr("Categories.Interdiction"),
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -106,7 +107,8 @@ class _PanneauxInterdictionScreenState extends State<PanneauxInterdictionScreen>
                   controller: _searchController,
                   onChanged: _filterPanneaux,
                   decoration: InputDecoration(
-                    hintText: "Rechercher...",
+                    hintText: "recherche".tr(),
+
                     prefixIcon: const Icon(Icons.search, color: Color(0xFF1B9169)),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),

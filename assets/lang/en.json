@@ -398,6 +398,59 @@
     "duration": "Duration",
     "selected_destination": "Selected destination"
   },
+  "recherche": "Recherche...",
+  "confirmer": "Confirmer",
+  "suivant": "Suivant",
+  "select_answer_error": "Veuillez sélectionner une réponse avant de confirmer.",
+
+  "home": {
+    "trafficlaws": "Code de la route",
+    "training": "Quiz",
+    "learning": "Apprentissage",
+    "exam": "Tests",
+    "codeslogan": "Apprenez le Code de la route aujourd’hui, conduisez en toute sécurité demain !"
+  },
+
+
+  "database": {
+    "questions_theorique": "Theoquestions",
+    "TestQuestions": "Questions",
+    "courses": "Traffic-Laws"
+  },
+  "Categories": {
+    "Choose": "Choisir une catégorie",
+    "Prio": "Priorité de passage",
+    "Panels": "Panneaux de signalisation",
+    "Questions_title": "Questions d\\'examen",
+    "Questions_theorique": "Questions theoriques",
+    "Pénalités": "Pénalités, et amendes",
+    "Interdiction": "Panneaux, d\\'interdiction",
+    "Danger": "Panneaux de danger",
+    "Obligation": "Panneaux, d\\'obligation",
+    "Indication": "Panneaux d\\'indication",
+    "Intersection": "Panneaux, d\\'intersection"
+  },
+  "tests": {
+    "test_result": "Résultat du test",
+    "selected_answers": "Vos réponses sélectionnées :",
+    "correction": "Correction :",
+    "your_answer": "Votre réponse :",
+    "none_selected": "Aucune réponse",
+
+    "time_limit": "Limite de Temps",
+    "time_limit_description": "Vous aurez un temps limité pour terminer l'examen.",
+    "no_external_aid": "Aucune Aide Externe",
+    "no_external_aid_description": "Vous n'êtes pas autorisé à utiliser des ressources externes.",
+    "navigation": "Navigation",
+    "navigation_description": "Vous pouvez revenir en arrière et revoir vos réponses avant de soumettre.",
+    "honesty": "Honnêteté",
+    "honesty_description": "Assurez-vous de passer l'examen avec intégrité.",
+    "start_test": "Faire le test",
+    "question_progress": "Question {current}/{total}",
+    "question_number": "Question {number}",
+    "test_label": "Test : {id}"
+
+  },
   "emergency_title": "Emergency Call",
   "error_phone": "Unable to open the Phone application",
   "police": "National Police",

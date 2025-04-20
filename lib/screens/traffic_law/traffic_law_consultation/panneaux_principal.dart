@@ -5,6 +5,7 @@ import 'package:road_companion/screens/traffic_law/traffic_law_consultation/pann
 import 'package:road_companion/screens/traffic_law/traffic_law_consultation/panneaux_intersection.dart';
 import 'package:road_companion/screens/traffic_law/traffic_law_consultation/panneaux_obligation.dart';
 import 'package:road_companion/widgets/navigation_bar_widget.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ChoisirPanneauxGlobal extends StatelessWidget {
   const ChoisirPanneauxGlobal({super.key});
@@ -35,7 +36,7 @@ class ChoisirPanneauxGlobal extends StatelessWidget {
                 return categorieItem(
                   context,
                   category['imagePath']!,
-                  category['title']!,
+                  category['title']!.tr(),
                       () => _handleNavigation(context, index),
                   screenWidth,
                 );
@@ -175,27 +176,26 @@ class ComingSoonScreen extends StatelessWidget {
   }
 }
 
-// 🔹 List of categories
 final List<Map<String, String>> _categories = [
   {
     'imagePath': 'assets/images/panneaux_interdiction.png',
-    'title': 'Panneaux d\'interdiction',
+    'title': 'Categories.Interdiction',
   },
   {
     'imagePath': 'assets/images/panneaux_danger.png',
-    'title': 'Panneaux de danger',
+    'title': 'Categories.Danger',
   },
   {
     'imagePath': 'assets/images/panneaux_obligation.png',
-    'title': 'Panneaux d\'obligation',
+    'title': 'Categories.Obligation',
   },
   {
     'imagePath': 'assets/images/panneaux_orientation.png',
-    'title': 'Panneaux d\'indication',
+    'title': 'Categories.Indication',
   },
   {
     'imagePath': 'assets/images/panneaux_priorité_inter.png',
-    'title': 'Panneaux d\'intersection',
+    'title': 'Categories.Intersection',
   },
 ];
 

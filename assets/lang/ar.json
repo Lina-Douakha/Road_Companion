@@ -397,6 +397,59 @@
     "no_other":  "لا توجد طلبات أخرى!",
     "finish_service":"إنهاء الخدمة"
   },
+  "recherche": "بحث...",
+  "confirmer": "تأكيد",
+  "suivant": "التالي",
+  "select_answer_error": "يرجى اختيار إجابة قبل التأكيد.",
+
+  "home": {
+    "trafficlaws": "قانون السير",
+    "training": "اختبار",
+    "learning": "تعلم",
+    "exam": "امتحانات",
+    "codeslogan": "تعلم قانون السير اليوم، قد بأمان غدًا!"
+  },
+
+
+
+  "database": {
+    "questions_theorique": "Theoquestions",
+    "TestQuestions": "Questions",
+    "courses": "Traffic_laws_ar"
+  },
+  "Categories": {
+    "Choose": "اختر فئة",
+    "Prio": "أولوية المرور",
+    "Panels": "لافتات المرور",
+    "Questions_title": "أسئلة الامتحان",
+    "Questions_theorique": "أسئلة نظرية",
+    "Pénalités": "الغرامات والعقوبات",
+    "Interdiction": "لافتات المنع",
+    "Danger": "لافتات الخطر",
+    "Obligation": "لافتات الإلزام",
+    "Indication": "لافتات الإرشاد",
+    "Intersection": "لافتات التقاطع"
+  },
+  "tests": {
+    "test_result": "نتيجة الاختبار",
+    "selected_answers": "إجاباتك المختارة:",
+    "correction": "التصحيح:",
+    "your_answer": "إجابتك:",
+    "none_selected": "لا إجابة",
+
+    "time_limit": "حد الوقت",
+    "time_limit_description": "سيكون لديك وقت محدود لإتمام الاختبار.",
+    "no_external_aid": "عدم استخدام مساعدات خارجية",
+    "no_external_aid_description": "لا يُسمح لك باستخدام موارد خارجية.",
+    "navigation": "التنقل",
+    "navigation_description": "يمكنك الرجوع إلى الوراء ومراجعة إجاباتك قبل التقديم.",
+    "honesty": "الصدق",
+    "honesty_description": "تأكد من إجراء الاختبار بنزاهة.",
+    "start_test": "أداء الاختبار",
+    "question_progress": "السؤال {current} من {total}",
+    "question_number": "السؤال {number}",
+    "test_label": "الاختبار : {id}"
+  },
 
   "emergency_title": "مكالمة الطوارئ",
   "error_phone": "تعذر فتح تطبيق الهاتف",

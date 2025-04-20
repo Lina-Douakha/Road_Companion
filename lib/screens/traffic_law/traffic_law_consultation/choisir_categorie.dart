@@ -3,6 +3,7 @@ import 'package:road_companion/screens/traffic_law/traffic_law_consultation/prio
 import 'package:road_companion/screens/traffic_law/traffic_law_consultation/panneaux_principal.dart';
 import 'package:road_companion/screens/traffic_law/traffic_law_consultation/questionExamen.dart';
 import 'package:road_companion/screens/traffic_law/traffic_law_consultation/penalties.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ChoisirCategorie extends StatelessWidget {
   const ChoisirCategorie({super.key});
@@ -18,9 +19,9 @@ class ChoisirCategorie extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const SizedBox(height: 150),
-          const Text(
-            'Choisir une catégorie',
-            style: TextStyle(
+           Text(
+             tr("Categories.Choose"),
+            style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
               color: Color(0xFF1B9169),
@@ -42,7 +43,7 @@ class ChoisirCategorie extends StatelessWidget {
                       categorieItem(
                         context,
                         'assets/images/priorités.png',
-                        'Priorité de passage',
+                        tr("Categories.Prio"),
                             () => Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -53,7 +54,7 @@ class ChoisirCategorie extends StatelessWidget {
                       categorieItem(
                         context,
                         'assets/images/panneaux.png',
-                        'Panneaux de signalisation',
+                        tr("Categories.Panels"),
                             () => Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -64,7 +65,7 @@ class ChoisirCategorie extends StatelessWidget {
                       categorieItem(
                         context,
                         'assets/images/exam.png',
-                        'Questions d\'examen',
+                        tr("Categories.Questions_title"),
                             () => Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -75,7 +76,7 @@ class ChoisirCategorie extends StatelessWidget {
                       categorieItem(
                         context,
                         'assets/images/penalties.png',
-                        'Pénalités et amendes',
+                        tr("Categories.Pénalités"),
                             () => Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => Law()),
@@ -141,5 +142,4 @@ class ChoisirCategorie extends StatelessWidget {
     );
   }
 }
-
 

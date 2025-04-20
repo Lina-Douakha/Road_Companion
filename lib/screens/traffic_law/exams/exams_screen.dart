@@ -6,6 +6,7 @@ import 'package:road_companion/screens/traffic_law/exams/exams_result.dart';
 import 'package:lottie/lottie.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:road_companion/services/auth_service.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ExamsScreen extends StatefulWidget {
   const ExamsScreen({super.key});
@@ -73,7 +74,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
       // ✅ Fetch the first 24 questions from "Questions"
       for (int i = 0; i < 24 && i < questionIds.length; i++) {
         DocumentSnapshot questionDoc = await FirebaseFirestore.instance
-            .collection("Questions")
+            .collection(tr("database.TestQuestions"))
             .doc(questionIds[i])
             .get();
 
@@ -85,7 +86,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
       // ✅ Fetch the last 6 questions from "Theoquestions"
       for (int i = 24;  i < questionIds.length; i++) {
         DocumentSnapshot questionDoc = await FirebaseFirestore.instance
-            .collection("Theoquestions")
+            .collection(tr("database.questions_theorique"))
             .doc(questionIds[i])
             .get();
 
@@ -194,9 +195,14 @@ class _ExamsScreenState extends State<ExamsScreen> {
                   children: [
                     SizedBox(height: screenHeight * 0.08),
                     Align(
-                      alignment: Alignment.centerLeft,
+                      alignment: Alignment.center,
                       child: Text(
-                        'Test: ${testId.replaceAll("Test", "")}', // Remove "Test" prefix if needed
+                        tr(
+                          "tests.test_label",
+                          namedArgs: {
+                            "id": testId.replaceAll("Test", "")
+                          },
+                        ), // Remove "Test" prefix if needed
                         style: TextStyle(
                           fontSize: screenWidth * 0.08,
                           fontWeight: FontWeight.bold,
@@ -217,8 +223,12 @@ class _ExamsScreenState extends State<ExamsScreen> {
                           borderRadius: BorderRadius.circular(20.0),
                         ),
                         child: Text(
-                          'Question ${currentQuestionIndex + 1}/${questions
-                              .length}',
+                          'tests.question_progress'.tr(
+                            namedArgs: {
+                              'current': '${currentQuestionIndex + 1}',
+                              'total': '${questions.length}'
+                            }
+                        ),
                           style: TextStyle(
                             fontSize: screenWidth * 0.04,
                             fontWeight: FontWeight.w600,
@@ -342,9 +352,9 @@ class _ExamsScreenState extends State<ExamsScreen> {
                           borderRadius: BorderRadius.circular(16.0),
                         ),
                       ),
-                      child: const Text(
-                        "Confirmer",
-                        style: TextStyle(
+                      child: Text(
+                        'confirmer'.tr(),
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

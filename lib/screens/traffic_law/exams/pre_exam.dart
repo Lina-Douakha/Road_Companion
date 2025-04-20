@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
 import 'package:road_companion/screens/traffic_law/exams/exams_screen.dart';
 import 'package:road_companion/widgets/navigation_bar_widget.dart';
+import 'package:easy_localization/easy_localization.dart';
+
 class PreExamScreen extends StatefulWidget {
   const PreExamScreen({super.key});
 
@@ -11,15 +13,25 @@ class PreExamScreen extends StatefulWidget {
 }
 
 class _PreExamScreenState extends State<PreExamScreen> {
-  int currentRuleIndex = 0;
-  final List<Map<String, String>> rules = [
-
-    {"title": "Limite de Temps", "description": "Vous aurez un temps limité pour terminer l'examen."},
-    {"title": "Aucune Aide Externe", "description": "Vous n'êtes pas autorisé à utiliser des ressources externes."},
-    {"title": "Navigation", "description": "Vous pouvez revenir en arrière et revoir vos réponses avant de soumettre."},
-    {"title": "Honnêteté", "description": "Assurez-vous de passer l'examen avec intégrité."}
-
+  int currentRuleIndex = 0;final List<Map<String, String>> rules = [
+    {
+      "title": "tests.time_limit".tr(), // Time limit translated dynamically
+      "description": "tests.time_limit_description".tr(), // Description translated dynamically
+    },
+    {
+      "title": "tests.no_external_aid".tr(), // No external aid translated dynamically
+      "description": "tests.no_external_aid_description".tr(), // Description translated dynamically
+    },
+    {
+      "title": "tests.navigation".tr(), // Navigation translated dynamically
+      "description": "tests.navigation_description".tr(), // Description translated dynamically
+    },
+    {
+      "title": "tests.honesty".tr(), // Honesty translated dynamically
+      "description": "tests.honesty_description".tr(), // Description translated dynamically
+    },
   ];
+
 
   void nextRule() {
     if (currentRuleIndex < rules.length - 1) {
@@ -86,8 +98,8 @@ class _PreExamScreenState extends State<PreExamScreen> {
                     child: Column(
                       children: [
                         Text(
-                          rules[currentRuleIndex]['title']!,
-                          style: TextStyle(
+                    rules[currentRuleIndex]['title']!.tr(),
+                          style:  TextStyle(
                             fontSize: screenWidth * 0.05,
                             fontWeight: FontWeight.bold,
                             color: const Color(0xFF1B9169),
@@ -96,7 +108,7 @@ class _PreExamScreenState extends State<PreExamScreen> {
                         ),
                         SizedBox(height: screenHeight * 0.01),
                         Text(
-                          rules[currentRuleIndex]['description']!,
+                          rules[currentRuleIndex]['description']!.tr(),
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: screenWidth * 0.04),
                         ),
@@ -146,7 +158,7 @@ class _PreExamScreenState extends State<PreExamScreen> {
                       );
                     },
                     child: Text(
-                      "Faire le test",
+                      'tests.start_test'.tr(),
                       style: TextStyle(
                         fontSize: screenWidth * 0.04,
                         fontWeight: FontWeight.bold,

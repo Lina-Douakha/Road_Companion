@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:road_companion/Theming/colors.dart';
+import 'package:easy_localization/easy_localization.dart';
+
 
 class PriorityQuestionsScreen extends StatefulWidget {
   const PriorityQuestionsScreen({super.key});
@@ -29,7 +31,7 @@ class _PriorityQuestionsScreenState extends State<PriorityQuestionsScreen> {
   Future<void> fetchQuestions() async {
     try {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('Questions')
+          .collection(tr("database.TestQuestions"))
           .where('Category', isEqualTo: 'priorities')
           .get();
 
@@ -123,9 +125,9 @@ class _PriorityQuestionsScreenState extends State<PriorityQuestionsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     SizedBox(height: screenHeight * 0.04),
-                    const Text(
-                      'Les questions du priorites de passages ',
-                      style: TextStyle(
+                     Text(
+                      tr("Categories.Prio"),
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1B9169),
@@ -180,10 +182,11 @@ class _PriorityQuestionsScreenState extends State<PriorityQuestionsScreen> {
                         ),
                         minimumSize: Size(screenWidth * 0.85, 50),
                       ),
-                      child: const Text('Confirmer',
-                          style: TextStyle(color: Colors.white, fontSize: 16)),
+                        child: Text('confirmer'.tr(),
+                          style: const TextStyle(color: Colors.white, fontSize: 16),
+                        ),
                     ),
-                    if (showResult)
+                        if (showResult)
                       Column(
                         children: [
                           SizedBox(height: screenHeight * 0.02),
@@ -196,8 +199,10 @@ class _PriorityQuestionsScreenState extends State<PriorityQuestionsScreen> {
                               ),
                               minimumSize: Size(screenWidth * 0.85, 50),
                             ),
-                            child: const Text('Suivant',
-                                style: TextStyle(color: Color(0xFF1B9169), fontSize: 16)),
+                            child: Text('suivant'.tr(),
+                              style: const TextStyle(color: Color(0xFF1B9169), fontSize: 16),
+                            ),
+
                           ),
                         ],
                       ),
@@ -212,11 +217,12 @@ class _PriorityQuestionsScreenState extends State<PriorityQuestionsScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(10),
                   color: Colors.red,
-                  child: const Text(
-                    'Veuillez sélectionner une réponse avant de confirmer.',
-                    style: TextStyle(color: Colors.white, fontSize: 14),
+                  child: Text(
+                    'error_select_answer'.tr(),
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
+
                 ),
               ),
           ],

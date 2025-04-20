@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:road_companion/widgets/navigation_bar_widget.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class PriorityQuestionScreen extends StatefulWidget {
   @override
@@ -25,7 +26,7 @@ class _PriorityQuestionScreenState extends State<PriorityQuestionScreen> {
   Future<void> _fetchPriorityQuestions() async {
     try {
       QuerySnapshot querySnapshot = await _firestore
-          .collection("Traffic-Laws")
+          .collection(tr("database.courses"))
           .where("Category", isEqualTo: "priorities")
           .get();
 
@@ -93,9 +94,9 @@ class _PriorityQuestionScreenState extends State<PriorityQuestionScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 70),
-              const Text(
-                'Priorité de passage',
-                style: TextStyle(
+               Text(
+                tr("Categories.Prio"),
+                style: const TextStyle(
                   fontSize: 25,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1B9169),
@@ -247,7 +248,6 @@ class _PriorityQuestionScreenState extends State<PriorityQuestionScreen> {
     );
   }
 }
-
 
 
 

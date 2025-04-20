@@ -4,6 +4,7 @@ import 'package:road_companion/Theming/colors.dart';
 import 'package:road_companion/screens/traffic_law/training_tests/choose_category_quizz.dart';
 import 'package:road_companion/screens/traffic_law/traffic_law_consultation/choisir_categorie.dart';
 import 'package:road_companion/screens/traffic_law/exams/pre_exam.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class TrafficLawScreen extends StatelessWidget {
   const TrafficLawScreen({super.key});
@@ -38,7 +39,7 @@ class TrafficLawScreen extends StatelessWidget {
                     children: [
                       SizedBox(height: screenHeight * 0.07),
                       Text(
-                        'Code de la route',
+                        tr("home.trafficlaws"),
                         style: TextStyle(
                           fontSize: screenWidth * 0.08,
                           fontWeight: FontWeight.bold,
@@ -47,14 +48,14 @@ class TrafficLawScreen extends StatelessWidget {
                       ),
                       SizedBox(height: screenHeight * 0.02),
                       Text(
-                        'Apprenez le Code de la route aujourd’hui, conduisez en toute sécurité demain !',
+                        tr("home.codeslogan"),
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: screenWidth * 0.045),
                       ),
                       SizedBox(height: screenHeight * 0.07),
                       ClickableCard(
                         icon: Icons.school,
-                        text: 'Apprentissage',
+                        text: tr('home.learning'),
                         onTap: () {
                           Navigator.push(
                             context,
@@ -65,7 +66,7 @@ class TrafficLawScreen extends StatelessWidget {
                       ),
                       ClickableCard(
                         icon: Icons.quiz,
-                        text: 'Quiz',
+                        text: tr('home.training'),
                         onTap: () {
                           Navigator.push(
                             context,
@@ -76,7 +77,7 @@ class TrafficLawScreen extends StatelessWidget {
                       ),
                       ClickableCard(
                         icon: Icons.assignment,
-                        text: 'Tests',
+                        text: tr('home.exam'),
                         onTap: () {
                           Navigator.push(
                             context,

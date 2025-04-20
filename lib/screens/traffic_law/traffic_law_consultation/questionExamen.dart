@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:road_companion/widgets/navigation_bar_widget.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class QuestionExamen extends StatefulWidget {
   @override
@@ -23,7 +24,7 @@ class _QuestionExamenState extends State<QuestionExamen> {
   Future<void> _fetchExamQuestions() async {
     try {
       QuerySnapshot querySnapshot = await _firestore
-          .collection("Traffic-Laws")
+          .collection(tr("database.courses"))
           .where("Category", isEqualTo: "question") // Filter for exam questions
           .get();
 
@@ -89,10 +90,10 @@ class _QuestionExamenState extends State<QuestionExamen> {
               SizedBox(height: screenHeight * 0.09),
 
               // Title
-              const Center(
+               Center(
                 child: Text(
-                  'Question théorique',
-                  style: TextStyle(
+                  tr("Categories.Questions_title"),
+                  style: const TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF1B9169),
@@ -114,7 +115,12 @@ class _QuestionExamenState extends State<QuestionExamen> {
                     borderRadius: BorderRadius.circular(20.0), // Rounded shape
                   ),
                   child: Text(
-                    'Question ${currentIndex + 1}/${questions.length}', // Dynamic question number
+                    'tests.question_progress'.tr(
+                        namedArgs: {
+                          'current': '${currentIndex + 1}',
+                          'total': '${questions.length}'
+                        }
+                    ), // Dynamic question number
                     style: TextStyle(
                       fontSize: screenWidth * 0.04,
                       fontWeight: FontWeight.w600,
@@ -208,7 +214,6 @@ class _QuestionExamenState extends State<QuestionExamen> {
     );
   }
 }
-
 
 
 

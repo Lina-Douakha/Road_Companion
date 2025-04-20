@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:road_companion/widgets/navigation_bar_widget.dart';
 import 'dart:async';
 import 'package:lottie/lottie.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class QuizResultsPage extends StatefulWidget {
   final String userId;
@@ -99,7 +100,7 @@ bool resultsFetched = false;
         String questionId = questionIds[i];
         String? selectedAnswer = userResponses[i.toString()];
 
-        DocumentSnapshot questionDoc = await FirebaseFirestore.instance.collection("Questions").doc(questionId).get();
+        DocumentSnapshot questionDoc = await FirebaseFirestore.instance.collection((tr("database.TestQuestions"))).doc(questionId).get();
         if (!questionDoc.exists) continue;
 
         Map<String, dynamic> questionData = questionDoc.data() as Map<String, dynamic>;
@@ -108,7 +109,7 @@ bool resultsFetched = false;
 
         // Store answers
         answerPairs.add({
-          "SelectedOption": selectedAnswer == null ? "Aucune réponse" : options[int.parse(selectedAnswer)].toString(),
+          "SelectedOption": selectedAnswer == null ? "tests.none_selected".tr() : options[int.parse(selectedAnswer)].toString(),
           "CorrectAnswer": correctAnswer,
         });
 
@@ -121,7 +122,7 @@ bool resultsFetched = false;
       // ✅ Process remaining 6 questions (multiple-answer)
       for (int i = 24; i < questionIds.length; i++) {
         String questionId = questionIds[i];
-        DocumentSnapshot questionDoc = await FirebaseFirestore.instance.collection("Theoquestions").doc(questionId).get();
+        DocumentSnapshot questionDoc = await FirebaseFirestore.instance.collection(tr("database.questions_theorique")).doc(questionId).get();
         if (!questionDoc.exists) continue;
 
         Map<String, dynamic> questionData = questionDoc.data() as Map<String, dynamic>;
@@ -160,7 +161,7 @@ bool resultsFetched = false;
 
         // ✅ Handle case where no answer was selected
         multiAnswerPairs.add({
-          "SelectedOption": selectedText.isEmpty ? "Aucune réponse" : selectedText.join(", "),
+          "SelectedOption": selectedText.isEmpty ? "tests.none_selected".tr() : selectedText.join(", "),
           "CorrectAnswer": correctText.join(", "),
         });
 
@@ -235,7 +236,7 @@ bool resultsFetched = false;
                   children: [
                     SizedBox(height: screenHeight * 0.04),
                     Text(
-                      'Résultat du test',
+                      'tests.test_result'.tr(),
                       style: TextStyle(
                         fontSize: baseSize * 1.6,
                         fontWeight: FontWeight.bold,
@@ -352,17 +353,24 @@ bool resultsFetched = false;
                           size: baseSize * 1.1,
                         ),
                         title: Text(
-                          "Question ${index + 1}",
+                          tr(
+                            "tests.question_number",
+                            namedArgs: {
+                              'number': '${index + 1}'
+                            },
+                          ),
                           style: TextStyle(
-                              fontSize: baseSize * 0.8,
-                              fontWeight: FontWeight.bold),
+                            fontSize: baseSize * 0.8,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
+
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (isMultiAnswer) ...[
                               Text(
-                                "Vos réponses sélectionnées :",
+                                'tests.selected_answers'.tr(),
                                 style: TextStyle(
                                     fontSize: baseSize * 0.7,
                                     fontWeight: FontWeight.bold),
@@ -378,7 +386,7 @@ bool resultsFetched = false;
                               )),
                               SizedBox(height: screenHeight * 0.005),
                               Text(
-                                "Correction :",
+                                'tests.correction'.tr(),
                                 style: TextStyle(
                                     fontSize: baseSize * 0.7,
                                     fontWeight: FontWeight.bold),
@@ -391,7 +399,7 @@ bool resultsFetched = false;
                               )),
                             ] else ...[
                               Text(
-                                "Votre réponse :",
+                                'tests.your_answer'.tr(),
                                 style: TextStyle(
                                     fontSize: baseSize * 0.7,
                                     fontWeight: FontWeight.bold),
@@ -407,7 +415,7 @@ bool resultsFetched = false;
                               ),
                               SizedBox(height: screenHeight * 0.005),
                               Text(
-                                "Correction :",
+                                'tests.correction'.tr(),
                                 style: TextStyle(
                                     fontSize: baseSize * 0.7,
                                     fontWeight: FontWeight.bold),
