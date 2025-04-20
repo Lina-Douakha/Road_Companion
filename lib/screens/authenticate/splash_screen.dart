@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
-import 'onboarding_screen.dart'; // Assuming this is your onboarding screen
+import 'onboarding_screen.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:road_companion/services/auth_service.dart'; // Import AuthService
-import 'package:road_companion/screens/home/home.dart'; // Import HomePage
-import 'package:road_companion/screens/authenticate/login.dart'; // Import LoginScreen
+import 'package:road_companion/services/auth_service.dart';
+import 'package:road_companion/screens/home/home.dart';
+import 'package:road_companion/screens/roadside_assistance/roadside_assistance_screen.dart';
+import 'package:road_companion/screens/authenticate/login.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,10 +18,11 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  int _currentLight = 0; // 0 = Rouge, 1 = Orange, 2 = Vert
+  int _currentLight = 0;
   late Timer _timer;
-  int _cycleCount = 0; // Compte combien de fois la séquence a tourné
-  final AuthService _authService = AuthService(); // Add AuthService instance
+  int _cycleCount = 0;
+  final AuthService _authService = AuthService();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void initState() {
@@ -39,24 +43,57 @@ class _SplashScreenState extends State<SplashScreen> {
 
         if (_cycleCount == 1) {
           _timer.cancel();
-          _checkLoginStatus(); // Check login status after animation
+          _checkLoginStatus();
         }
       });
     });
   }
 
-  // Check if the user is logged in
+  Future<String?> _getUserRole(String userId) async {
+    try {
+      DocumentSnapshot userDoc = await _firestore.collection('users').doc(userId).get();
+      if (userDoc.exists) {
+        return userDoc.get('Role');
+      }
+      return null;
+    } catch (e) {
+      print("Error getting user role: $e");
+      return null;
+    }
+  }
+
   Future<void> _checkLoginStatus() async {
     bool isLoggedIn = await _authService.isLoggedIn();
 
     if (isLoggedIn) {
-      // Navigate to HomePage if logged in
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
+      User? user = _authService.currentUser;
+      if (user != null) {
+        String? userRole = await _getUserRole(user.uid);
+
+        if (userRole == 'mechanic'||
+            userRole == 'parts_supplier' ||
+            userRole == 'towing_service') {
+          // Navigate to service provider home
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => RoadsideAssistanceScreen()),
+          );
+        } else {
+          // Navigate to regular user home
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage()),
+          );
+        }
+      } else {
+        // User is null, go to onboarding
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => OnboardingScreen()),
+        );
+      }
     } else {
-      // Navigate to OnboardingScreen or LoginScreen if not logged in
+      // Not logged in, go to onboarding
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => OnboardingScreen()),

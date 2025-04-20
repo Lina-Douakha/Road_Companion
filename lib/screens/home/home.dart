@@ -5,6 +5,7 @@ import 'package:road_companion/screens/incident_reporting/incident_report_screen
 import 'package:road_companion/screens/profile/profile.dart';
 import 'package:road_companion/widgets/navigation_bar_widget.dart';
 import 'package:road_companion/screens/traffic_law/Traffic_Law.dart';
+import 'package:road_companion/screens/GPS_navigation/map_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,7 +19,7 @@ class _HomePageState extends State<HomePage> {
 
   // Liste des pages associées aux onglets de la navbar
   final List<Widget> _pages = [
-    const IncidentReportScreen(),
+    const MapPage(),
     const EmergencyCallPage(),
     const TrafficLawScreen(),
     const ProfilePage(),

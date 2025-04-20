@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:road_companion/screens/home/home.dart';
+import 'package:road_companion/screens/roadside_assistance/roadside_assistance_screen.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
   final String name;
@@ -24,6 +26,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     super.initState();
     _startEmailVerificationCheck();
   }
+
   void _startEmailVerificationCheck() {
     _timer = Timer.periodic(const Duration(seconds: 5), (timer) async {
       await FirebaseAuth.instance.currentUser?.reload();
@@ -50,13 +53,28 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
           // Step 3: Remove from 'unverified_users'
           await FirebaseFirestore.instance.collection('unverified_users').doc(user.uid).delete();
-        }
 
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/home'); // Redirect to home
+          // Step 4: Navigate based on role
+          if (mounted) {
+            _navigateBasedOnRole(userData['Role'] ?? widget.role);
+          }
         }
       }
     });
+  }
+
+  void _navigateBasedOnRole(String role) {
+    if (role == 'mechanic' || role == 'parts_supplier' || role == 'towing_service') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => RoadsideAssistanceScreen()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
+    }
   }
 
   Future<void> _resendVerificationEmail() async {
@@ -74,7 +92,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
   @override
   void dispose() {
-    _timer?.cancel(); // Nettoyer le timer pour éviter les fuites de mémoire
+    _timer?.cancel();
     super.dispose();
   }
 

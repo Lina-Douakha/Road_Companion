@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:road_companion/services/auth_service.dart';
 import 'package:road_companion/screens/authenticate/reset_password.dart';
 import 'package:road_companion/screens/authenticate/registration.dart';
+import 'package:road_companion/screens/home/home.dart';
+import 'package:road_companion/screens/roadside_assistance/roadside_assistance_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Add this import
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -14,6 +17,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final AuthService _authService = AuthService();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -23,6 +27,19 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isValidEmail(String email) {
     final RegExp emailRegex = RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
     return emailRegex.hasMatch(email);
+  }
+
+  Future<String?> _getUserRole(String userId) async {
+    try {
+      DocumentSnapshot userDoc = await _firestore.collection('users').doc(userId).get();
+      if (userDoc.exists) {
+        return userDoc.get('Role');
+      }
+      return null;
+    } catch (e) {
+      print("Error getting user role: $e");
+      return null;
+    }
   }
 
   Future<void> _login() async {
@@ -43,15 +60,47 @@ class _LoginScreenState extends State<LoginScreen> {
 
     String? errorMessage = await _authService.signIn(email, password);
 
-    setState(() => _isLoading = false);
-
     if (errorMessage == null) {
-      // Save login state after successful login
-      await _saveLoginState();
-      Navigator.pushReplacementNamed(context, '/home');
+      User? user = _authService.currentUser;
+      if (user != null) {
+        String? userRole = await _getUserRole(user.uid);
+        await _saveLoginState(user.uid, userRole ?? 'user');
+        _navigateBasedOnRole(userRole);
+      } else {
+        _showSnackBar("login.error_user_not_found".tr(), isError: true);
+      }
     } else {
       _showSnackBar(errorMessage, isError: true);
     }
+
+    setState(() => _isLoading = false);
+  }
+
+  void _navigateBasedOnRole(String? userRole) {
+    Widget destination;
+
+    switch (userRole) {
+      case 'mechanic':
+      case 'parts_supplier':
+      case 'towing_service':
+        destination = RoadsideAssistanceScreen();
+        break;
+      default:
+        destination = HomePage();
+        break;
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => destination),
+    );
+  }
+
+  Future<void> _saveLoginState(String userId, String role) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', true);
+    await prefs.setString('userId', userId);
+    await prefs.setString('userRole', role);
   }
 
   void _showSnackBar(String message, {bool isError = false}) {
@@ -69,22 +118,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
     UserCredential? userCredential = await _authService.signInWithGoogle();
 
-    setState(() => _isLoading = false);
     if (userCredential != null) {
-      // Save login state after successful Google sign-in
-      await _saveLoginState();
-      Navigator.pushReplacementNamed(context, '/home');
+      String? userRole = await _getUserRole(userCredential.user!.uid);
+      await _saveLoginState(userCredential.user!.uid, userRole ?? 'user');
+      _navigateBasedOnRole(userRole);
     } else {
       _showSnackBar("login.error_google_sign_in".tr(), isError: true);
     }
-  }
 
-  // ================== NEW METHODS FOR PERSISTENT LOGIN ==================
-
-  // Save login state
-  Future<void> _saveLoginState() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', true);
+    setState(() => _isLoading = false);
   }
 
   @override

@@ -85,6 +85,52 @@
     "title": "About",
     "description": "Road Companion is an interactive and automated application designed to improve road safety in Algeria. With one of the highest accident rates in North Africa, this application addresses challenges related to the lack of awareness of traffic rules, insufficient incident reporting, and limited access to real-time roadside assistance.\n\nRoad Companion helps drivers by providing smart tools for safer and more responsible driving."
   },
+  "review":{  "title": "Customer Reviews",
+    "reviews": [
+      "He is good at his work",
+      "Very professional and punctual",
+      "I highly recommend his services"
+    ],
+    "summary": {
+      "based_on": "Based on ",
+      "reviews": "reviews",
+      "excellent": "Excellent",
+      "good": "Good",
+      "average": "Average",
+      "poor": "Poor"
+    },
+    "no_reviews" : "You haven\\'t received any reviews yet!"
+  },
+  "results": {
+    "no_results" : "No results found!"
+  },
+  "read": {
+    "read_less" : "Show less",
+    "read_more" : "Show more"
+  },
+  "handle_request": {
+    "accept": "Accept",
+    "reject": "Reject",
+    "client_name": "Client name",
+    "phone": "Phone",
+    "address": "Address",
+    "call": "Call",
+    "cancel": "Cancel",
+    "client_accepted": "Client Accepted!",
+    "call_prompt": "Do you want to call the client at ",
+    "show_description": "Show description",
+    "your_location": "Your location",
+    "go_now": "Go Now",
+    "service_completion": "Service Completion",
+    "service_completion_confirmation": "Are you sure you want to mark this service as completed?",
+    "confirm": "Confirm",
+    "no_requests_yet": "No requests yet",
+    "request_description": "Request Description",
+    "no_client_request_description": "No description of the client request!",
+    "close": "Close",
+    "no_other": "There are no other requests!",
+    "finish_service": "Finish Service"
+  },
 
   "incident_report": {
     "title": "Report an Incident",
@@ -92,6 +138,9 @@
     "select_type": "Select a type",
     "accident": "Accident",
     "breakdown": "Breakdown",
+    "Road_Blockages": "Road Closures",
+    "Roadwork": "Roadwork",
+    "Special_Events": "Special Events",
     "other": "Other",
     "descreption": "Description",
     "describe_incident": "Describe the incident",
@@ -118,8 +167,25 @@
     "Description": "Description",
     "Reported-on": "Reported on",
     "Location": "Location",
-    "Attached Image": "Attached Image"
-
+    "Attached Image": "Attached Image",
+    "select_location_method": "Choose location method",
+    "use_current_location": "Use current location",
+    "choose_on_map": "Select on map",
+    "location": "Incident location",
+    "fetching_location": "Detecting location...",
+    "select_location": "Select location",
+    "change_location": "Change location",
+    "location_service_disabled": "Location services disabled",
+    "enable_location_service": "Enable in device settings to continue",
+    "cancel": "Cancel",
+    "settings": "Settings",
+    "location_permission_denied": "Location access denied",
+    "enable_location_permission": "Enable location access",
+    "location_permission_permanently_denied": "Location permission is permanently denied",
+    "enable_location_permission_settings": "Please enable it manually from your device settings to use this feature",
+    "View_Map": "View Map",
+    "No_incidents_reported": "No incidents reported",
+    "You_haven't_reported_any_incidents_yet": "You haven't reported any incidents yet"
 
   },
   "nav": {
@@ -145,11 +211,10 @@
     "title4": "Interactive courses, quizzes, \nand tests to master the traffic rules.",
     "start_button": "Get Started",
     "skip": "Skip"
-  },"registration": {
+  },
+  "registration": {
   "oui":"Yes",
   "non":"No",
-  "oui": "Yes",
-  "non": "No",
   "num": "Phone Number",
   "welcome": "Welcome to Road Companion",
   "title": "Sign Up",
@@ -203,6 +268,97 @@
     "error_message": "Error: ",
     "back": "Back"
   },
+  "edit_profile_mecanic": {
+    "professionnelles": "Professional Information",
+    "personnelles": "Personal Information",
+    "Choisir": "Choose",
+    "Nom": "Name",
+    "Wilaya": "Province",
+    "Email": "Email",
+    "title": "Edit Profile",
+    "localisation": "Location",
+    "phone_number": "Phone Number",
+    "working_hours": "Working Hours",
+    "days": "Working Days",
+    "facebook_page": "Facebook Page",
+    "save_button": "Save",
+    "Debut": "Start",
+    "Fin": "End",
+    "required_field": "This field is required.",
+    "invalid_phone": "The number must contain exactly 9 digits after +213."
+  },
+
+  "wilayas": {
+    "1": "Adrar",
+    "2": "Chlef",
+    "3": "Laghouat",
+    "4": "Oum El Bouaghi",
+    "5": "Batna",
+    "6": "Béjaïa",
+    "7": "Biskra",
+    "8": "Béchar",
+    "9": "Blida",
+    "10": "Bouira",
+    "11": "Tamanrasset",
+    "12": "Tébessa",
+    "13": "Tlemcen",
+    "14": "Tiaret",
+    "15": "Tizi Ouzou",
+    "16": "Algiers",
+    "17": "Djelfa",
+    "18": "Jijel",
+    "19": "Sétif",
+    "20": "Saïda",
+    "21": "Skikda",
+    "22": "Sidi Bel Abbès",
+    "23": "Annaba",
+    "24": "Guelma",
+    "25": "Constantine",
+    "26": "Médéa",
+    "27": "Mostaganem",
+    "28": "M'Sila",
+    "29": "Mascara",
+    "30": "Ouargla",
+    "31": "Oran",
+    "32": "El Bayadh",
+    "33": "Illizi",
+    "34": "Bordj Bou Arreridj",
+    "35": "Boumerdès",
+    "36": "El Tarf",
+    "37": "Tindouf",
+    "38": "Tissemsilt",
+    "39": "El Oued",
+    "40": "Khenchela",
+    "41": "Souk Ahras",
+    "42": "Tipaza",
+    "43": "Mila",
+    "44": "Aïn Defla",
+    "45": "Naâma",
+    "46": "Aïn Témouchent",
+    "47": "Ghardaïa",
+    "48": "Relizane",
+    "49": "Timimoun",
+    "50": "Bordj Badji Mokhtar",
+    "51": "Ouled Djellal",
+    "52": "Béni Abbès",
+    "53": "In Salah",
+    "54": "In Guezzam",
+    "55": "Touggourt",
+    "56": "Djanet",
+    "57": "El M'Ghair",
+    "58": "El Menia"
+  },
+  "De":"From",
+  "à":"To",
+  "days": {
+    "1": "Sunday",
+    "2": "Monday",
+    "3": "Tuesday",
+    "4": "Wednesday",
+    "5": "Thursday",
+    "6": "Friday",
+    "7": "Saturday"
+  },
   "auth": {
     "invalid_email": "The email address is improperly formatted.",
     "user_not_found": "No user found with this email.",
@@ -212,6 +368,36 @@
     "email_already_in_use": "This email is already registered.",
     "weak_password": "The password must be at least 6 characters long."
   },
+  "demande_aide": {
+    "titre": "Help Request",
+    "nom_utilisateur": "Username",
+    "localisation": "Bab Ezzouar, Algeria",
+    "bouton_accepte": "Accepted",
+    "bouton_rejete": "Rejected"
+  },
+  "historique_mecanicien": {
+    "title": "Request History",
+    "username": "Username",
+    "location": "Bab Ezzouar, Algeria",
+    "date": "15/03/2025 at 18:13",
+    "accepted": "Accepted",
+    "rejected": "Rejected",
+    "no_requests": "You haven\\'t received any service requests yet!"
+  },
+  "rechercheGPS": {
+    "hint_search": "Search for a place...",
+    "historique_title": "Search history",
+    "place_eiffel": "Eiffel Tower",
+    "place_liberty": "Statue of Liberty",
+    "place_mosque": "Great Mosque of Algiers",
+    "search_result_title": "Search Results",
+    "report_incident":"Report Incident",
+    "your_location": "Your location",
+    "destination": "Destination","choose_destination": "Choose a destination",
+    "distance": "Distance",
+    "duration": "Duration",
+    "selected_destination": "Selected destination"
+  },
   "emergency_title": "Emergency Call",
   "error_phone": "Unable to open the Phone application",
   "police": "National Police",
@@ -219,6 +405,5 @@
   "protection_civile": "Civil Protection",
   "foret_service": "Forestry Service"
 }
-
 
 
