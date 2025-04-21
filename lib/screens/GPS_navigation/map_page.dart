@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -7,6 +10,7 @@ import 'package:road_companion/screens/GPS_navigation/Search_page.dart';
 import 'package:road_companion/screens/incident_reporting/incident_report_screen.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:road_companion/screens/GPS_navigation/Destination_map.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MapPage extends StatefulWidget {
   final double? latitude;
@@ -24,15 +28,19 @@ class _MapPageState extends State<MapPage> {
   final LatLng _center = const LatLng(36.7538, 3.0588);
   final Set<Polyline> _polyline = {};
   final Set<Marker> _markers = {};
+  final Map<String, BitmapDescriptor> _cachedIcons = {};
   bool _isPermissionGranted = false;
   bool _followUser = true;
   LatLng? _currentLocation;
   StreamSubscription<Position>? _positionStream;
+  StreamSubscription<QuerySnapshot>? _incidentsSubscription;
 
   @override
   void initState() {
     super.initState();
     _checkPermissionRequest();
+    _preloadMarkerIcons();
+    _subscribeToIncidents();
 
     if (widget.latitude != null && widget.longitude != null) {
       _centerOnProvidedLocation();
@@ -42,7 +50,108 @@ class _MapPageState extends State<MapPage> {
   @override
   void dispose() {
     _positionStream?.cancel();
+    _incidentsSubscription?.cancel();
     super.dispose();
+  }
+
+  Future<void> _preloadMarkerIcons() async {
+    await Future.wait([
+      _getCustomIcon('Accident'),
+      _getCustomIcon('Panne'),
+      _getCustomIcon('Routes Barrées'),
+      _getCustomIcon('Travaux'),
+      _getCustomIcon('Événements Spéciaux'),
+    ]);
+  }
+
+  Future<BitmapDescriptor> _getCustomIcon(String type) async {
+    if (_cachedIcons.containsKey(type)) return _cachedIcons[type]!;
+
+    String assetPath;
+    switch (type) {
+      case 'Accident':
+        assetPath = 'assets/GPS/accident_icon.png';
+        break;
+      case 'Panne':
+        assetPath = 'assets/GPS/breakdown_icon.png';
+        break;
+      case 'Routes Barrées':
+        assetPath = 'assets/GPS/circulation.png';
+        break;
+      case 'Travaux':
+        assetPath = 'assets/GPS/roadwork.png';
+        break;
+      case 'Événements Spéciaux':
+        assetPath = 'assets/GPS/event.png';
+        break;
+      default:
+        assetPath = 'assets/GPS/other.png';
+    }
+
+    try {
+      final Uint8List icon = await getBytesFromAsset(assetPath, 100);
+      final descriptor = BitmapDescriptor.fromBytes(icon);
+      _cachedIcons[type] = descriptor;
+      return descriptor;
+    } catch (e) {
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed);
+    }
+  }
+
+  Future<Uint8List> getBytesFromAsset(String path, int width) async {
+    ByteData data = await rootBundle.load(path);
+    ui.Codec codec = await ui.instantiateImageCodec(
+      data.buffer.asUint8List(),
+      targetWidth: width,
+    );
+    ui.FrameInfo fi = await codec.getNextFrame();
+    return (await fi.image.toByteData(format: ui.ImageByteFormat.png))!
+        .buffer
+        .asUint8List();
+  }
+
+  void _subscribeToIncidents() {
+    _incidentsSubscription = FirebaseFirestore.instance
+        .collection('Incident Reports')
+        .where('Status', whereIn: ['Pending', 'In Progress'])
+        .snapshots()
+        .listen((snapshot) {
+      _updateIncidentMarkers(snapshot.docs);
+    });
+  }
+
+  void _updateIncidentMarkers(List<QueryDocumentSnapshot> docs) {
+    // Clear existing incident markers
+    _markers.removeWhere((marker) => marker.markerId.value.startsWith('incident-'));
+
+    // Add new markers for active incidents
+    for (var doc in docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      if (data['Location'] != null) {
+        final geoPoint = data['Location'] as GeoPoint;
+        final position = LatLng(geoPoint.latitude, geoPoint.longitude);
+        final type = data['Type'] as String? ?? 'Unknown';
+        final status = data['Status'] as String? ?? 'Pending';
+
+        _getCustomIcon(type).then((icon) {
+          if (mounted) {
+            setState(() {
+              _markers.add(
+                Marker(
+                  markerId: MarkerId('incident-${doc.id}'),
+                  position: position,
+                  icon: icon,
+                  infoWindow: InfoWindow(
+                    title: type,
+                    snippet: '${data['Description']}\nStatus: $status',
+                  ),
+                ),
+              );
+            });
+          }
+        });
+      }
+    }
   }
 
   void _onMapCreated(GoogleMapController controller) {
@@ -191,8 +300,8 @@ class _MapPageState extends State<MapPage> {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           elevation: 3,
-          padding: const EdgeInsets.symmetric(horizontal: 16), // dynamic width
-          minimumSize: const Size(0, 36), // height fixed, width flexible
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          minimumSize: const Size(0, 36),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),
@@ -255,7 +364,7 @@ class _MapPageState extends State<MapPage> {
                 height: screenHeight * 0.04,
                 color: const Color(0xFF1B9169),
               ),
-              const SizedBox(height: 30), // Space above search bar
+              const SizedBox(height: 30),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: SizedBox(
@@ -386,7 +495,6 @@ class _MapPageState extends State<MapPage> {
           ],
         ),
       ),
-
     );
   }
 }
