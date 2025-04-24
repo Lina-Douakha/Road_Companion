@@ -311,7 +311,8 @@
   "terms_conditions": "الشروط والأحكام الخاصة بنا",
   "continue": "متابعة",
   "all_fields_required": "جميع الحقول مطلوبة",
-  "password_mismatch": "كلمتا المرور غير متطابقتين"
+  "password_mismatch": "كلمتا المرور غير متطابقتين",
+  "location": "موقع الخدمة"
 },
   "file_upload": {
     "upload_file": "تحميل ملف",

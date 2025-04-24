@@ -48,6 +48,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
             'Name': userData['Name'], // Retrieve from unverified_users
             'Phone': userData['Phone'],
             'Role': userData['Role'],
+            'Location': userData['Location'],
+            'Address': userData['Address'],
             'VerifiedAt': FieldValue.serverTimestamp(), // Add verification timestamp
           });
 

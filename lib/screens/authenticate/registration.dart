@@ -1,11 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'dart:io';
 import 'package:road_companion/services/auth_service.dart';
 import 'package:flutter/services.dart';
 import 'login.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:road_companion/screens/incident_reporting/location_picker_screen.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:lottie/lottie.dart';
 
 class RegistrationScreen extends StatefulWidget {
+  final LatLng? initialLocation;
+
+  const RegistrationScreen({
+    super.key,
+    this.initialLocation,
+  });
+
   @override
   State<RegistrationScreen> createState() => _RegistrationScreenState();
 }
@@ -32,6 +46,509 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   String? identityCardFile;
   String? commercialRegisterFile;
+  // Location related variables
+  LatLng? _selectedLocation;
+  bool _isLocationPermissionGranted = false;
+  bool _isFetchingLocation = false;
+  String _locationAddress = "Location not specified";
+  bool _isFetchingAddress = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedLocation = widget.initialLocation;
+    _checkLocationPermission();
+  }
+
+  Future<void> _updateAddress(double lat, double lng) async {
+    setState(() => _isFetchingAddress = true);
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(lat, lng);
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        setState(() {
+          _locationAddress = [
+            place.street,
+            place.subLocality,
+            place.locality,
+            place.postalCode,
+            place.country
+          ].where((part) => part?.isNotEmpty ?? false).join(', ');
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _locationAddress = "Location: ${lat.toStringAsFixed(6)}, ${lng.toStringAsFixed(6)}";
+      });
+    } finally {
+      setState(() => _isFetchingAddress = false);
+    }
+  }
+
+  void _copyToClipboard(String text) {
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Copied to clipboard'))
+    );
+  }
+
+  Future<void> _checkLocationPermission() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      _showLocationServiceDisabledDialog();
+      return;
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        _showPermissionDeniedDialog();
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      _showPermissionPermanentlyDeniedDialog();
+      return;
+    }
+
+    setState(() {
+      _isLocationPermissionGranted = true;
+    });
+  }
+
+  Future<void> _getCurrentLocation() async {
+    if (!_isLocationPermissionGranted) {
+      await _checkLocationPermission();
+      if (!_isLocationPermissionGranted) return;
+    }
+
+    setState(() {
+      _isFetchingLocation = true;
+    });
+
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.best,
+      );
+
+      setState(() {
+        _selectedLocation = LatLng(position.latitude, position.longitude);
+      });
+
+      await _updateAddress(position.latitude, position.longitude);
+
+    } catch (e) {
+      setState(() {
+        _isFetchingLocation = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to get location: ${e.toString()}"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+          setState(() => _isFetchingLocation = false);
+    }
+  }
+
+  Future<void> _selectLocationOnMap() async {
+    final selectedLocation = await Navigator.push<LatLng>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LocationPickerScreen(
+          initialLocation: _selectedLocation,
+        ),
+      ),
+    );
+
+    if (selectedLocation != null) {
+      setState(() {
+        _selectedLocation = selectedLocation;
+      });
+      await _updateAddress(selectedLocation.latitude, selectedLocation.longitude);
+    }
+  }
+
+  Future<void> _showLocationSelectionDialog() async {
+    final result = await showDialog<String>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: const Color(0xFFf8fafc),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minWidth: 300,
+              maxWidth: 350,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Lottie.asset(
+                    'assets/animation/location.json',
+                    height: 100,
+                    repeat: true,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'incident_report.select_location_method'.tr(),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.grey[900],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Use Current Location Button
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop('current_location');
+                    },
+                    icon: const Icon(Icons.my_location, color: Color(0xFF0766AD)),
+                    label: Text(
+                      'incident_report.use_current_location'.tr(),
+                      style: const TextStyle(color: Color(0xFF0766AD)),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFCAF4FF), // blue
+                      minimumSize: const Size.fromHeight(45),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Choose on Map Button
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop('map_selection');
+                    },
+                    icon: const Icon(Icons.map, color: Color(0xFF1b9169)),
+                    label: Text(
+                      'incident_report.choose_on_map'.tr(),
+                      style: const TextStyle(color: Color(0xFF1b9169)),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD1FADF), // Refreshing green
+                      minimumSize: const Size.fromHeight(45),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    // Handle the button response here:
+    if (result == 'current_location') {
+      await _getCurrentLocation();
+    } else if (result == 'map_selection') {
+      await _selectLocationOnMap();
+    }
+  }
+
+  // format coordinates to a normal text
+  String _getFormattedCoordinates(LatLng location) {
+    return 'Lat: ${location.latitude.toStringAsFixed(4)}, Lng: ${location.longitude.toStringAsFixed(4)}';
+  }
+
+  Widget _buildLocationOption({
+    required IconData icon,
+    required String title,
+    Color? color,
+    VoidCallback? onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap ?? () {
+          Navigator.pop(context);
+          if (icon == Icons.my_location) {
+            _getCurrentLocation();
+          } else {
+            _selectLocationOnMap();
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            vertical: 14.0,
+            horizontal: 12.0,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: (color ?? Colors.blue).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  size: 22,
+                  color: color ?? Colors.blue,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showLocationServiceDisabledDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing by tapping outside
+      builder: (BuildContext context) {
+        // Add a listener for app state changes
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _checkLocationServiceAndDismiss(context);
+        });
+
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'incident_report.location_service_disabled'.tr(),
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            'incident_report.enable_location_service'.tr(),
+            style: const TextStyle(fontSize: 16),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'incident_report.cancel'.tr(),
+                style: TextStyle(color: Colors.grey[700]),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                await Geolocator.openLocationSettings();
+                // Check service status after returning from settings
+                _checkLocationServiceAndDismiss(context);
+              },
+              child: Text(
+                'incident_report.settings'.tr(),
+                style: const TextStyle(color: Color(0xFF1B9169)),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _checkLocationServiceAndDismiss(BuildContext dialogContext) async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (serviceEnabled && dialogContext.mounted) {
+      Navigator.of(dialogContext).pop(); // Close the dialog
+      _checkLocationPermission(); // Re-check permissions
+    }
+  }
+
+  void _showPermissionDeniedDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          'incident_report.location_permission_denied'.tr(),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'incident_report.enable_location_permission'.tr(),
+          style: const TextStyle(fontSize: 16),
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: Text(
+              'incident_report.cancel'.tr(),
+              style: TextStyle(color: Colors.grey[700]),
+            ),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          TextButton(
+            child: Text(
+              'incident_report.settings'.tr(),
+              style: const TextStyle(color: Color(0xFF1B9169)),
+            ),
+            onPressed: () => Geolocator.openAppSettings(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPermissionPermanentlyDeniedDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          'incident_report.location_permission_permanently_denied'.tr(),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'incident_report.enable_location_permission_settings'.tr(),
+          style: const TextStyle(fontSize: 16),
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: Text(
+              'incident_report.cancel'.tr(),
+              style: TextStyle(color: Colors.grey[700]),
+            ),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          TextButton(
+            child: Text(
+              'incident_report.settings'.tr(),
+              style: const TextStyle(color: Color(0xFF1B9169)),
+            ),
+            onPressed: () => Geolocator.openAppSettings(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "registration.location".tr(),
+          style: const TextStyle(fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: _showLocationSelectionDialog,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16), // Reduced vertical padding
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.location_on,
+                  color: _selectedLocation != null
+                      ? const Color(0xFF1B9169)
+                      : Colors.grey.shade400,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _isFetchingLocation || _isFetchingAddress
+                      ? Text(
+                          'incident_report.fetching_location'.tr(),
+                          style: TextStyle(color: Colors.grey.shade600),
+                        )
+                      : Text(
+                          _selectedLocation != null
+                              ? _locationAddress
+                              : "incident_report.select_location".tr(),
+                          style: TextStyle(
+                            color: _selectedLocation != null
+                                ? Colors.black
+                                : Colors.grey.shade600,
+                          ),
+                        ),
+                ),
+                if (_selectedLocation != null)
+                  IconButton(
+                    icon: const Icon(Icons.copy, size: 18),
+                    onPressed: () => _copyToClipboard(
+                      '$_locationAddress\n(${_selectedLocation!.latitude}, ${_selectedLocation!.longitude})'
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.grey,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_selectedLocation != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4), // Reduced top padding
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                onPressed: _showLocationSelectionDialog,
+                child: Text(
+                  'incident_report.change_location'.tr(),
+                  style: const TextStyle(
+                    fontSize: 13, // Slightly smaller font
+                    color: Color(0xFF1B9169),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 
   String _getTranslatedRoleName(String roleKey) {
     switch (roleKey) {
@@ -184,6 +701,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       setState(() => commercialRegisterFile = file);
                     },
                   ),
+
+                  const SizedBox(height: 30),
+                  _buildLocationField(),
+
                 ],
                 const SizedBox(height: 10),
 
@@ -234,22 +755,37 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     onPressed: acceptedTerms
                         ? () async {
                             if (_validateFields()) {
-                              String? error = await _authService.registerUser(
-                                emailController.text.trim(),
-                                passwordController.text.trim(),
-                                nameController.text.trim(),
-                                phoneController.text.trim(),
-                                offerService ? serviceType : userRole,
-                                context,
-                              );
-
-                              if (error != null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(error),
-                                    backgroundColor: Colors.red,
-                                  ),
+                              try {
+                                final authService = AuthService();
+                                String? error = await authService.registerUser(
+                                  email: emailController.text.trim(),
+                                  password: passwordController.text.trim(),
+                                  name: nameController.text.trim(),
+                                  phone: phoneController.text.trim(),
+                                  role: offerService ? serviceType : AuthService.userRole,
+                                  context: context,
+                                  location: offerService ? _selectedLocation : null,
+                                  address: offerService ? _locationAddress : null,
                                 );
+
+                                if (error != null && context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(error),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text("registration.error_occurred".tr()),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                                print("Registration error: $e");
                               }
                             }
                           }

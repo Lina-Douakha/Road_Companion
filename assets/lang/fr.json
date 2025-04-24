@@ -237,8 +237,10 @@
     "terms_conditions": "nos conditions générales",
     "continue": "Continuer",
     "all_fields_required": "Tous les champs sont obligatoires",
-    "password_mismatch": "Les mots de passe ne correspondent pas"
-  },"file_upload": {
+    "password_mismatch": "Les mots de passe ne correspondent pas",
+    "location": "Emplacement du service"
+  },
+  "file_upload": {
   "upload_file": "Télécharger un fichier",
   "file_selected": "Fichier sélectionné",
   "select_file": "Sélectionnez un fichier",

@@ -235,7 +235,8 @@
   "terms_conditions": "our terms and conditions",
   "continue": "Continue",
   "all_fields_required": "All fields are required",
-  "password_mismatch": "Passwords do not match"
+  "password_mismatch": "Passwords do not match",
+  "location": "Service Location"
 },
   "file_upload": {
     "upload_file": "Upload a file",
