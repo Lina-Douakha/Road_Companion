@@ -414,9 +414,9 @@
 
 
   "database": {
-    "questions_theorique": "Theoquestions",
-    "TestQuestions": "Questions",
-    "courses": "Traffic_laws_ar"
+    "questions_theorique": "Theoquestions-ar",
+    "TestQuestions": "Questions-arb",
+    "courses": "Traffic-laws-ar"
   },
   "Categories": {
     "Choose": "اختر فئة",

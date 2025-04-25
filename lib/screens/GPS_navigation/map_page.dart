@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
@@ -34,6 +35,7 @@ class _MapPageState extends State<MapPage> {
   LatLng? _currentLocation;
   StreamSubscription<Position>? _positionStream;
   StreamSubscription<QuerySnapshot>? _incidentsSubscription;
+  String? _selectedServiceType;
 
   @override
   void initState() {
@@ -61,6 +63,9 @@ class _MapPageState extends State<MapPage> {
       _getCustomIcon('Routes Barrées'),
       _getCustomIcon('Travaux'),
       _getCustomIcon('Événements Spéciaux'),
+      _getServiceProviderIcon('mechanic'),
+      _getServiceProviderIcon('parts_supplier'),
+      _getServiceProviderIcon('towing_service'),
     ]);
   }
 
@@ -98,6 +103,34 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  Future<BitmapDescriptor> _getServiceProviderIcon(String role) async {
+    if (_cachedIcons.containsKey(role)) return _cachedIcons[role]!;
+
+    String assetPath;
+    switch (role) {
+      case 'mechanic':
+        assetPath = 'assets/GPS/marker_meca.png';
+        break;
+      case 'parts_supplier':
+        assetPath = 'assets/GPS/marker_parts.png';
+        break;
+      case 'towing_service':
+        assetPath = 'assets/GPS/marker_towing.png';
+        break;
+      default:
+        assetPath = 'assets/GPS/marker_meca.png';
+    }
+
+    try {
+      final Uint8List icon = await getBytesFromAsset(assetPath, 100);
+      final descriptor = BitmapDescriptor.fromBytes(icon);
+      _cachedIcons[role] = descriptor;
+      return descriptor;
+    } catch (e) {
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue);
+    }
+  }
+
   Future<Uint8List> getBytesFromAsset(String path, int width) async {
     ByteData data = await rootBundle.load(path);
     ui.Codec codec = await ui.instantiateImageCodec(
@@ -121,10 +154,8 @@ class _MapPageState extends State<MapPage> {
   }
 
   void _updateIncidentMarkers(List<QueryDocumentSnapshot> docs) {
-    // Clear existing incident markers
     _markers.removeWhere((marker) => marker.markerId.value.startsWith('incident-'));
 
-    // Add new markers for active incidents
     for (var doc in docs) {
       final data = doc.data() as Map<String, dynamic>;
       if (data['Location'] != null) {
@@ -156,7 +187,6 @@ class _MapPageState extends State<MapPage> {
 
   void _onMapCreated(GoogleMapController controller) {
     _controller.complete(controller);
-    _addCustomMarkers();
   }
 
   Future<void> _checkPermissionRequest() async {
@@ -165,24 +195,33 @@ class _MapPageState extends State<MapPage> {
       setState(() => _isPermissionGranted = true);
       _getUserLocation();
     } else {
-      print("Permission refusée");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Location permission is required")),
+      );
     }
   }
 
   Future<void> _getUserLocation() async {
     if (!_isPermissionGranted) return;
 
-    final position = await Geolocator.getCurrentPosition();
-    setState(() {
-      _currentLocation = LatLng(position.latitude, position.longitude);
-    });
-
-    _startTracking();
+    try {
+      final position = await Geolocator.getCurrentPosition();
+      setState(() {
+        _currentLocation = LatLng(position.latitude, position.longitude);
+      });
+      _startTracking();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error getting location: $e")),
+      );
+    }
   }
 
   void _startTracking() {
     _positionStream = Geolocator.getPositionStream().listen((position) {
-      _currentLocation = LatLng(position.latitude, position.longitude);
+      setState(() {
+        _currentLocation = LatLng(position.latitude, position.longitude);
+      });
 
       if (_followUser) {
         _controller.future.then((controller) {
@@ -222,29 +261,120 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  Future<void> _addCustomMarkers() async {
-    final icon = await _customIcon();
+  Future<void> _findNearbyServiceProviders(String serviceType) async {
+    if (_currentLocation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Waiting for location...")),
+      );
+      return;
+    }
 
     setState(() {
-      _markers.addAll([
-        Marker(
-          markerId: const MarkerId("Meca1"),
-          position: const LatLng(36.7143, 3.1795),
-          infoWindow: const InfoWindow(title: "Mécanicien - Sihem"),
-        ),
-        Marker(
-          markerId: const MarkerId("Meca2"),
-          position: const LatLng(36.7040, 3.1721),
-          infoWindow: const InfoWindow(title: "Mécanicien - Soundous"),
-        ),
-      ]);
+      _markers.removeWhere((marker) => marker.markerId.value.startsWith('service-'));
+      _selectedServiceType = serviceType;
     });
+
+    String role;
+    switch (serviceType) {
+      case "Mécanicien":
+        role = "mechanic";
+        break;
+      case "Pièce détachée":
+        role = "parts_supplier";
+        break;
+      case "Remorquage":
+        role = "towing_service";
+        break;
+      default:
+        return;
+    }
+
+    try {
+      const radiusInKm = 10;
+      const earthRadius = 6371.0;
+
+      final lat = _currentLocation!.latitude;
+      final lng = _currentLocation!.longitude;
+      final latDelta = radiusInKm / earthRadius * (180 / math.pi);
+      final lngDelta = radiusInKm / (earthRadius * math.cos(math.pi * lat / 180)) * (180 / math.pi);
+
+      final lowerLat = lat - latDelta;
+      final upperLat = lat + latDelta;
+      final lowerLng = lng - lngDelta;
+      final upperLng = lng + lngDelta;
+
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('Role', isEqualTo: role)
+          .where('Location', isGreaterThan: GeoPoint(lowerLat, lowerLng))
+          .where('Location', isLessThan: GeoPoint(upperLat, upperLng))
+          .get();
+
+      final icon = await _getServiceProviderIcon(role);
+
+      setState(() {
+        for (var doc in querySnapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          if (data['Location'] != null) {
+            final geoPoint = data['Location'] as GeoPoint;
+            final position = LatLng(geoPoint.latitude, geoPoint.longitude);
+            final name = data['Name'] as String? ?? 'Unknown';
+
+            _markers.add(
+              Marker(
+                markerId: MarkerId('service-${doc.id}'),
+                position: position,
+                icon: icon,
+                infoWindow: InfoWindow(
+                  title: '$serviceType - $name',
+                  snippet: data['Address'] as String? ?? '',
+                ),
+              ),
+            );
+          }
+        }
+      });
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final bounds = _calculateBounds(
+          _currentLocation!,
+          querySnapshot.docs.map((doc) {
+            final geoPoint = (doc.data() as Map<String, dynamic>)['Location'] as GeoPoint;
+            return LatLng(geoPoint.latitude, geoPoint.longitude);
+          }).toList(),
+        );
+
+        final controller = await _controller.future;
+        controller.animateCamera(
+          CameraUpdate.newLatLngBounds(bounds, 200),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("No $serviceType found nearby")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error finding service providers: $e")),
+      );
+    }
   }
 
-  Future<BitmapDescriptor> _customIcon() async {
-    return await BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(size: Size(48, 48)),
-      "assets/GPS/marker_meca.png",
+  LatLngBounds _calculateBounds(LatLng center, List<LatLng> locations) {
+    double? minLat, maxLat, minLng, maxLng;
+
+    locations.add(center);
+
+    for (var location in locations) {
+      minLat = minLat == null ? location.latitude : math.min(minLat, location.latitude);
+      maxLat = maxLat == null ? location.latitude : math.max(maxLat, location.latitude);
+      minLng = minLng == null ? location.longitude : math.min(minLng, location.longitude);
+      maxLng = maxLng == null ? location.longitude : math.max(maxLng, location.longitude);
+    }
+
+    return LatLngBounds(
+      northeast: LatLng(maxLat!, maxLng!),
+      southwest: LatLng(minLat!, minLng!),
     );
   }
 
@@ -254,57 +384,62 @@ class _MapPageState extends State<MapPage> {
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
         children: [
-          _buildQuickButton(
-            "Mécanicien",
-            Icons.handyman,
-            const LatLng(36.752887, 3.042048),
-          ),
-          const SizedBox(width: 1),
-          _buildQuickButton(
-            "Pièce détachée",
-            Icons.shopping_cart,
-            const LatLng(36.752887, 3.042048),
-          ),
-          const SizedBox(width: 1),
-          _buildQuickButton(
-            "Remorquage",
-            Icons.local_shipping,
-            const LatLng(36.752887, 3.042048),
-          ),
+          _buildQuickButton("Mécanicien", Icons.handyman),
+          const SizedBox(width: 8),
+          _buildQuickButton("Pièce détachée", Icons.shopping_cart),
+          const SizedBox(width: 8),
+          _buildQuickButton("Remorquage", Icons.local_shipping),
+          if (_selectedServiceType != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _selectedServiceType = null;
+                    _markers.removeWhere((marker) => marker.markerId.value.startsWith('service-'));
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  elevation: 3,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  minimumSize: const Size(0, 36),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                child: const Text(
+                  "Clear",
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildQuickButton(String label, IconData icon, LatLng target) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 12),
-      child: ElevatedButton.icon(
-        onPressed: () async {
-          final controller = await _controller.future;
-          _followUser = false;
-          controller.animateCamera(
-            CameraUpdate.newCameraPosition(
-              CameraPosition(target: target, zoom: 14),
-            ),
-          );
-        },
-        icon: Icon(icon, color: Colors.black, size: 18),
-        label: Text(
-          label,
-          style: const TextStyle(
-            color: Colors.black,
-            fontSize: 12,
-          ),
+  Widget _buildQuickButton(String label, IconData icon) {
+    return ElevatedButton.icon(
+      onPressed: () => _findNearbyServiceProviders(label),
+      icon: Icon(icon, color: Colors.black, size: 18),
+      label: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.black,
+          fontSize: 12,
         ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          elevation: 3,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          minimumSize: const Size(0, 36),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        elevation: 3,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        minimumSize: const Size(0, 36),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
         ),
       ),
     );
@@ -350,12 +485,8 @@ class _MapPageState extends State<MapPage> {
             initialCameraPosition: CameraPosition(target: _center, zoom: 12),
             polylines: _polyline,
             markers: _markers,
-            onTap: (_) {
-              setState(() => _followUser = false);
-            },
-            onCameraMoveStarted: () {
-              setState(() => _followUser = false);
-            },
+            onTap: (_) => setState(() => _followUser = false),
+            onCameraMoveStarted: () => setState(() => _followUser = false),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
