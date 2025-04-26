@@ -83,11 +83,11 @@ class _PersonOutlineScreenState extends State<PersonOutlineScreen> {
     } catch (e) {
       print("Error fetching user data: $e");
       setState(() {
-        _userName = "Erreur de chargement".tr();
-        phoneNumber = "Erreur de chargement".tr();
-        localisation = "Erreur de chargement".tr();
-        workingHours = "Erreur de chargement".tr();
-        facebookPage = "Erreur de chargement".tr();
+        _userName = "Erreur".tr();
+        phoneNumber = "Erreur".tr();
+        localisation = "Erreur".tr();
+        workingHours = "".tr();
+        facebookPage = "".tr();
         _isLoading = false;
       });
     }

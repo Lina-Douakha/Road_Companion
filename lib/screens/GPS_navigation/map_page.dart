@@ -12,6 +12,7 @@ import 'package:road_companion/screens/incident_reporting/incident_report_screen
 import 'package:easy_localization/easy_localization.dart';
 import 'package:road_companion/screens/GPS_navigation/Destination_map.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'service_profile.dart';
 
 class MapPage extends StatefulWidget {
   final double? latitude;
@@ -30,6 +31,9 @@ class _MapPageState extends State<MapPage> {
   final Set<Polyline> _polyline = {};
   final Set<Marker> _markers = {};
   final Map<String, BitmapDescriptor> _cachedIcons = {};
+  final ScrollController _scrollController = ScrollController();
+  List<Map<String, dynamic>> _serviceProviders = [];
+  bool _showProvidersSheet = false;
   bool _isPermissionGranted = false;
   bool _followUser = true;
   LatLng? _currentLocation;
@@ -261,6 +265,45 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  void _toggleProvidersSheet(bool show, {List<Map<String, dynamic>>? providers}) {
+    setState(() {
+      _showProvidersSheet = show;
+      if (providers != null) {
+        _serviceProviders = providers;
+      }
+    });
+  }
+
+  Future<double> _getAverageRating(String providerId) async {
+    try {
+      final reviewDoc = await FirebaseFirestore.instance
+          .collection('Reviews')
+          .doc(providerId)
+          .get();
+
+      if (!reviewDoc.exists) return 0.0;
+
+      final reviewData = reviewDoc.data() as Map<String, dynamic>;
+      final reviewsMap = reviewData['reviews'] as Map<String, dynamic>? ?? {};
+
+      double totalRating = 0.0;
+      int reviewCount = 0;
+
+      for (final entry in reviewsMap.entries) {
+        if (entry.key.startsWith('review')) {
+          final review = entry.value as Map<String, dynamic>;
+          totalRating += (review['rating'] as num?)?.toDouble() ?? 0.0;
+          reviewCount++;
+        }
+      }
+
+      return reviewCount > 0 ? totalRating / reviewCount : 0.0;
+    } catch (e) {
+      debugPrint('Error calculating average rating: $e');
+      return 0.0;
+    }
+  }
+
   Future<void> _findNearbyServiceProviders(String serviceType) async {
     if (_currentLocation == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -311,29 +354,57 @@ class _MapPageState extends State<MapPage> {
           .get();
 
       final icon = await _getServiceProviderIcon(role);
+      final providers = <Map<String, dynamic>>[];
 
-      setState(() {
-        for (var doc in querySnapshot.docs) {
-          final data = doc.data() as Map<String, dynamic>;
-          if (data['Location'] != null) {
-            final geoPoint = data['Location'] as GeoPoint;
-            final position = LatLng(geoPoint.latitude, geoPoint.longitude);
-            final name = data['Name'] as String? ?? 'Unknown';
+      // Get average ratings for all providers
+      await Future.wait(querySnapshot.docs.map((doc) async {
+        final data = doc.data() as Map<String, dynamic>;
+        if (data['Location'] != null) {
+          final geoPoint = data['Location'] as GeoPoint;
+          final position = LatLng(geoPoint.latitude, geoPoint.longitude);
+          final name = data['Name'] as String? ?? 'Unknown';
+          final address = data['Address'] as String? ?? '';
+          final phone = data['Phone'] as String? ?? '';
+          final profilePhoto = data['ProfilePhoto'] as String? ?? '';
+          final averageRating = await _getAverageRating(doc.id);
 
-            _markers.add(
-              Marker(
-                markerId: MarkerId('service-${doc.id}'),
-                position: position,
-                icon: icon,
-                infoWindow: InfoWindow(
-                  title: '$serviceType - $name',
-                  snippet: data['Address'] as String? ?? '',
-                ),
+          providers.add({
+            'id': doc.id,
+            'name': name,
+            'position': position,
+            'address': address,
+            'phone': phone,
+            'email': data['Email'] as String? ?? '',
+            'Link': data['Link'] as String? ?? '',
+            'ProfilePhoto': profilePhoto,
+            'Role': role,
+            'Location': geoPoint,
+            'VerifiedAt': data['VerifiedAt'],
+            'Working_hours': data['Working_hours'] as String? ?? '',
+            'rating': averageRating,
+          });
+
+          _markers.add(
+            Marker(
+              markerId: MarkerId('service-${doc.id}'),
+              position: position,
+              icon: icon,
+              infoWindow: InfoWindow(
+                title: '$serviceType - $name',
+                snippet: 'Tap for more information',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MechanicProfilePage(providerId: doc.id),
+                    ),
+                  );
+                },
               ),
-            );
-          }
+            ),
+          );
         }
-      });
+      }));
 
       if (querySnapshot.docs.isNotEmpty) {
         final bounds = _calculateBounds(
@@ -348,15 +419,19 @@ class _MapPageState extends State<MapPage> {
         controller.animateCamera(
           CameraUpdate.newLatLngBounds(bounds, 200),
         );
+
+        _toggleProvidersSheet(true, providers: providers);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("No $serviceType found nearby")),
         );
+        _toggleProvidersSheet(false);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error finding service providers: $e")),
       );
+      _toggleProvidersSheet(false);
     }
   }
 
@@ -397,6 +472,7 @@ class _MapPageState extends State<MapPage> {
                   setState(() {
                     _selectedServiceType = null;
                     _markers.removeWhere((marker) => marker.markerId.value.startsWith('service-'));
+                    _toggleProvidersSheet(false);
                   });
                 },
                 style: ElevatedButton.styleFrom(
@@ -596,6 +672,124 @@ class _MapPageState extends State<MapPage> {
               },
             ),
           ),
+          if (_showProvidersSheet)
+            DraggableScrollableSheet(
+              initialChildSize: 0.5,
+              minChildSize: 0.3,
+              maxChildSize: 0.85,
+              builder: (context, controller) => Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 4),
+                    Center(
+                      child: Container(
+                        width: 35,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 6),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _selectedServiceType ?? "Service Providers",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.close),
+                            onPressed: () => _toggleProvidersSheet(false),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: ListView.builder(
+                        controller: controller,
+                        itemCount: _serviceProviders.length,
+                        padding: const EdgeInsets.only(top: 8),
+                        itemBuilder: (context, index) {
+                          final provider = _serviceProviders[index];
+                          final profilePhoto = provider['ProfilePhoto'] as String?;
+                          final name = provider['name'] as String? ?? '';
+                          final rating = provider['rating'] as double? ?? 0.0;
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                            child: Material(
+                              borderRadius: BorderRadius.circular(12),
+                              elevation: 1,
+                              child: ListTile(
+                                tileColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                leading: CircleAvatar(
+                                  radius: 20,
+                                  backgroundColor: Colors.grey[400],
+                                  backgroundImage: profilePhoto != null && profilePhoto.isNotEmpty
+                                      ? (profilePhoto.startsWith('http')
+                                          ? NetworkImage(profilePhoto)
+                                          : AssetImage(profilePhoto)) as ImageProvider
+                                      : null,
+                                  child: profilePhoto == null || profilePhoto.isEmpty
+                                      ? Text(
+                                          name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                          style: TextStyle(color: Colors.white),
+                                        )
+                                      : null,
+                                ),
+                                title: Text(provider['name']),
+                                subtitle: Text(provider['address']),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.star, color: Colors.amber, size: 20),
+                                    SizedBox(width: 4),
+                                    Text(rating.toStringAsFixed(1)),
+                                    SizedBox(width: 8),
+                                    Icon(Icons.arrow_forward_ios, size: 16),
+                                  ],
+                                ),
+                                onTap: () {
+                                  _controller.future.then((controller) {
+                                    controller.animateCamera(
+                                      CameraUpdate.newLatLngZoom(
+                                        provider['position'],
+                                        16,
+                                      ),
+                                    );
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => MechanicProfilePage(providerId: provider['id']),
+                                      ),
+                                    );
+                                  });
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
