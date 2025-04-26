@@ -652,7 +652,6 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
     }
   }
 
-  // Update the _showRequestDialog method
   void _showRequestDialog() {
     final TextEditingController problemController = TextEditingController();
     bool isSending = false;
@@ -676,7 +675,7 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                   controller: problemController,
                   maxLines: 4,
                   decoration: const InputDecoration(
-                    hintText: 'Entrez la description de votre problème',
+                    hintText: 'Description (optionnelle)',
                     hintStyle: TextStyle(color: Colors.grey),
                     border: OutlineInputBorder(),
                     focusedBorder: OutlineInputBorder(
@@ -696,16 +695,6 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                   onPressed: isSending
                       ? null
                       : () async {
-                          if (problemController.text.trim().isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Please describe your problem"),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                            return;
-                          }
-
                           setState(() => isSending = true);
                           await _sendServiceRequest(problemController.text.trim());
                           setState(() => isSending = false);
