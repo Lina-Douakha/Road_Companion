@@ -35,10 +35,12 @@ class _DestinationPageState extends State<DestinationPage> {
   final Set<Polyline> _polylines = {};
   final Set<Marker> _markers = {};
   final Map<String, BitmapDescriptor> _cachedIcons = {};
+  final List<LatLng> _realTimePath = []; // Added for tracking
   bool _isPermissionGranted = false;
   bool _followUser = true;
   bool _showTripButton = false;
   bool _showIncidentAlert = false;
+  bool _tracking = false; // Added for tracking functionality
   LatLng? _currentLocation;
   LatLng? _destinationLocation;
   String? _destinationLabel;
@@ -272,32 +274,83 @@ class _DestinationPageState extends State<DestinationPage> {
         ),
       );
     });
-    _startTracking();
+    _startLocationUpdates(); // Changed from _startTracking to separate real-time position updates
     _moveCameraToCurrentLocation();
   }
 
-  void _startTracking() {
+  // Updated to separate location updates from tracking
+  void _startLocationUpdates() {
     _positionStream = Geolocator.getPositionStream().listen((position) {
-      _currentLocation = LatLng(position.latitude, position.longitude);
+      final newPosition = LatLng(position.latitude, position.longitude);
+
+      setState(() {
+        _currentLocation = newPosition;
+
+        // Update origin marker to match current position
+        _markers.removeWhere((marker) => marker.markerId.value == "origin");
+        _markers.add(
+          Marker(
+            markerId: const MarkerId("origin"),
+            position: newPosition,
+            infoWindow: const InfoWindow(title: "Votre position"),
+          ),
+        );
+
+        // If actively tracking, add to path and update route
+        if (_tracking && _destinationLocation != null) {
+          _realTimePath.add(newPosition);
+
+          // Update polyline for active navigation
+          _updateRoute(newPosition, _destinationLocation!);
+        }
+      });
+
       if (_followUser) {
         _moveCameraToCurrentLocation();
       }
     });
   }
 
-  Future<void> _moveCameraToCurrentLocation() async {
+  // New method for tracking functionality
+  void _startTracking() {
+    setState(() {
+      _tracking = true;
+      _realTimePath.clear();
+      _realTimePath.add(_currentLocation!);
+      _followUser = true;
+      _startIncidentMonitoring();
+    });
+
+    // Zoom in for better navigation view
+    _moveCameraToCurrentLocation(zoom: 18.0);
+  }
+
+  // New method to stop tracking
+  void _stopTracking() {
+    setState(() {
+      _tracking = false;
+      _moveCameraToCurrentLocation(zoom: 14.0);
+    });
+  }
+
+  Future<void> _moveCameraToCurrentLocation({double zoom = 14.0}) async {
     if (_currentLocation != null) {
       final controller = await _controller.future;
       controller.animateCamera(
         CameraUpdate.newCameraPosition(
           CameraPosition(
             target: _currentLocation!,
-            zoom: 14,
+            zoom: zoom,
             bearing: 0,
           ),
         ),
       );
     }
+  }
+
+  Future<void> _updateRoute(LatLng current, LatLng destination) async {
+    await _getPolyline(current, destination);
+    await _fetchDistanceAndDuration(current, destination);
   }
 
   Future<void> _selectDestination() async {
@@ -356,6 +409,18 @@ class _DestinationPageState extends State<DestinationPage> {
             width: 5,
           ),
         );
+
+        // Add real-time path polyline if tracking
+        if (_tracking && _realTimePath.isNotEmpty) {
+          _polylines.add(
+            Polyline(
+              polylineId: const PolylineId("realTimePath"),
+              points: _realTimePath,
+              color: kAppBGreen,
+              width: 6,
+            ),
+          );
+        }
       });
       _startIncidentMonitoring();
     }
@@ -391,6 +456,8 @@ class _DestinationPageState extends State<DestinationPage> {
       _markers.removeWhere((marker) => marker.markerId.value == "destination");
       _showTripButton = false;
       _showIncidentAlert = false;
+      _tracking = false;
+      _realTimePath.clear();
     });
   }
 
@@ -616,10 +683,13 @@ class _DestinationPageState extends State<DestinationPage> {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    "GOT IT",
-                    style: TextStyle(
+                  onPressed: _tracking ? null : () {
+                    Navigator.pop(context);
+                    _startTracking();
+                  },
+                  child: Text(
+                    _tracking ? "NAVIGATION IN PROGRESS" : "START TRIP",
+                    style: const TextStyle(
                       color: kAppWhite,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -719,7 +789,7 @@ class _DestinationPageState extends State<DestinationPage> {
               endIndent: 12,
             ),
             GestureDetector(
-              onTap: _selectDestination,
+              onTap: _tracking ? null : _selectDestination,
               child: TextField(
                 enabled: false,
                 style: const TextStyle(color: kAppGreen),
@@ -739,7 +809,51 @@ class _DestinationPageState extends State<DestinationPage> {
                 ),
               ),
             ),
+            if (_distance != null && _duration != null && _tracking)
+            const Divider(
+                                    color: Color(0xFFE0E0E0),
+                                    height: 1,
+                                    thickness: 1,
+                                    indent: 12,
+                                    endIndent: 12,
+                                ),
+            if (_distance != null && _duration != null && _tracking)
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
+                  children: [
+                    const Icon(Icons.directions_car, color: kAppGreen),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Text(
+                        'Distance: $_distance    Duration: $_duration',
+                        style: const TextStyle(
+                          color: kAppGrey,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStopTrackingButton() {
+    return Positioned(
+      bottom: 175, // Positioned above the current location button
+      right: 16,
+      child: SizedBox(
+        width: 45,
+        height: 45,
+        child: FloatingActionButton(
+          backgroundColor: Colors.red, // Red color for stop action
+          onPressed: _stopTracking,
+          child: const Icon(Icons.stop, color: Colors.white, size: 23),
         ),
       ),
     );
@@ -806,24 +920,25 @@ class _DestinationPageState extends State<DestinationPage> {
                 ),
               ),
             ),
-          Positioned(
-            bottom: 65,
-            right: 16,
-            child: SizedBox(
-              width: 45,
-              height: 45,
-              child: FloatingActionButton(
-                backgroundColor: Colors.white,
-                onPressed: () {
-                  setState(() {
-                    _followUser = true;
-                  });
-                  _moveCameraToCurrentLocation();
-                },
-                child: const Icon(Icons.my_location, color: Colors.black, size: 23),
-              ),
-            ),
-          ),
+          if (_tracking) _buildStopTrackingButton(),
+                Positioned(
+                  bottom: 65,
+                  right: 16,
+                  child: SizedBox(
+                    width: 45,
+                    height: 45,
+                    child: FloatingActionButton(
+                      backgroundColor: Colors.white,
+                      onPressed: () {
+                        setState(() {
+                          _followUser = true;
+                        });
+                        _moveCameraToCurrentLocation();
+                      },
+                      child: const Icon(Icons.my_location, color: Colors.black, size: 23),
+                    ),
+                  ),
+                ),
         ],
       ),
     );
