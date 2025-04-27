@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:road_companion/Theming/colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:road_companion/screens/chat.dart';
 
 class MechanicProfilePage extends StatefulWidget {
   final String providerId;
@@ -366,16 +368,33 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
     }
   }
 
-  Future<void> _launchUrl(String url) async {
+  Future<void> _launchUniversalUrl(String url) async {
     if (url.isEmpty) return;
 
-    final Uri uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Could not launch URL")),
-      );
+    try {
+      // Handle @username for Instagram
+      if (url.startsWith('@')) {
+        url = 'https://instagram.com/${url.substring(1)}';
+      }
+      // Add https:// if missing for websites
+      else if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://$url';
+      }
+
+      final Uri uri = Uri.parse(url);
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        throw 'Could not launch $url';
+      }
+    } catch (e) {
+      debugPrint("Error launching URL: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("error opening link"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -761,14 +780,38 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
   Widget build(BuildContext context) {
     final address = _providerData['Address'] as String? ?? 'Adresse non disponible';
     final name = _providerData['Name'] as String? ?? 'Nom inconnu';
+    final phoneNumber = _providerData['Phone'] as String? ?? '';
     final link = _providerData['Link'] as String? ?? '';
     final workingHours = _formatWorkingHours();
 
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+          statusBarColor: const Color(0xFF1B9169),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF1B9169)),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          IconButton(
+                icon: const Icon(Icons.chat_outlined, color: Color(0xFF1B9169)),
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatScreen(receiverId: widget.providerId),
+                  ),
+              );
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
-          Container(height: MediaQuery.of(context).padding.top, color: ColorsManager.Green1),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -807,6 +850,7 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                     style: const TextStyle(fontSize: 13, color: Colors.black54),
                   ),
                   const SizedBox(height: 16),
+
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ColorsManager.Bgreen,
@@ -820,6 +864,28 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                     ),
                     label: const Text('Demander', style: TextStyle(color: Colors.white, fontSize: 16)),
                   ),
+                  const SizedBox(height: 16),
+
+                  // Added rating button here - better position in the UI flow
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: ColorsManager.Green1,
+                      elevation: 2,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: ColorsManager.Green1.withOpacity(0.5), width: 1),
+                      ),
+                    ),
+                    onPressed: _showRatingDialog,
+                    icon: const Icon(Icons.star_border, size: 20),
+                    label: const Text(
+                      'Noter & Commenter',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    ),
+                  ),
+
                   const SizedBox(height: 24),
                   const Divider(thickness: 0.5, height: 10),
                   ListTile(
@@ -830,30 +896,26 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                     title: Text(workingHours, style: const TextStyle(fontSize: 13)),
                   ),
                   const Divider(thickness: 0.5, height: 10),
-                  if (link.isNotEmpty)
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      dense: true,
-                      horizontalTitleGap: 8,
-                      leading: const Icon(Icons.link, color: ColorsManager.Green1, size: 20),
-                      title: Text(
-                        link,
-                        style: const TextStyle(color: Colors.blue, fontSize: 13),
-                        overflow: TextOverflow.ellipsis,
+
+                  if (link.isNotEmpty) ...[
+                    InkWell(
+                      onTap: () => _launchUniversalUrl(link),
+                      borderRadius: BorderRadius.circular(6),
+                      child: SizedBox(
+                        height: 50,
+                        child: const Center(
+                          child: Row(
+                            children: [
+                              Icon(Icons.link, size: 20, color: ColorsManager.Green1),
+                              SizedBox(width: 8),
+                              Text("Open Link for more information"),
+                            ],
+                          ),
+                        ),
                       ),
-                      onTap: () => _launchUrl(link),
                     ),
-                  if (link.isNotEmpty) const Divider(thickness: 0.5, height: 10),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    dense: true,
-                    horizontalTitleGap: 8,
-                    title: const Text("Noter & Commenter",
-                        style: TextStyle(color: ColorsManager.Green1, fontSize: 15, fontWeight: FontWeight.bold)),
-                    onTap: _showRatingDialog,
-                  ),
-                  const SizedBox(height: 10),
-                  const Divider(thickness: 0.5, height: 10),
+                    const Divider(thickness: 0.5, height: 10),
+                  ],
                   const Align(
                     alignment: Alignment.centerLeft,
                     child: Text("Avis des clients",

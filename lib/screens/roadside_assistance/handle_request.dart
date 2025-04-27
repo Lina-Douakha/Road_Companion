@@ -9,7 +9,6 @@ import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:road_companion/screens/chat.dart';
-import 'package:geocoding/geocoding.dart';
 
 class HandleRequestPage extends StatefulWidget {
 
@@ -121,34 +120,13 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
     required String username,
     required GeoPoint location,
     required bool status,
-    required Timestamp timestamp,
+    required Timestamp timestamp, // client's original request time
   }) async {
     final firestore = FirebaseFirestore.instance;
     final historyRef = firestore.collection('Request_history').doc(providerID);
 
     try {
       print('Saving request to history for provider: $providerID');
-
-      // First convert GeoPoint to address
-      String address = 'Address not available';
-      try {
-        final placemarks = await placemarkFromCoordinates(
-          location.latitude,
-          location.longitude,
-        );
-
-        if (placemarks.isNotEmpty) {
-          final place = placemarks.first;
-          address = [
-            place.street,
-            place.locality,
-            place.administrativeArea,
-            place.country
-          ].where((part) => part?.isNotEmpty ?? false).join(', ');
-        }
-      } catch (e) {
-        print('⚠️ Geocoding error: $e');
-      }
 
       final snapshot = await historyRef.get();
       print('Fetched history snapshot: ${snapshot.data()}');
@@ -168,17 +146,15 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
       final newRequestData = {
         'date': timestamp,
         'location': location,
-        'address': address,  // Added address field
         'status': status,
         'userID': clientID,
         'username': username,
       };
 
+
       await historyRef.set(
-        {newRequestKey: newRequestData},
-        SetOptions(merge: true)
-      );
-      print('Request saved to history successfully with address: $address');
+          {newRequestKey: newRequestData}, SetOptions(merge: true));
+      print('Request saved to history successfully');
     } catch (e) {
       print("❌ Failed to save request to history: $e");
     }
@@ -565,13 +541,13 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
               clientLocation: clientLocation,
               clientAddress: clientAddress,
             ),
-            // Show the draggable sheet only if there are pending requests
+
             if (allRequests.isNotEmpty)
               DraggableScrollableSheet(
                 controller: _controller,
-                initialChildSize: 0.45,
+                initialChildSize: 0.48,
                 minChildSize: 0.12,
-                maxChildSize: 0.55,
+                maxChildSize: 0.6,
                 builder: (context, scrollController) {
                   return Container(
                     decoration: BoxDecoration(
@@ -666,12 +642,17 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
                                   child: InkWell(
                                     customBorder: CircleBorder(),
                                     onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => ChatScreen(receiverId: requestData!['clientID']),
-                                        ),
-                                      );
+                                      if (requestData!['status'] ==
+                                          'accepted') {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                ChatScreen(
+                                                    receiverId: requestData!['clientID']),
+                                          ),
+                                        );
+                                      }
                                     },
                                     child: Padding(
                                       padding: EdgeInsets.all(10),
@@ -697,7 +678,7 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
               ),
             if (allRequests.isNotEmpty && requestData!['status'] == 'accepted')
               Positioned(
-                top: 50,
+                top: 80,
                 left: 16,
                 child: ElevatedButton(
                   onPressed: () {
@@ -764,10 +745,10 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:  Colors.teal[900],
-                    // light green background
+                    backgroundColor:  Color(0xFF00D47E),
+
                     foregroundColor: Colors.white,
-                    // dark green text/icon
+
                     elevation: 0,
                     padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                     textStyle: TextStyle(
@@ -783,7 +764,7 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
 
             if (allRequests.isEmpty)
               Positioned(
-                top: 50,
+                top: 80,
                 left: 16,
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -817,9 +798,100 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
+        TextButton.icon(
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                title: Center(
+                  child: Text(
+                    'handle_request.request_description'.tr(),
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                content: requestData!['description'] == null ||
+                    requestData!['description']
+                        .toString()
+                        .trim()
+                        .isEmpty
+                    ? SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.7,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Lottie.asset(
+                        'assets/animation/emptybox.json',
+                        width: 140,
+                        height: 140,
+                        repeat: true,
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        'handle_request.no_client_request_description'
+                            .tr(),
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey.shade600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                )
+                    : SingleChildScrollView(
+                  child: Text(
+                    requestData!['description'],
+                    style: TextStyle(
+                      color: Colors.grey[800],
+                      fontSize: 14,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+                actions: [
+                  Center(
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(
+                        'handle_request.close'.tr(),
+                        style: TextStyle(
+                          color: Color(0xFF00D47E),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
 
-        // Enhanced Info Cards with subtle animations
+          icon: Icon(Icons.info_outline,
+              color: Color(0xFF00D47E), size: 18),
+          label: Text(
+            'handle_request.show_description'.tr(),
+            style: TextStyle(
+              color: Color(0xFF00D47E),
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.zero,
+            minimumSize: Size(0, 0),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+        const SizedBox(height: 16),
         _styledInfoCard(
           Icons.person_outline,
           'handle_request.client_name'.tr(),
@@ -837,12 +909,10 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
           'handle_request.address'.tr(),
           "${requestData!["address"]}",
         ),
-        const SizedBox(height: 28),
-
-        // Enhanced Accept / Reject Buttons with improved contrast and feedback
+        const SizedBox(height: 12),
         Row(
           children: [
-            // Reject Button with improved visual feedback
+            // Reject Button - smaller with enhanced style
             Expanded(
               child: OutlinedButton(
                 onPressed: () async {
@@ -870,26 +940,28 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
                   });
                 },
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.red[700],
+                  foregroundColor: Colors.teal,
                   backgroundColor: Colors.white,
-                  side: BorderSide(color: Colors.red[700]!),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: BorderSide(color: Colors.teal, width: 1.5),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  minimumSize: Size(100, 40),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24)
+                      borderRadius: BorderRadius.circular(20)
                   ),
                   elevation: 0,
                   shadowColor: Colors.transparent,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.close, size: 18),
-                    SizedBox(width: 8),
+                    Icon(Icons.close, size: 16),
+                    SizedBox(width: 6),
                     Text(
                       'handle_request.reject'.tr(),
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        fontSize: 15,
+                        fontSize: 14,
                       ),
                     ),
                   ],
@@ -897,13 +969,12 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
               ),
             ),
 
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
 
-            // Accept Button with improved visual feedback
             Expanded(
               child: ElevatedButton(
                 onPressed: () async {
-                  // Haptic feedback for better UX
+
                   HapticFeedback.mediumImpact();
 
                   setState(() => _accepted = true);
@@ -925,23 +996,25 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
                   backgroundColor: Color(0xFF00D47E),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  minimumSize: Size(100, 40),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24)
+                      borderRadius: BorderRadius.circular(20)
                   ),
                   elevation: 2,
-                  shadowColor: Color(0xFF00D47E).withOpacity(0.3),
+                  shadowColor: Color(0xFF00D47E).withOpacity(0.4),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.check, size: 18),
-                    SizedBox(width: 8),
+                    Icon(Icons.check, size: 16),
+                    SizedBox(width: 6),
                     Text(
                       'handle_request.accept'.tr(),
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        fontSize: 15,
+                        fontSize: 14,
                       ),
                     ),
                   ],
@@ -951,7 +1024,7 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
           ],
         ),
 
-        // Add a "swipe for more requests" indicator if there are multiple requests
+
         if (allRequests.length > 1)
           Padding(
             padding: const EdgeInsets.only(top: 16),
@@ -1000,10 +1073,10 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Color(0xFF00D47E),
+              color: Colors.teal,
               boxShadow: [
                 BoxShadow(
-                  color: Color(0xFF00D47E).withOpacity(0.2),
+                  color: Colors.teal.withOpacity(0.2),
                   blurRadius: 8,
                   spreadRadius: 0,
                   offset: Offset(0, 2),
@@ -1053,10 +1126,6 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
       ),
     );
   }
-
-// Don't forget to add this import at the top of your file
-// import 'package:flutter/services.dart' show HapticFeedback;
-
   Widget _buildAcceptedContent() {
     if (requestData == null) return Center(child: Text("No request data"));
 

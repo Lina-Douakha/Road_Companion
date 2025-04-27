@@ -476,7 +476,7 @@ class _AdminExamManagerState extends State<AdminExamManager> {
     final double screenHeight = MediaQuery.of(context).size.height;
     final double screenWidth = MediaQuery.of(context).size.width;
 
-    final testItems = List.generate(20, (i) => 'Test ${i + 1}');
+    final testItems = List.generate(20, (i) => 'Test${i + 1}');
     if (!testItems.contains(selectedTest)) {
       selectedTest = testItems.first;
     }

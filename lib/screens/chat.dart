@@ -137,6 +137,7 @@ class _ChatScreenState extends State<ChatScreen> {
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
+        surfaceTintColor: Colors.white,
         backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 2,
@@ -210,39 +211,13 @@ class _ChatScreenState extends State<ChatScreen> {
         decoration: BoxDecoration(
           color: Colors.grey[50],
           image: DecorationImage(
-            image: AssetImage('assets/chat_bg.png'), // Add a subtle background pattern - create or use your own
+            image: AssetImage('assets/chat_bg.png'),
             opacity: 0.05,
             fit: BoxFit.cover,
           ),
         ),
         child: Column(
           children: [
-            // Chat date indicator
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.8),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Text(
-                'Today',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-
-            // ⬇️ GestureDetector ONLY wraps the message list
             Expanded(
               child: GestureDetector(
                 onTap: () => _focusNode.unfocus(),
@@ -327,7 +302,6 @@ class _ChatScreenState extends State<ChatScreen> {
                         final isMe = sender == senderId;
                         final timestamp = doc['timestamp'];
 
-                        // Check if we should show a date header
                         bool showDateHeader = false;
                         if (index == 0) {
                           showDateHeader = true;
@@ -340,8 +314,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           showDateHeader = !isSameDay(prevDate, currentDate);
                         }
 
-                        // Check if we should show the sender avatar
-                        bool showAvatar = !isMe; // Never show avatar for current user's messages
+                        bool showAvatar = !isMe;
 
                         if (index < messages.length - 1 && !isMe) {
                           final nextSender = messages[index + 1]['senderId'];
@@ -374,7 +347,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             Align(
                               alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
                               child: Container(
-                                // Add small horizontal padding here for screen edge margin
+
                                 padding: EdgeInsets.only(
                                   right: isMe ? 8.0 : 0.0,
                                   left: isMe ? 0.0 : 8.0,
@@ -384,7 +357,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                   mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    // Display receiver's profile photo on the left side
+
                                     if (!isMe && showAvatar)
                                       Container(
                                         margin: const EdgeInsets.only(right: 8),
@@ -398,7 +371,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                     if (!isMe && !showAvatar)
                                       SizedBox(width: 40),
 
-                                    // The text message bubble
+
                                     Container(
                                       constraints: BoxConstraints(
                                         maxWidth: MediaQuery.of(context).size.width * 0.65,
@@ -423,7 +396,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                       child: Column(
                                         crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                                         children: [
-                                          // Message text with improved styling
+
                                           Text(
                                             message,
                                             style: TextStyle(
@@ -446,7 +419,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                               if (isMe) ...[
                                                 const SizedBox(width: 4),
                                                 Icon(
-                                                  Icons.done_all,  // Or use a custom asset for read receipts
+                                                  Icons.done_all,
                                                   size: 12,
                                                   color: Colors.white.withOpacity(0.7),
                                                 ),
@@ -469,7 +442,6 @@ class _ChatScreenState extends State<ChatScreen> {
                                           ),
                                         ),
                                       ),
-                                    // Removed the SizedBox that was here for isMe && !showAvatar
                                   ],
                                 ),
                               ),
@@ -551,7 +523,6 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-// Helper method to check if two dates are the same day
   bool isSameDay(DateTime date1, DateTime date2) {
     return date1.year == date2.year && date1.month == date2.month && date1.day == date2.day;
   }
