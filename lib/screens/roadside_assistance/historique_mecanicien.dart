@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 class NotificationHistoryScreen extends StatefulWidget {
   @override
   _NotificationHistoryScreenState createState() => _NotificationHistoryScreenState();
@@ -10,18 +11,29 @@ class NotificationHistoryScreen extends StatefulWidget {
 
 class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
   List<Map<String, String>> rawNotifications = [];
+  String  providerID="";
 
   @override
   void initState() {
     super.initState();
+    fetchCurrentUser();
     fetchNotifications();
   }
-
+  void fetchCurrentUser() {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        providerID = user.uid;
+      });
+    } else {
+      print("No user logged in.");
+    }
+  }
   Future<void> fetchNotifications() async {
     try {
       DocumentSnapshot doc = await FirebaseFirestore.instance
           .collection('Request_history')
-          .doc('p001')
+          .doc(providerID)
           .get();
 
       if (doc.exists) {
@@ -34,6 +46,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
             final username = value['username'] ?? 'No name';
             final location = "Lat: ${value['location']
                 .latitude}, Lng: ${value['location'].longitude}";
+            final address = value['address'] ?? location;
             final timestamp = value['date'] as Timestamp;
             final dateStr = DateFormat('yyyy-MM-dd HH:mm').format(
                 timestamp.toDate());
@@ -42,7 +55,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
             fetched.add({
               'image': 'assets/images/profil_pic.png',
               'username': username,
-              'location': location,
+              'address': address,
               'date': dateStr,
               'status': isAccepted
                   ? "historique_mecanicien.accepted"
@@ -155,7 +168,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
                   final translatedNotification = {
                     'image': notification['image']!,
                     'username': notification['username']!.tr(),
-                    'location': notification['location']!,
+                    'address': notification['address']!,
                     'date': notification['date']!,
                     'status': notification['status']!.tr(),
                   };
@@ -233,7 +246,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
                                     SizedBox(width: 4),
                                     Expanded(
                                       child: Text(
-                                        translatedNotification["location"]!,
+                                        translatedNotification["address"]!,
                                         style: TextStyle(
                                           fontSize: screenWidth * 0.03,
                                           color: Colors.grey.shade600,

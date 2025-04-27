@@ -15,12 +15,17 @@ dependencies:
   firebase_core: ^3.12.1
   firebase_auth: ^5.5.1
   cloud_firestore: ^5.6.5
+  fl_chart: ^0.65.0
   firebase_storage: ^12.4.4
+  firebase_messaging: ^15.2.5
+  flutter_local_notifications: ^19.1.0
   google_sign_in: ^6.1.6
   image_picker: ^1.0.7
   file_picker: ^10.1.2
   shared_preferences: ^2.5.3
   lottie: ^3.3.1
+  flutter_svg: ^2.0.7
+  flutter_colorpicker: ^1.0.3
   carousel_slider: ^5.0.0
   cached_network_image: ^3.4.1
   flutter_localizations:
@@ -31,12 +36,13 @@ dependencies:
   path_provider: ^2.1.2
   google_maps_flutter: ^2.11.0
   permission_handler: ^12.0.0+1
-  geolocator: ^13.0.4
+  geolocator: ^14.0.0
   dio: ^5.4.0
   flutter_polyline_points: ^2.1.0
   location: ^8.0.0
   geocoding: ^3.0.0
   http: ^1.1.0
+  keyboard_avoider: ^0.2.0
   uuid: 4.5.1
   latlong2: ^0.9.1
   flutter_map: ^8.1.1

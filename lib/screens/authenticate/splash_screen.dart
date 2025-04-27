@@ -9,6 +9,7 @@ import 'package:road_companion/screens/roadside_assistance/roadside_assistance_s
 import 'package:road_companion/screens/authenticate/login.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:road_companion/screens/admin/admin_menu.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -78,7 +79,13 @@ class _SplashScreenState extends State<SplashScreen> {
             context,
             MaterialPageRoute(builder: (context) => RoadsideAssistanceScreen()),
           );
-        } else {
+        } else if (userRole == 'admin') {
+            // Navigate to admin dashboard
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => AdminDashboardScreen()),
+            );
+             } else {
           // Navigate to regular user home
           Navigator.pushReplacement(
             context,

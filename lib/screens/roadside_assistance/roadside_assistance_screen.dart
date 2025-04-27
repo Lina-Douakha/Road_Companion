@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:road_companion/screens/roadside_assistance/historique_mecanicien.dart';
 import 'package:road_companion/screens/roadside_assistance/reviews.dart';
+import 'package:road_companion/screens/roadside_assistance/handle_request.dart';
 import 'package:road_companion/screens/roadside_assistance/person_outline.dart';
-import 'package:road_companion/screens/roadside_assistance/map_screen.dart'; // Importez votre MapScreen
+//import 'package:road_companion/screens/roadside_assistance/map_screen.dart'; // Importez votre MapScreen
 
 class RoadsideAssistanceScreen extends StatefulWidget {
   @override
@@ -15,7 +16,8 @@ class _RoadsideAssistanceScreenState extends State<RoadsideAssistanceScreen> {
   final List<Widget> _screens = [
     NotificationHistoryScreen(),
     ForumScreen(),
-    MapScreen(), // Nouvel écran de carte
+    HandleRequestPage(),
+    //MapScreen(), // Nouvel écran de carte
     PersonOutlineScreen(),
   ];
 

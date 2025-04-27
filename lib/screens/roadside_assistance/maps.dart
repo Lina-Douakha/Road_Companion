@@ -85,7 +85,6 @@ class _MapPageState extends State<MapPage> {
         controller.setMapStyle(mapStyle);
       },
       markers: markers,
-      polylines: polylines,
       myLocationButtonEnabled: true,
       myLocationEnabled: true,
     );

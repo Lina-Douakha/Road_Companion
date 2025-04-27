@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:lottie/lottie.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ForumScreen extends StatefulWidget {
   @override
@@ -15,16 +16,28 @@ class _ForumScreenState extends State<ForumScreen> {
   String status = 'Loading...'; // Added status variable for user feedback
 
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  String  providerID ="";
 
+  void fetchCurrentUser() {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        providerID = user.uid;
+      });
+    } else {
+      print("No user logged in.");
+    }
+  }
   @override
   void initState() {
     super.initState();
+    fetchCurrentUser();
     loadReviews();
   }
 
   Future<void> loadReviews() async {
     try {
-      DocumentReference providerRef = _db.collection('Reviews').doc('p001');
+      DocumentReference providerRef = _db.collection('Reviews').doc(providerID);
       DocumentSnapshot providerDoc = await providerRef.get();
 
       if (providerDoc.exists) {
@@ -33,27 +46,62 @@ class _ForumScreenState extends State<ForumScreen> {
         debugPrint('Top-level keys in document: ${data.keys}');
         debugPrint('Data fetched: $data');
 
-        // 🔥 FIX: Access the "reviews" map inside the document
+        // Access the "reviews" map inside the document
         Map<String, dynamic> reviewsMap = data['reviews'] ?? {};
         debugPrint('Reviews map: $reviewsMap');
 
         if (reviewsMap.isNotEmpty) {
+          // First collect all sender IDs
+          Set<String> senderIds = {};
+          reviewsMap.forEach((key, value) {
+            var reviewData = value as Map<String, dynamic>;
+            String? senderId = reviewData['senderID'] as String?;
+            if (senderId != null) {
+              senderIds.add(senderId);
+            }
+          });
+
+          // Fetch all sender data in one batch
+          Map<String, Map<String, dynamic>> sendersData = {};
+          if (senderIds.isNotEmpty) {
+            final sendersSnapshot = await _db.collection('users')
+                .where(FieldPath.documentId, whereIn: senderIds.toList())
+                .get();
+
+            for (var doc in sendersSnapshot.docs) {
+              sendersData[doc.id] = doc.data() as Map<String, dynamic>;
+            }
+          }
+
           setState(() {
             reviews = reviewsMap.entries.map((entry) {
               var value = entry.value as Map<String, dynamic>;
               debugPrint('Review data: $value');
 
-              double rating = value['rating'] is num ? value['rating']
-                  .toDouble() : 0.0;
+              // Check if the review is visible (default to true if not specified)
+              bool isVisible = value['isVisible'] ?? true;
+
+              // Skip hidden reviews
+              if (!isVisible) {
+                return null;
+              }
+
+              double rating = value['rating'] is num ? value['rating'].toDouble() : 0.0;
+              String senderId = value['senderID'] as String? ?? '';
+              Map<String, dynamic>? senderData = sendersData[senderId];
 
               return {
-                'name': value['name'] ?? 'No Name',
-                'image': value['image'] ?? '',
+                'name': senderData?['Name'] ?? senderData?['name'] ?? 'Anonymous',
+                'image': senderData?['ProfilePhoto'] ?? senderData?['image'] ?? '',
                 'rating': rating,
                 'comment': value['comment'] ?? 'No comment',
                 'date': value['date'] ?? 'No date',
               };
-            }).toList();
+            })
+                .where((review) => review != null) // Filter out null entries (hidden reviews)
+                .cast<Map<String, dynamic>>() // Cast to the correct type
+                .toList();
+
             status = '✅ Reviews loaded!';
           });
         } else {
@@ -73,7 +121,6 @@ class _ForumScreenState extends State<ForumScreen> {
       debugPrint('Error loading reviews: $e');
     }
   }
-
 
   Widget buildRatingSummary(double screenWidth) {
     int totalReviews = reviews.length;
@@ -387,9 +434,26 @@ class _ReviewCardState extends State<ReviewCard> {
                 // Avatar
                 CircleAvatar(
                   radius: avatarSize / 2,
-                  backgroundImage: widget.imageUrl.startsWith('http')
-                      ? NetworkImage(widget.imageUrl)
-                      : AssetImage(widget.imageUrl) as ImageProvider,
+                  backgroundColor: Colors.grey[400],
+                  child: widget.imageUrl.isNotEmpty
+                      ? null
+                      : Text(
+                          widget.name.isNotEmpty
+                              ? widget.name[0].toUpperCase()
+                              : '?',
+                          style: TextStyle(
+                            fontSize: avatarSize * 0.5,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                  backgroundImage: widget.imageUrl.isNotEmpty
+                      ? (widget.imageUrl.startsWith('http')
+                          ? NetworkImage(widget.imageUrl)
+                          : widget.imageUrl.startsWith('assets/')
+                              ? AssetImage(widget.imageUrl)
+                              : null)
+                      : null,
                 ),
                 SizedBox(width: screenWidth * 0.03), // Space between avatar and name/rating
 

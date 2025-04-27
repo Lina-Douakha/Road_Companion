@@ -286,7 +286,9 @@
     "Debut": "Start",
     "Fin": "End",
     "required_field": "This field is required.",
-    "invalid_phone": "The number must contain exactly 9 digits after +213."
+    "invalid_phone": "The number must contain exactly 9 digits after +213.",
+    "Link": "Link",
+    "address": "Address"
   },
 
   "wilayas": {

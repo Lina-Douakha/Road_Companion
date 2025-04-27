@@ -28,25 +28,6 @@ class _PersonOutlineScreenState extends State<PersonOutlineScreen> {
   final ValueNotifier<bool> notificationsEnabled = ValueNotifier<bool>(true);
   bool _isLoading = true;
 
-  String _formatWilaya(String wilayaNumber) {
-    if (wilayaNumber.isEmpty) {
-      return "edit_profile_mecanic.Not_specified".tr();
-    }
-
-    try {
-      // If already formatted, return as is
-      if (wilayaNumber.contains("-")) {
-        return wilayaNumber;
-      }
-
-      // Format with translation
-      return "$wilayaNumber - ${"wilayas.$wilayaNumber".tr()}";
-    } catch (e) {
-      print("Error formatting wilaya: $e");
-      return wilayaNumber;
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -72,7 +53,7 @@ class _PersonOutlineScreenState extends State<PersonOutlineScreen> {
           setState(() {
             _userName = userData['Name'] ?? "Nom non défini".tr();
             phoneNumber = userData['Phone'] ?? "Non spécifié".tr();
-            localisation = _formatWilaya(userData['Location'] ?? "");
+            localisation = userData['Address'] ?? "Non spécifié".tr();
             _profilePhoto = userData['ProfilePhoto'];
             workingHours = _formatWorkingHours(userData['Working_hours'] ?? "");
             facebookPage = userData['Link'] ?? "Non spécifiée".tr();
@@ -128,13 +109,7 @@ class _PersonOutlineScreenState extends State<PersonOutlineScreen> {
         String startTime = parts[1].trim();
         String endTime = parts[2].trim();
 
-
-        List<String> dayNumbers = days.split("  ");
-        List<String> translatedDays = dayNumbers.map((day) {
-          return "days.$day".tr();
-        }).toList();
-
-        return "${translatedDays.join(", ")}\n${"De".tr()} $startTime ${"à".tr()} $endTime";
+        return "${_formatDays(days)}\n${"De".tr()} $startTime ${"à".tr()} $endTime";
       }
       return workingHours;
     } catch (e) {
@@ -142,6 +117,7 @@ class _PersonOutlineScreenState extends State<PersonOutlineScreen> {
       return workingHours;
     }
   }
+
   void _showLanguageSelection(BuildContext context) {
     final isSmallScreen = MediaQuery.of(context).size.width < 400;
 
@@ -416,6 +392,7 @@ Widget _buildProfileHeader(bool isSmallScreen) {
     ],
   );
 }
+
 Widget _buildContactInfoCard(bool isSmallScreen) {
   return Padding(
     padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 8 : 12),
@@ -430,24 +407,24 @@ Widget _buildContactInfoCard(bool isSmallScreen) {
         padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
         child: Column(
           children: [
-            // Wilaya Information - made more compact
+            // Address Information - changed from Wilaya
             _buildCompactInfoRow(
               icon: Icons.location_on_outlined,
-              title: "edit_profile_mecanic.Wilaya".tr(),
-              value: _formatWilaya(localisation),
+              title: "profile.address".tr(), // Changed from Wilaya to address
+              value: localisation, // Display address directly
               isSmallScreen: isSmallScreen,
               iconColor: Colors.blue.shade600,
             ),
 
             Divider(height: 16, color: Colors.grey.shade200, thickness: 0.5),
 
-            // Working Hours Information - made more compact
+            // Working Hours Information
             _buildWorkingHoursInfo(isSmallScreen),
 
             if (facebookPage.isNotEmpty) ...[
               Divider(height: 16, color: Colors.grey.shade200, thickness: 0.5),
 
-              // Compact Facebook Link
+              // Facebook Link
               InkWell(
                 onTap: () => _launchURL(facebookPage),
                 borderRadius: BorderRadius.circular(6),
@@ -455,15 +432,15 @@ Widget _buildContactInfoCard(bool isSmallScreen) {
                   padding: EdgeInsets.symmetric(vertical: 4),
                   child: Row(
                     children: [
-                      Icon(Icons.facebook,
-                        size: 20,
+                      Icon(Icons.link,
+                        size: 24,
                         color: Colors.blue.shade700),
                       SizedBox(width: 8),
                       Text(
                         "edit_profile_mecanic.Link".tr(),
                         style: TextStyle(
                           fontSize: isSmallScreen ? 15 : 16,
-                          color: Colors.blue.shade700,
+                          color: Colors.black,
                           decoration: TextDecoration.underline,
                         ),
                       ),
@@ -632,7 +609,10 @@ Widget _buildWorkingHoursInfo(bool isSmallScreen) {
 
 String _formatDays(String daysString) {
   List<String> dayNumbers = daysString.trim().split("  ");
-  return dayNumbers.map((day) => "days.$day".tr()).join(", ");
+  return dayNumbers.map((day) {
+    String translated = "days.$day".tr();
+    return translated.replaceFirst("days.", "");
+  }).join(", ");
 }
 
 
@@ -652,10 +632,9 @@ String _formatDays(String daysString) {
                   context,
                   MaterialPageRoute(
                     builder: (context) => EditProfileScreen(
-                      localisation: localisation,
-                      phoneNumber: phoneNumber,
-                      workingHours: workingHours,
-                      facebookPage: facebookPage,
+                            phoneNumber: phoneNumber,
+                            workingHours: workingHours,
+                            facebookPage: facebookPage,
                     ),
                   ),
                 ).then((_) {

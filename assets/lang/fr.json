@@ -290,7 +290,8 @@
     "required_field": "Ce champ est obligatoire.",
     "invalid_phone": "Le numéro doit contenir exactement 9 chiffres après +213.",
     "Not_specified": "Non spécifié",
-    "Link": "Link"
+    "Link": "Link",
+    "address": "Adresse"
   },
   "wilayas": {
     "1": "Adrar",

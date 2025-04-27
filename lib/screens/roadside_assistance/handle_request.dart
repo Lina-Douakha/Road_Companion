@@ -7,11 +7,11 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:road_companion/screens/chat.dart';
+import 'package:geocoding/geocoding.dart';
 
 class HandleRequestPage extends StatefulWidget {
-  final String providerID;
-
-  const HandleRequestPage({Key? key, required this.providerID}) : super(key: key);
 
   @override
   _HandleRequestPageState createState() => _HandleRequestPageState();
@@ -46,13 +46,26 @@ Future<List<Map<String, dynamic>>> getRequestsForProvider(String providerID) asy
 
 class _HandleRequestPageState extends State<HandleRequestPage> {
   final DraggableScrollableController _controller = DraggableScrollableController();
+  String providerID="";
   bool _accepted = false;
   Map<String, dynamic>? requestData;
   List<Map<String, dynamic>> allRequests = [];
 
+
+  void fetchCurrentUser() {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        providerID = user.uid;
+      });
+    } else {
+      print("No user logged in.");
+    }
+  }
   @override
   void initState() {
     super.initState();
+    fetchCurrentUser();
     fetchRequests();
   }
 
@@ -75,8 +88,7 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
 
   void fetchRequests() async {
     print('Fetching requests...');
-    List<Map<String, dynamic>> requests = await getRequestsForProvider(
-        widget.providerID);
+    List<Map<String, dynamic>> requests = await getRequestsForProvider(providerID);
     if (requests.isNotEmpty) {
       print('Requests fetched: ${requests.length}');
       setState(() {
@@ -109,13 +121,34 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
     required String username,
     required GeoPoint location,
     required bool status,
-    required Timestamp timestamp, // client's original request time
+    required Timestamp timestamp,
   }) async {
     final firestore = FirebaseFirestore.instance;
     final historyRef = firestore.collection('Request_history').doc(providerID);
 
     try {
       print('Saving request to history for provider: $providerID');
+
+      // First convert GeoPoint to address
+      String address = 'Address not available';
+      try {
+        final placemarks = await placemarkFromCoordinates(
+          location.latitude,
+          location.longitude,
+        );
+
+        if (placemarks.isNotEmpty) {
+          final place = placemarks.first;
+          address = [
+            place.street,
+            place.locality,
+            place.administrativeArea,
+            place.country
+          ].where((part) => part?.isNotEmpty ?? false).join(', ');
+        }
+      } catch (e) {
+        print('⚠️ Geocoding error: $e');
+      }
 
       final snapshot = await historyRef.get();
       print('Fetched history snapshot: ${snapshot.data()}');
@@ -135,15 +168,17 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
       final newRequestData = {
         'date': timestamp,
         'location': location,
+        'address': address,  // Added address field
         'status': status,
         'userID': clientID,
         'username': username,
       };
 
-
       await historyRef.set(
-          {newRequestKey: newRequestData}, SetOptions(merge: true));
-      print('Request saved to history successfully');
+        {newRequestKey: newRequestData},
+        SetOptions(merge: true)
+      );
+      print('Request saved to history successfully with address: $address');
     } catch (e) {
       print("❌ Failed to save request to history: $e");
     }
@@ -411,7 +446,7 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
                                 await updateRequestStatus(
                                     requestData!['requestId'], 'accepted');
                                 await saveRequestToHistory(
-                                  providerID: "p001",
+                                  providerID: providerID,
                                   clientID: requestData!['clientID'],
                                   username: requestData!['clientName'],
                                   location: requestData!['location'],
@@ -445,7 +480,7 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
                                 await updateRequestStatus(
                                     requestData!['requestId'], 'rejected');
                                 await saveRequestToHistory(
-                                  providerID: "p001",
+                                  providerID: providerID,
                                   clientID: requestData!['clientID'],
                                   username: requestData!['clientName'],
                                   location: requestData!['location'],
@@ -625,6 +660,25 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
                                     ),
                                   ),
                                 ),
+                                Material(
+                                  color: Color(0xFFD6F5E7),
+                                  shape: CircleBorder(),
+                                  child: InkWell(
+                                    customBorder: CircleBorder(),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ChatScreen(receiverId: requestData!['clientID']),
+                                        ),
+                                      );
+                                    },
+                                    child: Padding(
+                                      padding: EdgeInsets.all(10),
+                                      child: _circleIcon(Icons.chat),
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
 
@@ -759,100 +813,49 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
       ),
     );
   }
-
-  Widget _infoCard({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 10),
-      padding: EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.6),
-        // soft background, slightly transparent
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: Color(0xFF1B9169).withOpacity(0.15), width: 0.8),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0xFF1B9169).withOpacity(0.08),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Color(0xFFD1FADF),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: Color(0xFF1B9169), size: 22),
-          ),
-          SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-                SizedBox(height: 3),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black54,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildPendingContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
 
-        // Styled Info Cards
-        _styledInfoCard(Icons.person_outline, 'handle_request.client_name'.tr(),
-            "${requestData!["clientName"]}"),
-        const SizedBox(height: 8),
+        // Enhanced Info Cards with subtle animations
         _styledInfoCard(
-            Icons.phone_outlined, 'handle_request.phone'.tr(), "**********"),
-        const SizedBox(height: 8),
+          Icons.person_outline,
+          'handle_request.client_name'.tr(),
+          "${requestData!["clientName"]}",
+        ),
+        const SizedBox(height: 10),
         _styledInfoCard(
-            Icons.location_on_outlined, 'handle_request.address'.tr(),
-            "${requestData!["address"]}"),
-        const SizedBox(height: 24),
+          Icons.phone_outlined,
+          'handle_request.phone'.tr(),
+          "**********",
+        ),
+        const SizedBox(height: 10),
+        _styledInfoCard(
+          Icons.location_on_outlined,
+          'handle_request.address'.tr(),
+          "${requestData!["address"]}",
+        ),
+        const SizedBox(height: 28),
 
-        // Accept / Reject Buttons
+        // Enhanced Accept / Reject Buttons with improved contrast and feedback
         Row(
           children: [
-            // Reject Button
+            // Reject Button with improved visual feedback
             Expanded(
               child: OutlinedButton(
                 onPressed: () async {
+                  // Haptic feedback for better UX
+                  HapticFeedback.mediumImpact();
+
                   setState(() => _accepted = false);
                   await updateRequestStatus(
-                      requestData!['requestId'], 'rejected');
+                      requestData!['requestId'],
+                      'rejected'
+                  );
                   await saveRequestToHistory(
-                    providerID: "p001",
+                    providerID: providerID,
                     clientID: requestData!['clientID'],
                     username: requestData!['clientName'],
                     location: requestData!['location'],
@@ -867,31 +870,49 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
                   });
                 },
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.teal,
+                  foregroundColor: Colors.red[700],
                   backgroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.teal),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  side: BorderSide(color: Colors.red[700]!),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)),
+                      borderRadius: BorderRadius.circular(24)
+                  ),
+                  elevation: 0,
+                  shadowColor: Colors.transparent,
                 ),
-                child: Text(
-                  'handle_request.reject'.tr(),
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.close, size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'handle_request.reject'.tr(),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
 
             const SizedBox(width: 16),
 
-            // Accept Button
+            // Accept Button with improved visual feedback
             Expanded(
-              child: TextButton(
+              child: ElevatedButton(
                 onPressed: () async {
+                  // Haptic feedback for better UX
+                  HapticFeedback.mediumImpact();
+
                   setState(() => _accepted = true);
                   await updateRequestStatus(
-                      requestData!['requestId'], 'accepted');
+                      requestData!['requestId'],
+                      'accepted'
+                  );
                   await saveRequestToHistory(
-                    providerID: "p001",
+                    providerID: providerID,
                     clientID: requestData!['clientID'],
                     username: requestData!['clientName'],
                     location: requestData!['location'],
@@ -901,71 +922,140 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
                   setState(() => requestData!['status'] = 'accepted');
                   _showCallDialog(requestData!["clientPhone"]);
                 },
-                style: TextButton.styleFrom(
+                style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  backgroundColor: Colors.teal,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  backgroundColor: Color(0xFF00D47E),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)),
+                      borderRadius: BorderRadius.circular(24)
+                  ),
+                  elevation: 2,
+                  shadowColor: Color(0xFF00D47E).withOpacity(0.3),
                 ),
-                child: Text(
-                  'handle_request.accept'.tr(),
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check, size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'handle_request.accept'.tr(),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ],
         ),
+
+        // Add a "swipe for more requests" indicator if there are multiple requests
+        if (allRequests.length > 1)
+          Padding(
+            padding: const EdgeInsets.only(top: 16),
+            child: Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.swipe, size: 16, color: Colors.grey[500]),
+                  SizedBox(width: 6),
+                  Text(
+                    '${allRequests.length - 1} more requests',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[500],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
       ],
     );
   }
+
   Widget _styledInfoCard(IconData icon, String label, String value) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            offset: Offset(0, 2),
+            blurRadius: 5,
+            spreadRadius: 0,
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 34,
-            height: 34,
-            decoration: const BoxDecoration(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Color(0xFF00D47E),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF00D47E).withOpacity(0.2),
+                  blurRadius: 8,
+                  spreadRadius: 0,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
             child: Center(
-              child: Icon(icon, size: 16, color: Colors.white),
+              child: Icon(icon, size: 18, color: Colors.white),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                const SizedBox(height: 2),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Text(
                     value,
-                    style: const TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.w500),
-                    overflow: TextOverflow.ellipsis, // Optional: to handle long text
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[800],
+                    ),
                   ),
                 ),
               ],
             ),
           ),
+          // Add a subtle indicator for horizontal scrollable content if needed
+          if (value.length > 25)
+            Icon(
+              Icons.keyboard_arrow_right,
+              size: 16,
+              color: Colors.grey[400],
+            )
         ],
       ),
     );
   }
 
-
+// Don't forget to add this import at the top of your file
+// import 'package:flutter/services.dart' show HapticFeedback;
 
   Widget _buildAcceptedContent() {
     if (requestData == null) return Center(child: Text("No request data"));

@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:road_companion/screens/admin/admin_menu.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -84,6 +85,9 @@ class _LoginScreenState extends State<LoginScreen> {
       case 'parts_supplier':
       case 'towing_service':
         destination = RoadsideAssistanceScreen();
+        break;
+      case 'admin':
+        destination = AdminDashboardScreen();
         break;
       default:
         destination = HomePage();
