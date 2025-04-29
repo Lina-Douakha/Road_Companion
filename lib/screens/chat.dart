@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
+
 class ChatScreen extends StatefulWidget {
   final String receiverId;
 
@@ -29,9 +30,9 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  late String receiverProfilePhotoUrl='';
-  late String receiverName ='';
-  late String receiverNumber ='';
+  String? receiverProfilePhotoUrl;
+  String receiverName = '';
+  String receiverNumber = '';
 
   @override
   void initState() {
@@ -54,10 +55,15 @@ class _ChatScreenState extends State<ChatScreen> {
           .get();
 
       if (receiverDoc.exists) {
+        final data = receiverDoc.data();
+
         setState(() {
-          receiverProfilePhotoUrl = receiverDoc['ProfilePhoto'];
-          receiverName = receiverDoc['Name'];
-          receiverNumber = receiverDoc['Phone'];
+          // Safely check if ProfilePhoto exists and is not null
+          receiverProfilePhotoUrl = data != null && data.containsKey('ProfilePhoto')
+              ? receiverDoc['ProfilePhoto']
+              : null;
+          receiverName = receiverDoc['Name'] ?? '';
+          receiverNumber = receiverDoc['Phone'] ?? '';
         });
       }
     } catch (e) {
@@ -73,7 +79,6 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
-
   void _callClient(String phoneNumber) async {
     final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
     if (await canLaunchUrl(phoneUri)) {
@@ -84,6 +89,7 @@ class _ChatScreenState extends State<ChatScreen> {
       );
     }
   }
+
   String _getChatId(String senderId, String receiverId) {
     return senderId.compareTo(receiverId) <= 0
         ? '${senderId}_${receiverId}'
@@ -129,6 +135,52 @@ class _ChatScreenState extends State<ChatScreen> {
     return '$hour:$minute';
   }
 
+  Widget _getProfileWidget(String name) {
+    if (receiverProfilePhotoUrl != null && receiverProfilePhotoUrl!.isNotEmpty) {
+      // If we have a profile photo URL, use it
+      return CircleAvatar(
+        backgroundImage: AssetImage(receiverProfilePhotoUrl!),
+        radius: 18,
+      );
+    } else {
+      // Otherwise, display the first letter of the user's name
+      return CircleAvatar(
+        backgroundColor: Colors.grey[400],
+        radius: 18,
+        child: Text(
+          name.isNotEmpty ? name[0].toUpperCase() : '?',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+      );
+    }
+  }
+
+  Widget _getSmallProfileWidget(String name) {
+    if (receiverProfilePhotoUrl != null && receiverProfilePhotoUrl!.isNotEmpty) {
+      return CircleAvatar(
+        backgroundImage: AssetImage(receiverProfilePhotoUrl!),
+        radius: 16,
+      );
+    } else {
+      return CircleAvatar(
+        backgroundColor: Colors.grey[400],
+        radius: 16,
+        child: Text(
+          name.isNotEmpty ? name[0].toUpperCase() : '?',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     String chatId = _getChatId(senderId, widget.receiverId);
@@ -164,12 +216,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     border: Border.all(color: Color(0xFF00D47E), width: 2),
                     borderRadius: BorderRadius.circular(22),
                   ),
-                  child: CircleAvatar(
-                    radius: 18,
-                    backgroundImage: receiverProfilePhotoUrl.isNotEmpty
-                        ? AssetImage(receiverProfilePhotoUrl) as ImageProvider
-                        : const NetworkImage('https://i.imgur.com/BoN9kdC.png'),
-                  ),
+                  child: _getProfileWidget(receiverName),
                 ),
               ],
             ),
@@ -347,7 +394,6 @@ class _ChatScreenState extends State<ChatScreen> {
                             Align(
                               alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
                               child: Container(
-
                                 padding: EdgeInsets.only(
                                   right: isMe ? 8.0 : 0.0,
                                   left: isMe ? 0.0 : 8.0,
@@ -357,20 +403,13 @@ class _ChatScreenState extends State<ChatScreen> {
                                   mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-
                                     if (!isMe && showAvatar)
                                       Container(
                                         margin: const EdgeInsets.only(right: 8),
-                                        child: CircleAvatar(
-                                          backgroundImage: receiverProfilePhotoUrl.isNotEmpty
-                                              ? AssetImage(receiverProfilePhotoUrl) as ImageProvider
-                                              : const NetworkImage('https://i.imgur.com/BoN9kdC.png'),
-                                          radius: 16,
-                                        ),
+                                        child: _getSmallProfileWidget(receiverName),
                                       ),
                                     if (!isMe && !showAvatar)
                                       SizedBox(width: 40),
-
 
                                     Container(
                                       constraints: BoxConstraints(
@@ -396,7 +435,6 @@ class _ChatScreenState extends State<ChatScreen> {
                                       child: Column(
                                         crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                                         children: [
-
                                           Text(
                                             message,
                                             style: TextStyle(
@@ -455,7 +493,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
 
-            // ⬇️ Enhanced Input area
+            // Input area
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
               decoration: BoxDecoration(
@@ -527,7 +565,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return date1.year == date2.year && date1.month == date2.month && date1.day == date2.day;
   }
 
-// Helper method to format date for headers
+  // Helper method to format date for headers
   String _formatDate(dynamic timestamp) {
     if (timestamp == null) return 'Unknown';
 

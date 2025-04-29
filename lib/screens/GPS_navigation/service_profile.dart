@@ -202,70 +202,76 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
   }
 
   Future<void> _fetchReviews() async {
-    try {
-      final reviewDoc = await FirebaseFirestore.instance
-          .collection('Reviews')
-          .doc(widget.providerId)
-          .get();
+      try {
+        final reviewDoc = await FirebaseFirestore.instance
+            .collection('Reviews')
+            .doc(widget.providerId)
+            .get();
 
-      if (reviewDoc.exists) {
-        final reviewData = reviewDoc.data() as Map<String, dynamic>;
-        final reviewsMap = reviewData['reviews'] as Map<String, dynamic>? ?? {};
+        if (reviewDoc.exists) {
+          final reviewData = reviewDoc.data() as Map<String, dynamic>;
+          final reviewsMap = reviewData['reviews'] as Map<String, dynamic>? ?? {};
 
-        final loadedReviews = <Map<String, dynamic>>[];
-        double totalRating = 0.0;
-        int reviewCount = 0;
+          final loadedReviews = <Map<String, dynamic>>[];
+          double totalRating = 0.0;
+          int reviewCount = 0;
 
-        await Future.wait(reviewsMap.entries.map((entry) async {
-          if (entry.key.startsWith('review')) {
-            final review = entry.value as Map<String, dynamic>;
-            final senderId = review['senderID'] as String?;
+          await Future.wait(reviewsMap.entries.map((entry) async {
+            if (entry.key.startsWith('review')) {
+              final review = entry.value as Map<String, dynamic>;
 
-            if (senderId != null) {
-              final senderDoc = await FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(senderId)
-                  .get();
+              // Only process visible reviews (isVisible not set to false)
+              if (review['isVisible'] != false) {
+                final senderId = review['senderID'] as String?;
 
-              if (senderDoc.exists) {
-                final senderData = senderDoc.data() as Map<String, dynamic>;
-                loadedReviews.add({
-                  'name': senderData['Name'] ?? 'Anonymous',
-                  'comment': review['comment'] ?? '',
-                  'rating': (review['rating'] as num?)?.toDouble() ?? 0.0,
-                  'date': review['date'] ?? '',
-                  'image': senderData['ProfilePhoto'] ?? '',
-                });
+                if (senderId != null) {
+                  final senderDoc = await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(senderId)
+                      .get();
 
-                totalRating += (review['rating'] as num?)?.toDouble() ?? 0.0;
-                reviewCount++;
+                  if (senderDoc.exists) {
+                    final senderData = senderDoc.data() as Map<String, dynamic>;
+                    loadedReviews.add({
+                      'name': senderData['Name'] ?? 'Anonymous',
+                      'comment': review['comment'] ?? '',
+                      'rating': (review['rating'] as num?)?.toDouble() ?? 0.0,
+                      'date': review['date'] ?? '',
+                      'image': senderData['ProfilePhoto'] ?? '',
+                      'reviewId': entry.key, // Store review ID for moderation
+                      'isVisible': review['isVisible'] ?? true,
+                    });
+
+                    totalRating += (review['rating'] as num?)?.toDouble() ?? 0.0;
+                    reviewCount++;
+                  }
+                }
               }
             }
-          }
-        }));
+          }));
 
-        loadedReviews.sort((a, b) => (b['date'] ?? '').compareTo(a['date'] ?? ''));
+          loadedReviews.sort((a, b) => (b['date'] ?? '').compareTo(a['date'] ?? ''));
 
+          setState(() {
+            _reviews = loadedReviews;
+            _averageRating = reviewCount > 0 ? totalRating / reviewCount : 0.0;
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _reviews = [];
+            _averageRating = 0.0;
+            _isLoading = false;
+          });
+        }
+      } catch (e) {
         setState(() {
-          _reviews = loadedReviews;
-          _averageRating = reviewCount > 0 ? totalRating / reviewCount : 0.0;
           _isLoading = false;
         });
-      } else {
-        setState(() {
-          _reviews = [];
-          _averageRating = 0.0;
-          _isLoading = false;
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load reviews: $e')),
+        );
       }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load reviews: $e')),
-      );
-    }
   }
 
   String _formatWorkingHours() {
@@ -518,6 +524,7 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                                           'date':
                                               '${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}',
                                           'senderID': user.uid,
+                                          'isVisible': true,
                                         }
                                       }
                                     },

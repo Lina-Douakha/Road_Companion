@@ -9,6 +9,9 @@ import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:road_companion/screens/chat.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:math';
 
 class HandleRequestPage extends StatefulWidget {
 
@@ -523,7 +526,7 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
         requestData!["location"] != null) {
       clientLocation = LatLng(requestData!["location"].latitude,
           requestData!["location"].longitude);
-      clientAddress = requestData!["address"];
+      clientAddress = requestData!["clientName"];
     }
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -534,10 +537,8 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
       child: Scaffold(
         body: Stack(
           children: [
-            // Always show the map
-            MapPage(
+            ServiceProviderMapPage(
               key: ValueKey(requestData?["requestId"]),
-              serviceProviderLocation: providerLocation,
               clientLocation: clientLocation,
               clientAddress: clientAddress,
             ),
@@ -678,7 +679,7 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
               ),
             if (allRequests.isNotEmpty && requestData!['status'] == 'accepted')
               Positioned(
-                top: 80,
+                top: 115,
                 left: 16,
                 child: ElevatedButton(
                   onPressed: () {
@@ -764,7 +765,7 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
 
             if (allRequests.isEmpty)
               Positioned(
-                top: 80,
+                top: 115,
                 left: 16,
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),

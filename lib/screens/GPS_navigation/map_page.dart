@@ -78,19 +78,19 @@ class _MapPageState extends State<MapPage> {
 
     String assetPath;
     switch (type) {
-      case 'Accident':
+      case 'accident':
         assetPath = 'assets/GPS/accident_icon.png';
         break;
-      case 'Panne':
+      case 'breakdown':
         assetPath = 'assets/GPS/breakdown_icon.png';
         break;
-      case 'Routes Barrées':
+      case 'Road_Blockages':
         assetPath = 'assets/GPS/circulation.png';
         break;
-      case 'Travaux':
+      case 'Roadwork':
         assetPath = 'assets/GPS/roadwork.png';
         break;
-      case 'Événements Spéciaux':
+      case 'Special_Events':
         assetPath = 'assets/GPS/event.png';
         break;
       default:
@@ -157,6 +157,25 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
+  String _getTranslatedIncidentTitle(String type) {
+    switch (type.toLowerCase()) {
+      case 'accident':
+        return 'incident_report.accident'.tr();
+      case 'breakdown':
+        return 'incident_report.breakdown'.tr();
+      case 'road_blockages':
+        return 'incident_report.Road_Blockages'.tr();
+      case 'roadwork':
+        return 'incident_report.Roadwork'.tr();
+      case 'special_events':
+        return 'incident_report.Special_Events'.tr();
+      case 'other':
+        return 'incident_report.other'.tr();
+      default:
+        return 'incident_report.other'.tr();
+    }
+  }
+
   void _updateIncidentMarkers(List<QueryDocumentSnapshot> docs) {
     _markers.removeWhere((marker) => marker.markerId.value.startsWith('incident-'));
 
@@ -177,8 +196,8 @@ class _MapPageState extends State<MapPage> {
                   position: position,
                   icon: icon,
                   infoWindow: InfoWindow(
-                    title: type,
-                    snippet: '${data['Description']}\nStatus: $status',
+                    title: _getTranslatedIncidentTitle(type),
+                    snippet: '${data['Description']}',
                   ),
                 ),
               );
@@ -292,8 +311,11 @@ class _MapPageState extends State<MapPage> {
       for (final entry in reviewsMap.entries) {
         if (entry.key.startsWith('review')) {
           final review = entry.value as Map<String, dynamic>;
-          totalRating += (review['rating'] as num?)?.toDouble() ?? 0.0;
-          reviewCount++;
+          // Only count visible reviews (isVisible not set to false)
+          if (review['isVisible'] != false) {
+            totalRating += (review['rating'] as num?)?.toDouble() ?? 0.0;
+            reviewCount++;
+          }
         }
       }
 

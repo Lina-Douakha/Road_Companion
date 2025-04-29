@@ -349,7 +349,7 @@ class _IncidentHistoryScreenState extends State<IncidentHistoryScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      incident['type'],
+                      "incident_report.${incident['type']}".tr(),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -475,7 +475,7 @@ class _IncidentHistoryScreenState extends State<IncidentHistoryScreen> {
                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                children: [
                  Text(
-                   incident['type'],
+                   "incident_report.${incident['type']}".tr(),
                    style: const TextStyle(
                      fontSize: 20,
                      fontWeight: FontWeight.bold,

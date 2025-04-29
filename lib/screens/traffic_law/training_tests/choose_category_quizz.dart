@@ -7,84 +7,99 @@ import 'package:road_companion/screens/traffic_law/training_tests/roadsigns_ques
 import 'package:road_companion/screens/traffic_law/training_tests/Questions.dart';
 import 'package:easy_localization/easy_localization.dart';
 
-
 class ChooseCategoryQuizScreen extends StatelessWidget {
   const ChooseCategoryQuizScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double screenHeight = MediaQuery.of(context).size.height;
-
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Color(0xFF1B9169),
         statusBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFFAFAFA),
         body: Column(
           children: [
             Container(
-              height: screenHeight * 0.04,
+              height: MediaQuery.of(context).padding.top,
               color: const Color(0xFF1B9169),
             ),
             Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: screenHeight * 0.05),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(height: screenHeight * 0.07), // Dynamic space above title
-                      Text(
-                        tr("Categories.Choose"),
-                        style: TextStyle(
-                          fontSize: screenWidth * 0.07,
-                          fontWeight: FontWeightHelper.bold,
-                          color: ColorsManager.Green1,
+              child: Center(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 60),
+                    Text(
+                      tr("Categories.Choose"),
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeightHelper.bold,
+                        color: ColorsManager.Green1,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                      child: Divider(
+                        color: ColorsManager.Green1.withOpacity(0.2),
+                        thickness: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: Center(
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CategoryCard(
+                                  text: tr("Categories.Prio"),
+                                  imagePath: 'assets/images/priorités.png',
+                                  iconBgColor: const Color(0xFFE5F6EF),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const PriorityQuestionsScreen()),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 20),
+                                CategoryCard(
+                                  text: tr("Categories.Panels"),
+                                  imagePath: 'assets/images/panel.png',
+                                  iconBgColor: const Color(0xFFF2F8FF),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const RoadSignQuestionScreen()),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 20),
+                                CategoryCard(
+                                  imagePath: 'assets/images/exam.png',
+                                  text: tr("Categories.Questions_theorique"),
+                                  iconBgColor: const Color(0xFFFFF8E5),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const TheoreticalQuestionsScreen()),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 20),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                      SizedBox(height: screenHeight * 0.09), // Dynamic space under title
-                      Column(
-                        children: [
-                          CategoryCard(
-                            text: tr("Categories.Prio"),
-                            imagePath: 'assets/images/priorités.png',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const PriorityQuestionsScreen()),
-                              );
-                            },
-                          ),
-                          SizedBox(height: screenHeight * 0.03),
-                          CategoryCard(
-                            text: tr("Categories.Panels"),
-                            imagePath: 'assets/images/panel.png',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const RoadSignQuestionScreen()),
-                              );
-                            },
-                          ),
-                          SizedBox(height: screenHeight * 0.03),
-                          CategoryCard(
-                            imagePath: 'assets/images/exam.png',
-                            text: tr("Categories.Questions_theorique"),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const TheoreticalQuestionsScreen()),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -98,63 +113,89 @@ class ChooseCategoryQuizScreen extends StatelessWidget {
 class CategoryCard extends StatelessWidget {
   final String text;
   final String imagePath;
+  final Color iconBgColor;
   final VoidCallback onTap;
 
   const CategoryCard({
     required this.text,
     required this.imagePath,
+    required this.iconBgColor,
     required this.onTap,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double cardWidth = screenWidth * 0.8;
-    final double cardHeight = cardWidth * 0.4;
-
-    return SizedBox(
-      width: cardWidth,
-      height: cardHeight,
-      child: Card(
-        elevation: 4,
-        color: const Color(0xFFf1f5f9), // Light background color
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return Container(
+      width: 320,  // Fixed width
+      height: 100,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 3,
+            offset: const Offset(0, 2),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
         child: InkWell(
           onTap: onTap,
-          splashColor: const Color.fromARGB(255, 183, 185, 186), // Splash color when pressed
-          highlightColor: const Color(0xFFE2E4E6), // Color on tap hold
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(20),
+          splashColor: iconBgColor.withOpacity(0.3),
+          highlightColor: iconBgColor.withOpacity(0.15),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             child: Row(
               children: [
-                // Image on the left*
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child:ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(
-                      imagePath,
-                      width: cardHeight * 0.8, // Reduced image size
-                      height: cardHeight * 0.8,
-                      fit: BoxFit.cover,
+                Container(
+                  width: 70,
+                  height: 70,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: iconBgColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Image.asset(
+                    imagePath,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Text(
+                    text,
+                    textAlign: TextAlign.start,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF424752),
+                      height: 1.2,
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                // Centered text
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.center, // Center the text vertically
-                    child: Text(
-                      text,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: iconBgColor.withOpacity(0.3),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 14,
+                    color: Color(0xFF424752),
                   ),
                 ),
               ],
@@ -165,4 +206,3 @@ class CategoryCard extends StatelessWidget {
     );
   }
 }
-

@@ -589,26 +589,32 @@ Widget _buildLocationField() {
   void _showIncidentTypeMenu() {
     final incidentTypes = [
       {
+        'key': 'accident',
         'label': 'incident_report.accident',
         'iconPath': 'assets/GPS/accident_icon.png',
       },
       {
+        'key': 'breakdown',
         'label': 'incident_report.breakdown',
         'iconPath': 'assets/GPS/breakdown_icon.png',
       },
       {
+        'key': 'Road_Blockages',
         'label': 'incident_report.Road_Blockages',
         'iconPath': 'assets/GPS/circulation.png',
       },
       {
+        'key': 'Roadwork',
         'label': 'incident_report.Roadwork',
         'iconPath': 'assets/GPS/roadwork.png',
       },
       {
+        'key': 'Special_Events',
         'label': 'incident_report.Special_Events',
         'iconPath': 'assets/GPS/event.png',
       },
       {
+        'key': 'other',
         'label': 'incident_report.other',
         'iconPath': 'assets/GPS/other.png',
       },
@@ -644,7 +650,7 @@ Widget _buildLocationField() {
                 title: Text(type['label']!.tr()),
                 onTap: () {
                   setState(() {
-                    _selectedType = type['label']!.tr();
+                    _selectedType = type['key']!;
                   });
                   Navigator.pop(context);
                 },
@@ -764,7 +770,7 @@ Widget _buildTextField({
           validator: isDropdown
               ? null
               : (value) {
-                  if (_selectedType == "incident_report.other".tr() &&
+                  if (_selectedType == "other" &&
                       (value == null || value.isEmpty)) {
                     return "incident_report.description_required".tr();
                   }

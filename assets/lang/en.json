@@ -421,17 +421,18 @@
     "courses": "Traffic-Laws"
   },
   "Categories": {
-    "Choose": "Choisir une catégorie",
-    "Prio": "Priorité de passage",
-    "Panels": "Panneaux de signalisation",
-    "Questions_title": "Questions d\\'examen",
-    "Questions_theorique": "Questions theoriques",
-    "Pénalités": "Pénalités, et amendes",
-    "Interdiction": "Panneaux, d\\'interdiction",
-    "Danger": "Panneaux de danger",
-    "Obligation": "Panneaux, d\\'obligation",
-    "Indication": "Panneaux d\\'indication",
-    "Intersection": "Panneaux, d\\'intersection"
+    "Choose": "Choose a category",
+    "Prio": "Right of way",
+    "Panels": "Traffic signs",
+    "Questions_title": "Exam questions",
+    "Questions_theorique": "Theoretical questions",
+    "Pénalités": "Penalties and fines",
+    "Interdiction": "No entry signs",
+    "Danger": "Danger signs",
+    "Obligation": "Mandatory signs",
+    "Indication": "Indication signs",
+    "Intersection": "Intersection signs",
+    "Panels_title": "Traffic signs"
   },
   "tests": {
     "test_result": "Résultat du test",
