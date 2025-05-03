@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
-import 'package:lottie/lottie.dart';
 import 'package:road_companion/screens/admin/admin_load_reviews.dart';
+import 'package:road_companion/screens/admin/UserDetailsScreen.dart';
 
 class AdminReviewManager extends StatefulWidget {
   @override
@@ -15,6 +15,7 @@ class _AdminReviewManagerState extends State<AdminReviewManager> {
   List<Map<String, dynamic>> reviews = [];
   String status = 'Loading...';
   List<String> providers = [];
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
   bool isLoading = true;
   @override
   void initState() {
@@ -53,10 +54,10 @@ class _AdminReviewManagerState extends State<AdminReviewManager> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(8), // outermost padding for soft spacing
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: color.withOpacity(0.1), // outer circle (low opacity)
+          color: color.withOpacity(0.1),
         ),
 
         child: Icon(
@@ -140,9 +141,35 @@ class _AdminReviewManagerState extends State<AdminReviewManager> {
                             child: Material(
                               color: Colors.transparent,
                               child: InkWell(
-                                onTap: () {
-                                  // Handle tap on provider card
-                                },
+                                  onTap: () async {
+                                    try {
+
+                                      final snapshot = await firestore.collection('users').doc(id).get();
+
+                                      if (snapshot.exists) {
+
+                                        Map<String, dynamic> userData = snapshot.data() as Map<String, dynamic>? ?? {};
+
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (context) => UserDetailsScreen(user: userData),
+                                          ),
+                                        );
+                                      } else {
+
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('User profile not found')),
+                                        );
+                                      }
+                                    } catch (e) {
+
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Error loading user profile: ${e.toString()}')),
+                                      );
+                                      print('Error navigating to user profile: $e');
+                                    }
+                                  },
+
                                 child: Padding(
                                   padding: const EdgeInsets.all(16.0),
                                   child: Row(
@@ -183,7 +210,7 @@ class _AdminReviewManagerState extends State<AdminReviewManager> {
                                       ),
                                       TextButton(
                                         onPressed: () {
-                                          // Navigate to the AdminLoadReviews screen with the provider ID
+
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(

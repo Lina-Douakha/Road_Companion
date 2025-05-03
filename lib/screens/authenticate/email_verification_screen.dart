@@ -50,6 +50,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
             'Role': userData['Role'],
             'Location': userData['Location'],
             'Address': userData['Address'],
+            'isBlocked': false,
             'VerifiedAt': FieldValue.serverTimestamp(), // Add verification timestamp
           });
 

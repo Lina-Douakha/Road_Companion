@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
-import 'package:lottie/lottie.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:road_companion/screens/admin/UserDetailsScreen.dart';
 class AdminLoadReviews extends StatefulWidget {
   final String providerId;
 
@@ -12,17 +11,41 @@ class AdminLoadReviews extends StatefulWidget {
   @override
   _AdminLoadReviewsState createState() => _AdminLoadReviewsState();
 }
-
 class _AdminLoadReviewsState extends State<AdminLoadReviews> {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   List<Map<String, dynamic>> reviews = [];
   String status = 'Loading...';
   bool isLoading = true;
+  List<Map<String, dynamic>> users = [];
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
   final ScrollController scrollController = ScrollController();
   @override
   void initState() {
     super.initState();
     loadReviews(widget.providerId);
+  }
+  Future<void> toggleBlockUser(String userId, bool currentBlockedStatus) async {
+    try {
+
+      await firestore.collection('users').doc(userId).update({
+        'isBlocked': !currentBlockedStatus,
+      });
+
+      setState(() {
+
+        final userIndex = users.indexWhere((user) => user['UserID'] == userId);
+        if (userIndex != -1) {
+
+          users[userIndex]['isBlocked'] = !currentBlockedStatus;
+        }
+      });
+    } catch (e) {
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to toggle block status: $e')),
+      );
+    }
   }
   Future<void> loadReviews(String providerID) async {
     try {
@@ -37,45 +60,64 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
         return;
       }
 
-      final data       = providerDoc.data() as Map<String, dynamic>;
+      final data = providerDoc.data() as Map<String, dynamic>;
       final reviewsMap = data['reviews'] as Map<String, dynamic>? ?? {};
 
+      List<Map<String, dynamic>> reviewsList = [];
+
+      for (var entry in reviewsMap.entries) {
+        final v = entry.value as Map<String, dynamic>;
+
+        final bool isVisible = v.containsKey('isVisible')
+            ? (v['isVisible'] as bool)
+            : true;
+
+        final String senderID = v['senderID'] ?? '';
+        String name = v['name'] ?? '';
+        String image = v['image'] ?? '';
+
+        if (senderID.isNotEmpty) {
+          try {
+
+            final userDoc = await _db.collection('users').doc(senderID).get();
+
+            if (userDoc.exists) {
+              final userData = userDoc.data() as Map<String, dynamic>;
+
+              name = userData['Name'] ?? name;
+              image = userData['ProfilePhoto'] ?? image;
+            }
+          } catch (e) {
+            debugPrint('Error fetching user data for $senderID: $e');
+
+          }
+        }
+        reviewsList.add({
+          'name': name,
+          'image': image,
+          'rating': (v['rating'] is num)
+              ? (v['rating'] as num).toDouble()
+              : 0.0,
+          'comment': v['comment'] ?? 'No comment',
+          'date': v['date'] ?? 'No date',
+          'senderID': senderID,
+          'isVisible': isVisible,
+        });
+      }
+
       setState(() {
-        reviews = reviewsMap.entries.map((entry) {
-          final v = entry.value as Map<String, dynamic>;
-
-          // **Pull the real bool straight from Firestore:**
-          final bool isVisible = v.containsKey('isVisible')
-              ? (v['isVisible'] as bool)
-              : true;  // (fallback if somehow missing)
-
-          return {
-            'name'      : v['name']     ?? 'No Name',
-            'image'     : v['image']    ?? '',
-            'rating'    : (v['rating'] is num)
-                ? (v['rating'] as num).toDouble()
-                : 0.0,
-            'comment'   : v['comment']  ?? 'No comment',
-            'date'      : v['date']     ?? 'No date',
-            'senderID'  : v['senderID'] ?? '',
-
-            // ← **This is the key addition**:
-            'isVisible' : isVisible,
-          };
-        }).toList();
-
-        status    = reviews.isEmpty ? '❌ No reviews found.' : '✅ Reviews loaded!';
+        reviews = reviewsList;
+        status = reviews.isEmpty ? '❌ No reviews found.' : '✅ Reviews loaded!';
         isLoading = false;
       });
     } catch (e) {
       setState(() {
-        status    = '❌ Error: $e';
+        status = '❌ Error: $e';
         isLoading = false;
       });
       debugPrint('Error loading reviews: $e');
     }
   }
-
   @override
   void dispose() {
     scrollController.dispose();
@@ -114,17 +156,50 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
             color: Color(0xFF1B9169),
             child: Row(
               children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    'Provider ID: ${widget.providerId}',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            'Provider ID: ${widget.providerId}',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        InkWell(
+                          onTap: () async {
+                            await Clipboard.setData(ClipboardData(text: widget.providerId));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Provider ID copied to clipboard',
+                                    style: TextStyle(color: Colors.green)),
+                                backgroundColor: Colors.green[50],
+                                behavior: SnackBarBehavior.floating,
+                                margin: EdgeInsets.all(10),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            );
+                          },
+                          child: Icon(
+                            Icons.copy,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -135,7 +210,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
             child: isLoading
                 ? Center(
               child: CircularProgressIndicator(
-                color: Color(0xFF00D47E), // Replace with any color you want
+                color: Color(0xFF00D47E),
               ),
             )
                 : ListView.builder(
@@ -163,8 +238,32 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                     child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                    onTap: () {
-                // Handle tap on provider card
+                    onTap: () async {
+                      try {
+                        final snapshot = await firestore.collection('users').doc(review['senderID']).get();
+
+                        if (snapshot.exists) {
+
+                          Map<String, dynamic> userData = snapshot.data() as Map<String, dynamic>? ?? {};
+
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => UserDetailsScreen(user: userData),
+                            ),
+                          );
+                        } else {
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('User profile not found')),
+                          );
+                        }
+                      } catch (e) {
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error loading user profile: ${e.toString()}')),
+                        );
+                        print('Error navigating to user profile: $e');
+                      }
                 },
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -177,7 +276,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                                 radius: 24,
                                 backgroundColor: Color(0xFF1B9169).withOpacity(0.1),
                                 backgroundImage: review['image'] != null && review['image'].isNotEmpty
-                                    ? NetworkImage(review['image'])
+                                    ? AssetImage(review['image'])
                                     : null,
                                 child: review['image'] == null || review['image'].isEmpty
                                     ? Text(
@@ -343,7 +442,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                       ),
                       child: Icon(
                         Icons.admin_panel_settings,
-                        color: Colors.blueAccent,
+                        color:Colors.blue[700],
                         size: 28,
                       ),
                     ),
@@ -414,39 +513,61 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                       ),
                     ),
                     SizedBox(height: 12),
+
                     Container(
                       width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          // Implement block user functionality
-                          Navigator.pop(context);
-                          SuccessDialog(context, "User blocked successfully!");
+                      child: FutureBuilder<DocumentSnapshot>(
+                        future: firestore.collection('users').doc(review['senderID']).get(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+                          if (snapshot.hasError) {
+                            return ElevatedButton(
+                              onPressed: null,
+                              child: Text('Error loading user data'),
+                            );
+                          }
+
+                          Map<String, dynamic> userData = snapshot.data?.data() as Map<String, dynamic>? ?? {};
+                          bool isBlocked = userData['isBlocked'] ?? false;
+                          return ElevatedButton.icon(
+                            onPressed: () {
+                              toggleBlockUser(review['senderID'], isBlocked).then((_) {
+                                Navigator.pop(context);
+                                SuccessDialog(
+                                    context,
+                                    isBlocked ? "User activated successfully!" : "User blocked successfully!"
+                                );
+                              });
+                            },
+                            icon: Icon(
+                              isBlocked ? Icons.person_add : Icons.block,
+                              color: isBlocked ? Colors.green : Colors.red,
+                              size: 20,
+                            ),
+                            label: Text(
+                              isBlocked ? 'Activate User' : 'Block User',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: isBlocked ? Colors.green : Colors.red,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isBlocked ? Colors.green[50] : Colors.red[50],
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          );
                         },
-                        icon: Icon(
-                          Icons.block,
-                          color: Colors.red,
-                          size: 20,
-                        ),
-                        label: Text(
-                          'Block User',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.red,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red[50],
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
                       ),
                     ),
-
-
                     SizedBox(height: 16),
 
                     // Cancel action
@@ -552,7 +673,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                         data: Theme.of(context).copyWith(
                           textSelectionTheme: TextSelectionThemeData(
                             selectionHandleColor: Colors.orange[300],
-                            selectionColor: Colors.orange[100], // optional, for selected text background
+                            selectionColor: Colors.orange[100],
                           ),
                         ),
                         child: TextField(
@@ -618,11 +739,10 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                                       },
                                     );
 
-                                    // Get current admin user ID
                                     final currentAdmin = FirebaseAuth.instance.currentUser;
                                     final adminId = currentAdmin?.uid ?? 'unknown_admin';
 
-                                    // Add warning data to user's document
+
                                     await FirebaseFirestore.instance
                                         .collection('users')
                                         .doc(userId)
@@ -638,13 +758,10 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                                       ]),
                                     });
 
-                                    // Close loading indicator
                                     Navigator.pop(context);
 
-                                    // Close warning dialog
                                     Navigator.pop(context);
 
-                                    // Show success message
                                     SuccessDialog(context, "Warning sent successfully");
                                   } catch (e) {
                                     // Close loading indicator
@@ -665,7 +782,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                                     );
                                   }
                                 } else {
-                                  // Show error for empty message
+
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text('Please enter a warning message',
@@ -1055,11 +1172,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
       String reviewKey = "";
       reviewsMap.forEach((key, value) {
         Map<String, dynamic> reviewData = value as Map<String, dynamic>;
-        print("//////////////");
-        print(reviewData['senderID']);
-        print(reviewData['date']);
-        print(reviewData['comment']);
-        print("//////////////");
+
         // Match on multiple fields to ensure we get exactly the right review
         if (reviewData['senderID'] == senderID &&
             reviewData['date'] == reviewDate &&
@@ -1199,4 +1312,3 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
     );
   }
 }
-

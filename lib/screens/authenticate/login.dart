@@ -87,8 +87,8 @@ class _LoginScreenState extends State<LoginScreen> {
         destination = RoadsideAssistanceScreen();
         break;
       case 'admin':
-        destination = AdminDashboardScreen();
-        break;
+         destination = AdminDashboardScreen();
+         break;
       default:
         destination = HomePage();
         break;
@@ -120,14 +120,19 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _signInWithGoogle() async {
     setState(() => _isLoading = true);
 
-    UserCredential? userCredential = await _authService.signInWithGoogle();
+    String? error = await _authService.signInWithGoogle(context);
 
-    if (userCredential != null) {
-      String? userRole = await _getUserRole(userCredential.user!.uid);
-      await _saveLoginState(userCredential.user!.uid, userRole ?? 'user');
-      _navigateBasedOnRole(userRole);
+    if (error == null) {
+      // Login success! Proceed to get user data
+      User? user = _authService.currentUser; // Assuming you have a getter for currentUser
+      if (user != null) {
+        String? userRole = await _getUserRole(user.uid);
+        await _saveLoginState(user.uid, userRole ?? 'user');
+        _navigateBasedOnRole(userRole);
+      }
     } else {
-      _showSnackBar("login.error_google_sign_in".tr(), isError: true);
+      // Show the specific error message
+      _showSnackBar(error, isError: true);
     }
 
     setState(() => _isLoading = false);

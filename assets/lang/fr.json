@@ -167,6 +167,7 @@
     "Total": "Total",
     "Pending": "En attente",
     "Resolved": "Résolu",
+    "Rejected": "Rejeté",
     "Description": "Description",
     "Reported-on": "Signalé le",
     "Location": "Localisation",
@@ -459,6 +460,35 @@
     "test_label": "Test : {id}"
 
   },
+
+  "fr": {
+    "titre": "Conditions d'utilisation - Road Companion",
+    "introduction": "Les présentes conditions d'utilisation constituent un accord entre vous et Road Companion concernant votre utilisation de l'application.Important : En utilisant ce service, vous confirmez avoir lu, compris, accepté et approuvé ces conditions d'utilisation.",
+    "conditions": [
+      "L'application est conçue pour aider les utilisateurs à trouver des services de dépannage, mécaniciens et vendeurs de pièces détachées dans leur région en fonction de leur emplacement.",
+      "Les prestataires de services peuvent s'inscrire en fournissant des informations telles que leur nom, leur emplacement et les services proposés. Ces informations seront publiées dans l'application et peuvent être supprimées sur demande.",
+      "L'application peut accéder aux informations de localisation GPS de l'utilisateur afin de fournir des services personnalisés.",
+      "Les accords entre le client et le prestataire sont indépendants de l'application. L'entreprise décline toute responsabilité quant aux résultats du service fourni.",
+      "L'utilisation est exclusivement personnelle. Il est interdit d'insulter, harceler ou menacer les autres utilisateurs ou prestataires.",
+      "En cas de réclamation, l'utilisateur peut contacter l'entreprise en fournissant l'identifiant du prestataire concerné.",
+      "L'entreprise se réserve le droit de restreindre ou suspendre l'accès à tout moment, sans préavis.",
+      "Les prestataires doivent respecter les lois et règlements applicables. L'entreprise décline toute responsabilité liée à leurs pratiques.",
+      "Les utilisateurs doivent respecter les droits de propriété intellectuelle de l'application et des prestataires.",
+      "L'entreprise peut modifier les termes sans préavis. Les utilisateurs doivent consulter régulièrement cette section.",
+      "Les utilisateurs sont responsables de leur sécurité et confidentialité en utilisant l'application.",
+      "Les contenus inappropriés doivent être signalés aux administrateurs.",
+      "L'entreprise ne garantit pas l'exactitude des informations fournies par les prestataires.",
+      "Les utilisateurs doivent respecter les lois et règlements locaux concernant les services routiers.",
+      "Délit d'enregistrement audio ou de prise de photos d'une personne sans son consentement dans le Code pénal algérien\n\nArticle 303 bis : (nouvel article)\nEst puni d’un emprisonnement de six (6) mois à trois (3) ans et d’une amende de 50 000 DA à 300 000 DA, quiconque porte volontairement atteinte à la vie privée d’autrui, par quelque moyen que ce soit :\n1- En captant, enregistrant ou transmettant, sans l’autorisation ou le consentement de l’auteur, des conversations ou propos privés ou secrets.\n2- En captant, enregistrant ou transmettant l’image d’une personne dans un lieu privé, sans son autorisation ou son consentement.\nLa tentative de commettre ce délit est punie des mêmes peines prévues pour l’infraction consommée.\nLe pardon de la victime met fin aux poursuites pénales.\n\nArticle 303 bis 1 : (nouvel article)\nEst puni des mêmes peines prévues à l’article précédent, quiconque conserve, met à disposition du public ou d’un tiers, ou utilise, par quelque moyen que ce soit, les enregistrements, images ou documents obtenus au moyen d’un des actes prévus à l’article 303 bis du Code pénal."
+    ]
+  },
+
+  "registrationGeneral": {
+    "terms_title": "Terms and Conditions",
+    "accept": "Accept"
+  },
+
+  "conditionsgeneral": "En vous inscrivant ou en utilisant cette application, vous acceptez de respecter et d’être lié par les présentes conditions générales d’utilisation.\nVous vous engagez à utiliser cette application uniquement dans le cadre de ses fonctionnalités et conformément aux lois applicables.\nNous collectons certaines informations personnelles pour améliorer votre expérience dans l'application.\nTous les contenus de l’application sont protégés par des droits de propriété intellectuelle.\nL’application ne garantit pas l’absence d’erreurs ou d’interruptions de service.\nNous nous réservons le droit de modifier ces conditions d’utilisation à tout moment.\nLes présentes conditions sont régies par la loi algérienne, et tout litige sera soumis aux tribunaux compétents.\nL'utilisateur peut supprimer son compte à tout moment en contactant l'équipe de support.",
 
   "emergency_title": "Numéros d'urgence",
   "error_phone": "Impossible de passer l'appel",

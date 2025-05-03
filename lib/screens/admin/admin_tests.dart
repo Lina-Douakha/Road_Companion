@@ -1,4 +1,3 @@
-// This is a simplified UI with the logic for managing exam tests and their questions.
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
@@ -13,23 +12,43 @@ class AdminExamManager extends StatefulWidget {
 class _AdminExamManagerState extends State<AdminExamManager> {
   String selectedTest = 'Test1';
   List<String> questionIds = [];
-
+  Map<String, Set<String>> modifiedQuestions = {};
+  Set<String> pendingModifications = {};
+  Map<String, Map<String, Map<String, dynamic>>> pendingChanges = {};
+  bool isLoading = true;
   @override
   void initState() {
     super.initState();
     fetchTestQuestions();
   }
-
+  @override
+  void dispose() {
+    modifiedQuestions.clear();
+    pendingModifications.clear();
+    super.dispose();
+  }
   Future<void> fetchTestQuestions() async {
-    final doc = await FirebaseFirestore.instance.collection('Exam Test').doc(
-        selectedTest).get();
-    if (doc.exists) {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final doc = await FirebaseFirestore.instance.collection('Exam Test').doc(selectedTest).get();
+      if (doc.exists) {
+        final newQuestionIds = List<String>.from(doc['ExamQuestions']);
+
+        setState(() {
+          questionIds = newQuestionIds;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print("Error fetching test questions: $e");
       setState(() {
-        questionIds = List<String>.from(doc['ExamQuestions']);
+        isLoading = false;
       });
     }
   }
-
   void deleteQuestion(String id) async {
     questionIds.remove(id);
     await FirebaseFirestore.instance.collection('Exam Test')
@@ -53,12 +72,21 @@ class _AdminExamManagerState extends State<AdminExamManager> {
     final doc = await FirebaseFirestore.instance.collection(collection).doc(id).get();
     return doc.data() ?? {};
   }
-
   Future<void> editQuestionDialog(BuildContext context, String questionId, String languageCode) async {
     final isTheo = questionId.startsWith('TheoQuestion');
+    final otherLanguage = languageCode == 'ar' ? 'fr' : 'ar';
+    final Language = languageCode == 'ar' ? 'French' : 'Arabic';
 
-    // Fetch question data using the fetchQuestionData function
-    final data = await fetchQuestionData(questionId, languageCode);
+    final bool hasPendingChanges = pendingChanges.containsKey(questionId) &&
+        pendingChanges[questionId]!.containsKey(languageCode);
+
+    Map<String, dynamic> data;
+    if (hasPendingChanges) {
+      data = pendingChanges[questionId]![languageCode]!;
+    } else {
+
+      data = await fetchQuestionData(questionId, languageCode);
+    }
 
     if (data.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -66,7 +94,8 @@ class _AdminExamManagerState extends State<AdminExamManager> {
       );
       return;
     }
-
+    final String category = data['Category'] ?? '';
+    final String imageAssetPath = 'assets/images/$category/${data['ImageURL'] ?? ''}';
     final questionController = TextEditingController(text: data['QuestionText']);
     final imageController = TextEditingController(text: data['ImageURL'] ?? '');
     final options = List<String>.from(data['Options'] ?? []);
@@ -80,6 +109,9 @@ class _AdminExamManagerState extends State<AdminExamManager> {
     } else {
       correctAnswer = data['CorrectAnswer'] ?? '';
     }
+
+    bool hasOtherLanguageChanges = pendingChanges.containsKey(questionId) &&
+        pendingChanges[questionId]!.containsKey(otherLanguage);
 
     await showDialog(
       context: context,
@@ -97,24 +129,90 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Dialog title with matching style
-                  Text(
-                    'Edit ${isTheo ? "Theoretical" : "Test"} Question',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1B9169),
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Edit ${isTheo ? "Theoretical" : "Test"} Question',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1B9169),
+                        ),
+                      ),
+
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Color(0xFF1B9169).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          languageCode.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1B9169),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 6),
+
+                  if (pendingChanges.containsKey(questionId))
+                    Container(
+                      padding: EdgeInsets.all(10),
+                      margin: EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: hasOtherLanguageChanges
+                            ? Color(0xFF00D47E).withOpacity(0.2)
+                            : Colors.amber.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                            color: hasOtherLanguageChanges
+                                ? Color(0xFF00D47E).withOpacity(0.5)
+                                : Colors.amber.withOpacity(0.5)
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                              hasOtherLanguageChanges
+                                  ? Icons.check_circle_outline
+                                  : Icons.warning_amber_rounded,
+                              color: hasOtherLanguageChanges
+                                  ? Color(0xFF00D47E)
+                                  : Colors.amber[700],
+                              size: 18
+                          ),
+                          SizedBox(width: 8),
+
+                          Expanded(
+                            child: Text(
+                              hasOtherLanguageChanges
+                                  ? "The ${Language} version has been modified. Save this version to update both simultaneously."
+                                  : "You must edit this question in ${Language} as well before changes take effect.",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: hasOtherLanguageChanges
+                                    ? Color(0xFF00D47E)
+                                    : Colors.amber[700],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   const SizedBox(height: 20),
 
-                  // Content scrollable area
                   Flexible(
                     child: SingleChildScrollView(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Question text field
+
                           Theme(
                             data: Theme.of(context).copyWith(
                               textSelectionTheme: TextSelectionThemeData(
@@ -123,8 +221,6 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                 selectionHandleColor: Color(0xFF00D47E),
                               ),
                             ),
-                            child: Directionality(
-                              textDirection: languageCode == 'ar' ? TextDirection.rtl : TextDirection.ltr,
                               child: TextField(
                                 cursorColor: Color(0xFF00D47E),
                                 controller: questionController,
@@ -150,9 +246,7 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                 ),
                               ),
                             ),
-                          ),
 
-                          // Image URL field for non-theoretical questions
                           if (!isTheo)
                             Padding(
                               padding: const EdgeInsets.only(top: 16),
@@ -164,13 +258,11 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                     selectionHandleColor: Color(0xFF00D47E),
                                   ),
                                 ),
-                                child: Directionality(
-                                  textDirection: languageCode == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+
                                   child: TextField(
                                     cursorColor: Color(0xFF00D47E),
                                     controller: imageController,
                                     style: TextStyle(fontSize: 15),
-                                    textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
                                     decoration: InputDecoration(
                                       labelText: 'Image URL',
                                       alignLabelWithHint: true,
@@ -192,11 +284,61 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                   ),
                                 ),
                               ),
-                            ),
 
+                          if (data['ImageURL'] != null && data['ImageURL'].toString().isNotEmpty)
+                            Container(
+                              margin: EdgeInsets.only(top: 12), // reduced margin
+                              padding: EdgeInsets.all(6), // reduced padding
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.grey.shade100,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 6.0),
+                                    child: Text(
+                                      'Image Preview:',
+                                      style: TextStyle(
+                                        color: Color(0xFF1B9169),
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.asset(
+                                      imageAssetPath,
+                                      height: 110,
+                                      width: double.infinity,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (context, error, stackTrace) => Container(
+                                        height: 110,
+                                        width: double.infinity,
+                                        color: Colors.grey.shade200,
+                                        alignment: Alignment.center,
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(Icons.broken_image, size: 36, color: Colors.grey),
+                                            SizedBox(height: 6),
+                                            Text(
+                                              'Image not found: $imageAssetPath',
+                                              style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           const SizedBox(height: 24),
 
-                          // Options section header
                           Container(
                             padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                             decoration: BoxDecoration(
@@ -221,7 +363,6 @@ class _AdminExamManagerState extends State<AdminExamManager> {
 
                           const SizedBox(height: 16),
 
-                          // Options list
                           ...optionControllers.asMap().entries.map((entry) {
                             final i = entry.key;
                             final controller = entry.value;
@@ -247,7 +388,7 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                 textDirection: languageCode == 'ar' ? TextDirection.rtl : TextDirection.ltr,
                                 child: Row(
                                   children: [
-                                    // Selection control (checkbox or radio)
+
                                     Container(
                                       padding: EdgeInsets.symmetric(horizontal: 8),
                                       child: isTheo
@@ -286,7 +427,6 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                       ),
                                     ),
 
-                                    // Option text field
                                     Expanded(
                                       child: Theme(
                                         data: Theme.of(context).copyWith(
@@ -327,7 +467,6 @@ class _AdminExamManagerState extends State<AdminExamManager> {
 
                   const SizedBox(height: 24),
 
-                  // Action buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -362,6 +501,8 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
+
+
                         onPressed: () async {
                           final updatedOptions = optionControllers.map((e) => e.text.trim()).toList();
 
@@ -377,59 +518,120 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                             updatedData['ImageURL'] = imageController.text.trim();
                           }
 
-                          // Update the question document in Firestore
-                          final collection = languageCode == 'ar'
-                              ? (isTheo ? 'Theoquestions-ar' : 'Questions-arb')
-                              : (isTheo ? 'Theoquestions' : 'Questions');
+                          bool hasChanges = false;
 
-                          await FirebaseFirestore.instance.collection(collection).doc(questionId).update(updatedData);
+                          if (data['QuestionText'] != updatedData['QuestionText']) {
+                            hasChanges = true;
+                          }
 
-                          Navigator.pop(context);
+                          if (!isTheo && (data['ImageURL'] ?? '') != updatedData['ImageURL']) {
+                            hasChanges = true;
+                          }
 
-                          // Success notification
-                          showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (context) {
-                              Future.delayed(Duration(seconds: 1), () {
-                                Navigator.of(context).pop();
-                              });
+                          List<String> originalOptions = List<String>.from(data['Options'] ?? []);
+                          if (originalOptions.length != updatedData['Options'].length) {
+                            hasChanges = true;
+                          } else {
+                            for (int i = 0; i < originalOptions.length; i++) {
+                              if (originalOptions[i] != updatedData['Options'][i]) {
+                                hasChanges = true;
+                                break;
+                              }
+                            }
+                          }
 
-                              return Dialog(
-                                backgroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(20),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      SizedBox(
-                                        height: 60,
-                                        width: 60,
-                                        child: Icon(
-                                          Icons.check_circle_outline,
-                                          size: 50,
-                                          color: Color(0xFF00D47E),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      const Text(
-                                        'Question updated successfully!',
-                                        style: TextStyle(
-                                          color: Colors.black87,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ],
+                          if (isTheo) {
+                            List<int> originalCorrect = List<int>.from(data['CorrectAnswer'] ?? []);
+                            if (originalCorrect.length != correctIndices.length) {
+                              hasChanges = true;
+                            } else {
+
+                              originalCorrect.sort();
+                              List<int> sortedCorrectIndices = List<int>.from(correctIndices)..sort();
+
+                              for (int i = 0; i < originalCorrect.length; i++) {
+                                if (originalCorrect[i] != sortedCorrectIndices[i]) {
+                                  hasChanges = true;
+                                  break;
+                                }
+                              }
+                            }
+                          } else {
+                            if ((data['CorrectAnswer'] ?? '') != correctAnswer) {
+                              hasChanges = true;
+                            }
+                          }
+
+                          if (hasChanges) {
+
+                            if (!pendingChanges.containsKey(questionId)) {
+                              pendingChanges[questionId] = {};
+                            }
+                            pendingChanges[questionId]![languageCode] = updatedData;
+
+
+                            bool readyToSave = pendingChanges[questionId]!.containsKey('ar') &&
+                                pendingChanges[questionId]!.containsKey('fr');
+
+                            if (readyToSave) {
+
+                              try {
+
+                                final batch = FirebaseFirestore.instance.batch();
+
+                                final frCollection = isTheo ? 'Theoquestions' : 'Questions';
+                                final frDocRef = FirebaseFirestore.instance
+                                    .collection(frCollection)
+                                    .doc(questionId);
+                                batch.update(frDocRef, pendingChanges[questionId]!['fr']!);
+
+
+                                final arCollection = isTheo ? 'Theoquestions-ar' : 'Questions-arb';
+                                final arDocRef = FirebaseFirestore.instance
+                                    .collection(arCollection)
+                                    .doc(questionId);
+                                batch.update(arDocRef, pendingChanges[questionId]!['ar']!);
+
+                                await batch.commit();
+
+                                pendingChanges.remove(questionId);
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error updating question: $e'),
+                                    backgroundColor: Colors.red,
                                   ),
+                                );
+
+                                return;
+                              }
+                              Navigator.pop(context);
+                              showSuccessDialog(context,  "Both versions updated successfully!");
+                              fetchTestQuestions();
+                            } else {
+
+                              this.setState(() {}); // Update parent widget state
+                              Navigator.pop(context);
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Changes saved. Please edit the ${Language} version to complete the update.',
+                                  style: TextStyle(color: Colors.amber[700], fontWeight: FontWeight.bold),
+                                  ),
+                                  backgroundColor: Colors.amber[50],
+
+                                  duration: Duration(seconds: 3),
                                 ),
                               );
-                            },
-                          );
+                            }
+                          } else {
+
+                            Navigator.pop(context);
+                          }
                         },
                         child: Text(
-                          'Save Changes',
+                          hasOtherLanguageChanges ? 'Save Both Versions' : 'Save Changes',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -446,6 +648,49 @@ class _AdminExamManagerState extends State<AdminExamManager> {
       },
     );
   }
+  void showSuccessDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        Future.delayed(Duration(seconds: 1), () {
+          Navigator.of(context).pop();
+        });
+
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: 60,
+                  width: 60,
+                  child: Icon(
+                    Icons.check_circle_outline,
+                    size: 50,
+                    color: Color(0xFF00D47E),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  message,
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
   Widget buildIconCircle({
     required IconData icon,
     required Color color,
@@ -454,22 +699,22 @@ class _AdminExamManagerState extends State<AdminExamManager> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(8), // outermost padding for soft spacing
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: color.withOpacity(0.1), // outer circle (low opacity)
+          color: color.withOpacity(0.1),
         ),
 
             child: Icon(
               icon,
               size: 16,
-              color: color, // white icon
+              color: color,
             ),
 
         ),
     );
   }
-  String selectedLanguage = "fr"; // Default language
+  String selectedLanguage = "fr";
 
   @override
   Widget build(BuildContext context) {
@@ -506,13 +751,13 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                 ),
               ),
 
-              // Fixed Dropdown and Language Toggle
+
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Test Dropdown
+
                     Container(
                       width: 140,
                       decoration: BoxDecoration(
@@ -566,7 +811,6 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                       ),
                     ),
 
-                    // Language Toggle
                     Container(
                       width: 150,
                       decoration: BoxDecoration(
@@ -634,15 +878,20 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                 ),
               ),
 
-              // Scrollable List
               Expanded(
                 child: CustomScrollView(
                   slivers: [
+
                     SliverList(
                       delegate: SliverChildBuilderDelegate(
                             (context, index) {
                           final questionNum = index + 1;
                           final id = questionIds[index];
+                          final hasPendingChanges = pendingChanges.containsKey(id);
+                          final pendingLanguages = hasPendingChanges
+                              ? pendingChanges[id]!.keys.map((lang) => lang.toUpperCase()).join(' / ')
+                              : '';
+
                           return Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 6.0),
                             child: Container(
@@ -650,6 +899,9 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(16.0),
+                                border: hasPendingChanges
+                                    ? Border.all(color: Colors.amber, width: 1.5)
+                                    : null,
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.grey.withOpacity(0.1),
@@ -661,16 +913,33 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.help_outline, color: Colors.grey[900], size: 20),
+                                  Icon(
+                                      hasPendingChanges ? Icons.warning_amber_rounded : Icons.help_outline,
+                                      color: hasPendingChanges ? Colors.amber[700] : Colors.grey[900],
+                                      size: 20
+                                  ),
                                   const SizedBox(width: 10),
                                   Expanded(
-                                    child: Text(
-                                      'Question $questionNum',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.grey[900],
-                                      ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Question $questionNum',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.grey[900],
+                                          ),
+                                        ),
+                                        if (hasPendingChanges)
+                                          Text(
+                                            'Modified in: $pendingLanguages - needs other language',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: Colors.amber[700],
+                                            ),
+                                          ),
+                                      ],
                                     ),
                                   ),
                                   buildIconCircle(

@@ -1,36 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:io';
 import 'package:road_companion/services/auth_service.dart';
-import 'package:flutter/services.dart';
-import 'login.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:road_companion/screens/incident_reporting/location_picker_screen.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:lottie/lottie.dart';
-import 'package:flutter/gestures.dart';
-import 'package:road_companion/screens/authenticate/condition_generale.dart';
 
-class RegistrationScreen extends StatefulWidget {
+
+
+class UserRegistrationScreen extends StatefulWidget {
   final LatLng? initialLocation;
-  final bool acceptedFromTerms;
 
-
-
-  const RegistrationScreen({
+  const UserRegistrationScreen({
     super.key,
     this.initialLocation,
-    this.acceptedFromTerms = false,
   });
 
   @override
-  State<RegistrationScreen> createState() => _RegistrationScreenState();
+  State<UserRegistrationScreen> createState() => _UserRegistrationScreenState();
 }
 
-class _RegistrationScreenState extends State<RegistrationScreen> {
+class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
   // Role constants
   static const String userRole = 'user';
   static const String mechanicRole = 'mechanic';
@@ -613,35 +608,51 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
-        statusBarColor: Color(0xFF1B9169),
+        statusBarColor: Color(0xFF4CAF50),
         statusBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
         backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Color(0xFF4CAF50)),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: const Text(
+            'Add New User',
+            style: TextStyle(
+              color: Color(0xFF4CAF50),
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
+          ),
+          centerTitle: true,
+          automaticallyImplyLeading: false,
+          scrolledUnderElevation: 0,
+        ),
+
         body: SingleChildScrollView(
+
           padding: const EdgeInsets.all(16),
+
           child: ConstrainedBox(
+
             constraints: BoxConstraints(
               minHeight: MediaQuery.of(context).size.height,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 50),
+                const SizedBox(height: 30),
                 Center(
                   child: Text(
-                    'registration.welcome'.tr(),
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Center(
-                  child: Text(
-                    'registration.title'.tr(),
+                    'Fill in the details below to add a new user.',
+                    textAlign: TextAlign.center,
                     style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
+                      fontSize: 16,
+                      color: Colors.black54,
                     ),
                   ),
                 ),
@@ -712,68 +723,26 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   _buildLocationField(),
 
                 ],
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Checkbox(
-                      value: acceptedTerms,
-                      onChanged: (val) {
-                        setState(() {
-                          acceptedTerms = val ?? false;
-                        });
-                      },
-                      activeColor: const Color(0xFF00d47e),
-                    ),
-                    Expanded(
-                      child: RichText(
-                        text: TextSpan(
-                          style: const TextStyle(color: Colors.black),
-                          children: [
-                            TextSpan(text: 'registration.accept_terms'.tr()),
-                            TextSpan(
-                              text: 'registration.terms_conditions'.tr(),
-                              style: const TextStyle(
-                                color: Color(0xFF00d47e),
-                                decoration: TextDecoration.underline,
-                              ),
-                              recognizer:
-                                  TapGestureRecognizer()
-                                    ..onTap = () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (context) =>
-                                                  const TermsAndConditionsPage(),
-                                        ),
-                                      );
-                                    },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
                 const SizedBox(height: 20),
+
+
 
                 // Register button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: acceptedTerms ? Colors.green : const Color(0xFFCBD5E1),
+                      backgroundColor: Colors.green,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    onPressed: acceptedTerms
-                        ? () async {
+                    onPressed: () async {
                       if (_validateFields()) {
                         try {
                           final authService = AuthService();
-                          String? error = await authService.registerUser(
+                          String? error = await authService.registerUserAdmin(
                             email: emailController.text.trim(),
                             password: passwordController.text.trim(),
                             name: nameController.text.trim(),
@@ -791,6 +760,62 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                 backgroundColor: Colors.red,
                               ),
                             );
+                          } else {
+                            if (context.mounted) {
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (context) => AlertDialog(
+                                  backgroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Lottie.network(
+                                        'https://assets9.lottiefiles.com/packages/lf20_jbrw3hcz.json',
+                                        height: 120,
+                                        repeat: false,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      const Text(
+                                        'Success!',
+                                        style: TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      const Text(
+                                        'The user has been registered successfully.',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(fontSize: 16, color: Colors.black54),
+                                      ),
+                                      const SizedBox(height: 24),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context); // Close dialog
+                                          Navigator.pop(context); // Go back
+                                        },
+                                        style: TextButton.styleFrom(
+                                          backgroundColor: Colors.green,
+                                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'OK',
+                                          style: TextStyle(color: Colors.white, fontSize: 16),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }
                           }
                         } catch (e) {
                           if (context.mounted) {
@@ -804,14 +829,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           print("Registration error: $e");
                         }
                       }
-                    }
-                        : null,
+                    },
                     child: Text(
                       'registration.continue'.tr(),
                       style: const TextStyle(fontSize: 18, color: Colors.white),
                     ),
                   ),
                 ),
+
               ],
             ),
           ),

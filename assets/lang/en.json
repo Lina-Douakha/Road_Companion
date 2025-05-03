@@ -164,6 +164,7 @@
     "Total": "Total",
     "Pending": "Pending",
     "Resolved": "Resolved",
+    "Rejected": "Rejected",
     "Description": "Description",
     "Reported-on": "Reported on",
     "Location": "Location",
@@ -455,6 +456,33 @@
     "test_label": "Test : {id}"
 
   },
+  "en": {
+    "titre": "Terms of Use - Road Companion",
+    "introduction": "These terms of use constitute an agreement between you and Road Companion regarding your use of the application.Important: By using this service, you confirm that you have read, understood, accepted, and agreed to these terms of use.",
+    "conditions": [
+      "The application is designed to help users find roadside assistance, mechanics, and spare part sellers based on their location.",
+      "Service providers can register by providing details such as their name, location, and offered services. This data will be published and can be deleted upon request.",
+      "The app may access the user's GPS location to provide personalized services.",
+      "Agreements between clients and service providers are independent from the app. The company is not responsible for service outcomes.",
+      "Usage is strictly personal. It is prohibited to insult, harass, or threaten other users or providers.",
+      "In case of complaints, users may contact the company and provide the service provider’s ID.",
+      "The company reserves the right to suspend or deny access at any time, without notice.",
+      "Service providers must comply with applicable laws and regulations. The company disclaims liability for illegal practices.",
+      "Users must respect the intellectual property rights of the app and service providers.",
+      "The company may modify these terms without notice. Users should regularly review this section.",
+      "Users are responsible for their own safety and privacy while using the app.",
+      "Users must report any inappropriate or illegal content to the app administrators.",
+      "The company does not guarantee the accuracy or completeness of information provided by service providers.",
+      "Users must comply with the app’s terms and applicable local laws regarding road services.",
+      "Misdemeanor of audio recording or photographing a person without their permission under Algerian Penal Code\n\nArticle 303 bis: (New)\nAnyone who deliberately violates the privacy of others using any technology is punished with imprisonment from six (6) months to three (3) years and a fine from 50,000 DZD to 300,000 DZD:\n1- By recording, capturing or transmitting private or secret conversations without the owner's consent.\n2- By recording, capturing or transmitting the image of a person in a private place without the owner's consent.\nAttempting to commit this offense is punishable with the same penalties as the completed crime.\nThe victim's pardon ends the criminal prosecution.\n\nArticle 303 bis 1: (New)\nThe same penalties shall apply to anyone who retains, distributes, allows access to, or uses by any means the recordings, images, or documents obtained through any of the acts referred to in Article 303 bis of the Penal Code."
+
+    ]
+  },
+  "registrationGeneral": {
+    "terms_title": "Termes et Conditions",
+    "accept": "Accepter"
+  },
+  "conditionsgeneral": "By registering or using this application, you agree to abide by and be bound by these terms and conditions of use.\nYou agree to use this application only within the scope of its features and in accordance with applicable laws.\nWe collect certain personal information to improve your experience in the application.\nAll content in the application is protected by intellectual property rights.\nThe application does not guarantee the absence of errors or service interruptions.\nWe reserve the right to modify these terms of use at any time.\nThese terms are governed by Algerian law, and any dispute will be submitted to the competent courts.\nThe user may delete their account at any time by contacting the support team.",
   "emergency_title": "Emergency Call",
   "error_phone": "Unable to open the Phone application",
   "police": "National Police",

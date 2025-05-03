@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:road_companion/screens/authenticate/login.dart';
 import 'package:road_companion/services/auth_service.dart';
 import 'package:road_companion/screens/authenticate/splash_screen.dart';
+import 'package:road_companion/screens/profile/terms_condition_page.dart';
 
 class PrivacyPolicyPage extends StatelessWidget {
   const PrivacyPolicyPage({super.key});
@@ -15,7 +16,11 @@ class PrivacyPolicyPage extends StatelessWidget {
     String? errorMessage; // To store error messages
 
     final user = FirebaseAuth.instance.currentUser;
-    final isGoogleUser = user?.providerData.any((userInfo) => userInfo.providerId == 'google.com') ?? false;
+    final isGoogleUser =
+        user?.providerData.any(
+          (userInfo) => userInfo.providerId == 'google.com',
+        ) ??
+        false;
 
     showModalBottomSheet(
       context: context,
@@ -35,14 +40,19 @@ class PrivacyPolicyPage extends StatelessWidget {
                 left: 16,
                 right: 16,
                 top: 16,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 16, // Adjust for keyboard
+                bottom:
+                    MediaQuery.of(context).viewInsets.bottom +
+                    16, // Adjust for keyboard
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     "privacy.delete_confirmation_title".tr(),
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 10),
@@ -63,7 +73,9 @@ class PrivacyPolicyPage extends StatelessWidget {
                       decoration: InputDecoration(
                         labelText: "privacy.enter_password".tr(),
                         labelStyle: const TextStyle(color: Colors.black),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: const BorderSide(color: Colors.black),
@@ -85,34 +97,50 @@ class PrivacyPolicyPage extends StatelessWidget {
                   const SizedBox(height: 20),
 
                   ElevatedButton(
-                    onPressed: isLoading
-                        ? null
-                        : () async {
-                            setState(() {
-                              isLoading = true;
-                              errorMessage = null; // Reset error message
-                            });
-                            bool success = await _deleteAccount(context, isGoogleUser ? null : passwordController.text);
-                            setState(() => isLoading = false);
-
-                            if (!success) {
+                    onPressed:
+                        isLoading
+                            ? null
+                            : () async {
                               setState(() {
-                                errorMessage = isGoogleUser
-                                    ? "privacy.delete_error".tr()
-                                    : "privacy.wrong_password".tr(); // Set error message
+                                isLoading = true;
+                                errorMessage = null; // Reset error message
                               });
-                            } else {
-                              Navigator.pop(context); // Close modal only if successful
-                            }
-                          },
+                              bool success = await _deleteAccount(
+                                context,
+                                isGoogleUser ? null : passwordController.text,
+                              );
+                              setState(() => isLoading = false);
+
+                              if (!success) {
+                                setState(() {
+                                  errorMessage =
+                                      isGoogleUser
+                                          ? "privacy.delete_error".tr()
+                                          : "privacy.wrong_password"
+                                              .tr(); // Set error message
+                                });
+                              } else {
+                                Navigator.pop(
+                                  context,
+                                ); // Close modal only if successful
+                              }
+                            },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFF44336),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       minimumSize: const Size(double.infinity, 48),
                     ),
-                    child: isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : Text("privacy.delete_account".tr(), style: const TextStyle(color: Colors.white)),
+                    child:
+                        isLoading
+                            ? const CircularProgressIndicator(
+                              color: Colors.white,
+                            )
+                            : Text(
+                              "privacy.delete_account".tr(),
+                              style: const TextStyle(color: Colors.white),
+                            ),
                   ),
 
                   const SizedBox(height: 10),
@@ -120,7 +148,10 @@ class PrivacyPolicyPage extends StatelessWidget {
                     onPressed: () => Navigator.pop(context),
                     child: Text(
                       "privacy.cancel".tr(),
-                      style: const TextStyle(color: Color(0xFF00D47E), fontSize: 16),
+                      style: const TextStyle(
+                        color: Color(0xFF00D47E),
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ],
@@ -147,14 +178,19 @@ class PrivacyPolicyPage extends StatelessWidget {
     }
 
     try {
-      final AuthService _authService = AuthService(); // Create an instance of AuthService
+      final AuthService _authService =
+          AuthService(); // Create an instance of AuthService
 
       // Check if the user signed in with Google
-      final isGoogleUser = user.providerData.any((userInfo) => userInfo.providerId == 'google.com');
+      final isGoogleUser = user.providerData.any(
+        (userInfo) => userInfo.providerId == 'google.com',
+      );
 
       if (isGoogleUser) {
         // Skip password verification for Google users
-        debugPrint("User signed in with Google. Skipping password verification.");
+        debugPrint(
+          "User signed in with Google. Skipping password verification.",
+        );
       } else {
         // For email/password users, re-authenticate with the provided password
         if (password == null || password.isEmpty) {
@@ -176,7 +212,10 @@ class PrivacyPolicyPage extends StatelessWidget {
       }
 
       // Step 2: Delete from Firestore
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .delete();
       debugPrint("User deleted from Firestore!");
 
       // Step 3: Delete from Firebase Authentication
@@ -207,10 +246,7 @@ class PrivacyPolicyPage extends StatelessWidget {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
       );
 
       return false;
@@ -233,7 +269,14 @@ class PrivacyPolicyPage extends StatelessWidget {
                 _buildOptionTile(
                   icon: Icons.article,
                   text: "privacy.terms_and_conditions".tr(),
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TermsConditionsPage(),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 10),
                 _buildOptionTile(
@@ -252,14 +295,23 @@ class PrivacyPolicyPage extends StatelessWidget {
   /// Custom Header (Back Button + Title)
   Widget _buildCustomHeader(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 70.0, left: 16.0, right: 16.0, bottom: 20.0),
+      padding: const EdgeInsets.only(
+        top: 70.0,
+        left: 16.0,
+        right: 16.0,
+        bottom: 20.0,
+      ),
       child: Stack(
         alignment: Alignment.center,
         children: [
           Align(
             alignment: Alignment.centerLeft,
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Color(0xFF1B9169), size: 24),
+              icon: const Icon(
+                Icons.arrow_back,
+                color: Color(0xFF1B9169),
+                size: 24,
+              ),
               onPressed: () => Navigator.pop(context),
             ),
           ),
@@ -277,7 +329,11 @@ class PrivacyPolicyPage extends StatelessWidget {
   }
 
   /// Option Tiles (Terms & Delete Account)
-  Widget _buildOptionTile({required IconData icon, required String text, required VoidCallback onTap}) {
+  Widget _buildOptionTile({
+    required IconData icon,
+    required String text,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -294,7 +350,10 @@ class PrivacyPolicyPage extends StatelessWidget {
             Expanded(
               child: Text(
                 text,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
             const Icon(Icons.arrow_forward_ios, size: 18, color: Colors.grey),
@@ -304,6 +363,3 @@ class PrivacyPolicyPage extends StatelessWidget {
     );
   }
 }
-
-
-

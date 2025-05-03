@@ -86,19 +86,19 @@ class _DestinationPageState extends State<DestinationPage> {
 
     String assetPath;
     switch (type) {
-      case 'Accident':
+      case 'accident':
         assetPath = 'assets/GPS/accident_icon.png';
         break;
-      case 'Panne':
+      case 'breakdown':
         assetPath = 'assets/GPS/breakdown_icon.png';
         break;
-      case 'Routes Barrées':
+      case 'Road_Blockages':
         assetPath = 'assets/GPS/circulation.png';
         break;
-      case 'Travaux':
+      case 'Roadwork':
         assetPath = 'assets/GPS/roadwork.png';
         break;
-      case 'Événements Spéciaux':
+      case 'Special_Events':
         assetPath = 'assets/GPS/event.png';
         break;
       default:
