@@ -74,6 +74,9 @@ class _LawState extends State<Law> {
 
   @override
   Widget build(BuildContext context) {
+
+      final screenHeight = MediaQuery.of(context).size.height;
+      final screenWidth = MediaQuery.of(context).size.width;
     if (jsonData == null || !jsonData!.containsKey(currentSection)) {
       return Scaffold(body: Center(child: Text("Chargement en cours...")));
     }
@@ -160,24 +163,29 @@ class _LawState extends State<Law> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  IconButton(
-                    onPressed: previousQuestion,
-                    icon: Icon(Icons.arrow_circle_left_outlined, size: 30),
-                    color: Color(0xFF1B9169),
+                  CircleAvatar(
+                                      radius: screenWidth * 0.08,
+                                      backgroundColor: const Color(0xFFD1FADF),
+                                      child: IconButton(
+                                        icon: const Icon(
+                                            Icons.arrow_back, color: Color(0xFF00D47E)),
+                                        onPressed: previousQuestion,
+                                      ),
                   ),
-                  IconButton(
-                    onPressed: nextQuestion,
-                    icon: Icon(Icons.arrow_circle_right_outlined, size: 30),
-                    color: Color(0xFF1B9169),
+
+                  CircleAvatar(
+                                        radius: screenWidth * 0.08,
+                                        backgroundColor: const Color(0xFFD1FADF),
+                                        child: IconButton(
+                                          icon: const Icon(
+                                              Icons.arrow_forward, color: Color(0xFF00D47E)),
+                                          onPressed: nextQuestion,
+                  ),
                   ),
                 ],
               ),
             ],
           ),
-        ),
-        bottomNavigationBar: NavigationBarWidget(
-          selectedIndex: _selectedIndex,
-          onItemTapped: _onItemTapped,
         ),
       ),
     );

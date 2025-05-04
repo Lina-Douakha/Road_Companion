@@ -172,12 +172,6 @@ class _PanneauxInterdictionScreenState extends State<PanneauxInterdictionScreen>
           ),
         ),
         resizeToAvoidBottomInset: false,
-        bottomNavigationBar: NavigationBarWidget(
-          selectedIndex: 0,
-          onItemTapped: (index) {
-            print("Onglet sélectionné : $index");
-          },
-        ),
       ),
     );
   }

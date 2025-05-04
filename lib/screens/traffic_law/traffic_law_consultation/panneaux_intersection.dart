@@ -172,12 +172,6 @@ class _PanneauxIntersectionScreenState extends State<PanneauxIntersectionScreen>
           ),
         ),
         resizeToAvoidBottomInset: false,
-        bottomNavigationBar: NavigationBarWidget(
-          selectedIndex: 0,
-          onItemTapped: (index) {
-            print("Onglet sélectionné : $index");
-          },
-        ),
       ),
     );
   }

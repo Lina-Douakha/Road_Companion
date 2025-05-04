@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:road_companion/screens/authenticate/login.dart';
+import 'package:road_companion/screens/GPS_navigation/map_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,7 +23,7 @@ class _HomePageState extends State<HomePage> {
 
   // Liste des pages associées aux onglets de la navbar
   final List<Widget> _pages = [
-    const IncidentReportScreen(),
+    const MapPage(),
     const EmergencyCallPage(),
     const TrafficLawScreen(),
     const ProfilePage(),

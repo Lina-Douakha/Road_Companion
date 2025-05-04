@@ -171,10 +171,6 @@ class _PreExamScreenState extends State<PreExamScreen> {
             ),
           ),
         ),
-        bottomNavigationBar: NavigationBarWidget(
-          selectedIndex: _selectedIndex,
-          onItemTapped: _onItemTapped,
-        ),
       ),
     );
   }

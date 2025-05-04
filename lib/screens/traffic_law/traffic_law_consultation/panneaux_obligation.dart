@@ -172,12 +172,6 @@ class _PanneauxObligationScreenState extends State<PanneauxObligationScreen> {
           ),
         ),
         resizeToAvoidBottomInset: false,
-        bottomNavigationBar: NavigationBarWidget(
-          selectedIndex: 0,
-          onItemTapped: (index) {
-            print("Onglet sélectionné : $index");
-          },
-        ),
       ),
     );
   }

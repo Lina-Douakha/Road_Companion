@@ -171,12 +171,6 @@ class _PanneauxIndicationScreenState extends State<PanneauxIndicationScreen> {
           ),
         ),
         resizeToAvoidBottomInset: false,
-        bottomNavigationBar: NavigationBarWidget(
-          selectedIndex: 0,
-          onItemTapped: (index) {
-            print("Onglet sélectionné : $index");
-          },
-        ),
       ),
     );
   }

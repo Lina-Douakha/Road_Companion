@@ -86,12 +86,6 @@ class ChoisirPanneauxGlobal extends StatelessWidget {
             ),
           ],
         ),
-        bottomNavigationBar: NavigationBarWidget(
-          selectedIndex: _selectedIndex,
-          onItemTapped: (index) {
-            print("Onglet sélectionné : $index");
-          },
-        ),
       ),
     );
   }

@@ -437,10 +437,6 @@ bool resultsFetched = false;
             ],
           ),
         ),
-        bottomNavigationBar: NavigationBarWidget(
-          selectedIndex: _selectedIndex,
-          onItemTapped: _onItemTapped,
-        ),
       ),
     );
   }

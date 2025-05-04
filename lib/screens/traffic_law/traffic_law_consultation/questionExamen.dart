@@ -187,28 +187,28 @@ class _QuestionExamenState extends State<QuestionExamen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  IconButton(
-                    onPressed: previousQuestion,
-                    icon: const Icon(Icons.arrow_circle_left_outlined, size: 30),
-                    color: const Color(0xFF1B9169),
-                    tooltip: "Question précédente",
+                  CircleAvatar(
+                                      radius: screenWidth * 0.08,
+                                      backgroundColor: const Color(0xFFD1FADF),
+                                      child: IconButton(
+                                        icon: const Icon(
+                                            Icons.arrow_back, color: Color(0xFF00D47E)),
+                                        onPressed: previousQuestion,
+                                      ),
                   ),
-                  IconButton(
-                    onPressed: nextQuestion,
-                    icon: const Icon(Icons.arrow_circle_right_outlined, size: 30),
-                    color: const Color(0xFF1B9169),
-                    tooltip: "Question suivante",
+                  CircleAvatar(
+                                        radius: screenWidth * 0.08,
+                                        backgroundColor: const Color(0xFFD1FADF),
+                                        child: IconButton(
+                                          icon: const Icon(
+                                              Icons.arrow_forward, color: Color(0xFF00D47E)),
+                                          onPressed: nextQuestion,
+                                        ),
                   ),
                 ],
               ),
             ],
           ),
-        ),
-
-        // Bottom navigation bar
-        bottomNavigationBar: NavigationBarWidget(
-          selectedIndex: _selectedIndex,
-          onItemTapped: _onItemTapped,
         ),
       ),
     );

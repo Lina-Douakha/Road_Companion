@@ -408,18 +408,18 @@
   "select_answer_error": "Veuillez sélectionner une réponse avant de confirmer.",
 
   "home": {
-    "trafficlaws": "Code de la route",
-    "training": "Quiz",
-    "learning": "Apprentissage",
+    "trafficlaws": "Highway Code",
+    "training": "Quizz",
+    "learning": "Learning",
     "exam": "Tests",
-    "codeslogan": "Apprenez le Code de la route aujourd’hui, conduisez en toute sécurité demain !"
+    "codeslogan": "Learn the Highway Code today, drive safely tomorrow!"
   },
 
 
   "database": {
-    "questions_theorique": "Theoquestions",
-    "TestQuestions": "Questions",
-    "courses": "Traffic-Laws"
+    "questions_theorique": "Theoquestions-en",
+    "TestQuestions": "Questions-en",
+    "courses": "Traffic-laws-en"
   },
   "Categories": {
     "Choose": "Choose a category",

@@ -171,12 +171,6 @@ class _PanneauxDeDangerScreenState extends State<PanneauxDeDangerScreen> {
           ),
         ),
         resizeToAvoidBottomInset: false,
-        bottomNavigationBar: NavigationBarWidget(
-          selectedIndex: 0,
-          onItemTapped: (index) {
-            print("Onglet sélectionné : $index");
-          },
-        ),
       ),
     );
   }
