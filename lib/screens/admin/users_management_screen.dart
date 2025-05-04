@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'UserDetailsScreen.dart';
-import 'user_registration_Screen.dart';
-import 'admin_registartion_screen.dart';
+import 'package:road_companion/screens/admin/UserDetailsScreen.dart';
+import 'package:road_companion/screens/admin/user_registration_Screen.dart';
+import 'package:road_companion/screens/admin/admin_registartion_screen.dart';
 
 
 enum UserFilter { active, blocked, deleted }
@@ -31,13 +31,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   Color _getRoleColor(String Role) {
     switch (Role.toLowerCase()) {
       case 'user':
-        return Colors.grey;
+        return const Color(0xFF00D47E);
       case 'mechanic':
-        return Colors.orange;
+        return Colors.amber;
       case 'parts_supplier':
-        return Colors.green;
+        return const Color(0xFFE84D5E);
       case 'towing_service':
-        return Colors.purple;
+        return Colors.blue;
       default:
         return Colors.grey;
     }
@@ -152,28 +152,95 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       );
     }
   }
-
   Future<void> _toggleBlockUser(String userId, bool currentBlockedStatus, int index) async {
     try {
+      // Update Firestore
       await _firestore.collection('users').doc(userId).update({
         'isBlocked': !currentBlockedStatus,
       });
+
+      // Update local state
       setState(() {
         final userIndex = _users.indexWhere((user) => user['UserID'] == userId);
         if (userIndex != -1) {
           _users[userIndex]['isBlocked'] = !currentBlockedStatus;
         }
       });
+
+      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                'user ${!currentBlockedStatus ? 'blocked' : 'active'} successfully.')),
+        SnackBar(content: Text('User ${!currentBlockedStatus ? 'blocked' : 'active'} successfully.')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to toggle block status: <span class="math-inline">e')),
+        SnackBar(content: Text('Failed to toggle block status: $e')),
       );
     }
+  }
+
+// Enhanced dialog with more detailed explanation
+  void _showBlockDialog(Map<String, dynamic> user, int index, bool isBlocked) {
+    final String actionText = isBlocked ? "Unblock" : "Block";
+    final Color actionColor = isBlocked
+        ? const Color(0xFF1B9169) // soft modern green for unblock
+        : Colors.red; // red for block action
+
+    final String message = isBlocked
+        ? 'Are you sure you want to unblock "${user['Name']}"?'
+        : 'Are you sure you want to block "${user['Name']}"?\n\nThis will immediately log the user out of the app and prevent them from logging in again until unblocked.';
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          '$actionText User',
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+          ),
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(fontSize: 15),
+        ),
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _toggleBlockUser(user['UserID'], isBlocked, index);
+            },
+            child: Text(
+              actionText,
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: isBlocked ? const Color(0xFF1B9169) : Colors.white,
+              ),
+
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isBlocked
+                  ? const Color(0xFF1B9169).withOpacity(0.1)
+                  : Colors.red,
+              foregroundColor: isBlocked ? const Color(0xFF1B9169) : Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   String _getNoUsersMessage() {
@@ -356,57 +423,6 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       ),
     );
   }
-  void _showBlockDialog(Map<String, dynamic> user, int index, bool isBlocked) {
-    final String actionText = isBlocked ? "Unblock" : "Block";
-    final Color actionColor = const Color(0xFF1B9169); // soft modern green
-
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          '$actionText user',
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
-        ),
-        content: Text(
-          'Are you sure you want to ${actionText.toLowerCase()} "${user['Name']}"?',
-          style: const TextStyle(fontSize: 15),
-        ),
-        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _toggleBlockUser(user['UserID'], isBlocked, index);
-            },
-            child: Text(
-              actionText,
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: actionColor.withOpacity(0.1),
-              foregroundColor: actionColor,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
   void _showDeleteDialog(Map<String, dynamic> user, int index) {
     showDialog(
       context: context,
@@ -460,6 +476,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   @override
   Widget build(BuildContext context) {
     List<Map<String, dynamic>> displayedUsers = [];
+
     if (_selectedFilter == UserFilter.deleted) {
       displayedUsers = _deletedUsers.where((user) {
         final isSearchMatch =
@@ -494,11 +511,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
         return isRoleMatch && isSearchMatch && isBlockStatusMatch;
       }).toList();
     }
-
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.grey[100],
         elevation: 0,
         scrolledUnderElevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
@@ -508,242 +524,144 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1B9169)),
           onPressed: () => Navigator.pop(context),
         ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 16, top: 16),
-
-              child: PopupMenuButton<String>(
-
-                tooltip: 'Add New',
-                onSelected: (value) {
-                  if (value == 'admin') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const AdminRegistrationScreen()),
-                    );
-
-                  } else if (value == 'user') {
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (context) => UserRegistrationScreen(),
-                    ));
-
-                  }
-                },
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-
-                ),
-                color: Colors.white,
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'admin',
-                    child: Row(
-                      children: const [
-                        Icon(Icons.admin_panel_settings, color: Color(0xFF1B9169)),
-                        SizedBox(width: 10),
-                        Text('Add Admin'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'user',
-                    child: Row(
-                      children: const [
-                        Icon(Icons.person_add_alt, color: Color(0xFF1B9169)),
-                        SizedBox(width: 10),
-                        Text('Add User'),
-                      ],
-                    ),
-                  ),
-                ],
-                child:Container(
-                  height: 30,
-                  width: 30,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1B9169).withOpacity(0.1),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16, top: 16),
+            child: PopupMenuButton<String>(
+              tooltip: 'Add New',
+              onSelected: (value) {
+                if (value == 'admin') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AdminRegistrationScreen()),
+                  );
+                } else if (value == 'user') {
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (context) => UserRegistrationScreen(),
+                  ));
+                }
+              },
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              color: Colors.white,
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'admin',
+                  child: Row(
+                    children: const [
+                      Icon(Icons.admin_panel_settings, color: Color(0xFF1B9169)),
+                      SizedBox(width: 10),
+                      Text('Add Admin'),
                     ],
                   ),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(30),
-                    onTap: null,
-                    child: const Center(
-                      child: Icon(
-                        Icons.add,
-                        color: Color(0xFF1B9169),
-                        size: 20,
-                      ),
+                ),
+                PopupMenuItem(
+                  value: 'user',
+                  child: Row(
+                    children: const [
+                      Icon(Icons.person_add_alt, color: Color(0xFF1B9169)),
+                      SizedBox(width: 10),
+                      Text('Add User'),
+                    ],
+                  ),
+                ),
+              ],
+              child: Container(
+                height: 30,
+                width: 30,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1B9169).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(30),
+                  onTap: null,
+                  child: const Center(
+                    child: Icon(
+                      Icons.add,
+                      color: Color(0xFF1B9169),
+                      size: 20,
                     ),
                   ),
                 ),
-
               ),
             ),
-          ],
-
-
-
-
+          ),
+        ],
       ),
-
-
-      body: RefreshIndicator(
-        color: const Color(0xFF1B9169),
-        backgroundColor: Colors.white,
-        strokeWidth: 2.0,
-        onRefresh: _fetchUsersBasedOnFilter,
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFF1B9169)))
-            : Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 16, bottom: 16),
-                child: Center(
-                  child: Text(
-                    'admin.manage_users'.tr(),
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF157E15),
-                    ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          children: [
+            // Fixed header content
+            Padding(
+              padding: const EdgeInsets.only(top: 16, bottom: 16),
+              child: Center(
+                child: Text(
+                  'admin.manage_users'.tr(),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF157E15),
                   ),
                 ),
               ),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      spreadRadius: 1,
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: (_) => setState(() {}),
-                  decoration: InputDecoration(
-                    hintText: "recherche".tr(),
-                    prefixIcon: const Icon(Icons.search, color: Color(0xFF1B9169)),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide.none,
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
+            ),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.3),
+                    spreadRadius: 1,
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(height: 16),
-              Container(
-                height: 44,
-                margin: const EdgeInsets.symmetric(horizontal: 8),
-                child: SegmentedButton<UserFilter>(
-                  showSelectedIcon: false,
-                  style: ButtonStyle(
-                    padding: MaterialStateProperty.all(
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    ),
-                    backgroundColor: MaterialStateProperty.resolveWith<Color?>((states) {
-                      return states.contains(MaterialState.selected)
-                          ? const Color(0xFFE0F2F1)
-                          : Colors.transparent;
-                    }),
-                    side: MaterialStateProperty.resolveWith<BorderSide?>((states) {
-                      return states.contains(MaterialState.selected)
-                          ? const BorderSide(color: Color(0xFF1B9169))
-                          : const BorderSide(color: Colors.grey);
-                    }),
-                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    foregroundColor: MaterialStateProperty.resolveWith<Color?>((states) {
-                      return states.contains(MaterialState.selected)
-                          ? const Color(0xFF1B9169)
-                          : Colors.grey;
-                    }),
-                    overlayColor: MaterialStateProperty.all(
-                      const Color(0xFF1B9169).withOpacity(0.1),
-                    ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  hintText: "recherche".tr(),
+                  prefixIcon: const Icon(Icons.search, color: Color(0xFF1B9169)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
                   ),
-                  segments: <ButtonSegment<UserFilter>>[
-                    ButtonSegment<UserFilter>(
-                      value: UserFilter.active,
-                      label: _buildSegmentLabel(Icons.check_circle, 'Active', _selectedFilter == UserFilter.active),
-                    ),
-                    ButtonSegment<UserFilter>(
-                      value: UserFilter.blocked,
-                      label: Flexible(
-                        child: _buildSegmentLabel(Icons.block, 'Blocked', _selectedFilter == UserFilter.blocked),
-                      ),
-                    ),
-                    ButtonSegment<UserFilter>(
-                      value: UserFilter.deleted,
-                      label: _buildSegmentLabel(Icons.delete, 'Deleted', _selectedFilter == UserFilter.deleted),
-                    ),
-                  ],
-                  selected: {_selectedFilter},
-                  onSelectionChanged: (Set<UserFilter> newSelection) {
-                    setState(() {
-                      _selectedFilter = newSelection.first;
-                      _fetchUsersBasedOnFilter();
-                    });
-                  },
+                  filled: true,
+                  fillColor: Colors.white,
                 ),
               ),
+            ),
+            const SizedBox(height: 16),
+            _buildUserFilter(),
+            const SizedBox(height: 0),
+            _buildRoleChips(),
 
-              const SizedBox(height: 0),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Row(
-                  children: _roles.map((role) => Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: FilterChip(
-                      label: Text('registration.$role'.tr()),
-                      selected: selectedRole == role,
-                      onSelected: (bool selected) {
-                        setState(() {
-                          if (selected) {
-                            selectedRole = role;
-                          } else if (selectedRole == role) {
-                            selectedRole = 'All';
-                          }
-                        });
-                      },
-                      selectedColor: const Color(0xFF1B9169).withOpacity(0.2),
-                      backgroundColor: Colors.grey.withOpacity(0.1),
-                      checkmarkColor: const Color(0xFF1B9169),
-                      labelStyle: TextStyle(
-                        fontSize: 14,
-                        fontWeight: selectedRole == role ? FontWeight.bold : FontWeight.normal,
-                        color: selectedRole == role ? const Color(0xFF1B9169) : Colors.black87,
-                      ),
-                      shape: const StadiumBorder(),
-                      elevation: selectedRole == role ? 2 : 0,
-                      shadowColor: Colors.grey.withOpacity(0.3),
-                    ),
-                  )).toList(),
-                ),
-              ),
-
-              Expanded(
+            // Refresh indicator only wraps the user list
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator(color: Color(0xFF1B9169)))
+                  : RefreshIndicator(
+                color: const Color(0xFF1B9169),
+                backgroundColor: Colors.white,
+                strokeWidth: 2.0,
+                onRefresh: _fetchUsersBasedOnFilter,
                 child: displayedUsers.isEmpty
-                    ? Center(child: Text(_getNoUsersMessage()))
+                    ? ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.3,
+                      child: Center(child: Text(_getNoUsersMessage())),
+                    ),
+                  ],
+                )
                     : ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   itemCount: displayedUsers.length,
                   itemBuilder: (context, index) {
                     final user = displayedUsers[index];
@@ -751,31 +669,156 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                   },
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
-  Widget _buildSegmentLabel(IconData icon, String text, bool isSelected) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 18, color: isSelected ? const Color(0xFF1B9169) : Colors.grey),
-        const SizedBox(width: 4),
-        Flexible(
-          child: Text(
-            text,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: isSelected ? const Color(0xFF1B9169) : Colors.grey,
-              fontSize: 14,
-            ),
+  Widget _buildUserFilter() {
+    return SizedBox(
+      width: double.infinity, // Make the SizedBox take the full width
+      child: SegmentedButton<UserFilter>(
+        showSelectedIcon: false,
+        style: ButtonStyle(
+          padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
+          backgroundColor: MaterialStateProperty.resolveWith<Color?>(
+                (states) => states.contains(MaterialState.selected)
+                ? const Color(0xFFE0F2F1) // Light green when selected (from _buildStatusFilter)
+                : Colors.transparent,
+          ),
+          side: MaterialStateProperty.resolveWith<BorderSide?>(
+                (states) => states.contains(MaterialState.selected)
+                ? const BorderSide(color: Color(0xFF00D47E)) // Green border when selected (from _buildStatusFilter)
+                : const BorderSide(color: Colors.grey),
+          ),
+          shape: MaterialStateProperty.all(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          foregroundColor: MaterialStateProperty.resolveWith<Color?>(
+                (states) => states.contains(MaterialState.selected)
+                ? const Color(0xFF00D47E) // Green text when selected (from _buildStatusFilter)
+                : Colors.grey,
+          ),
+          overlayColor: MaterialStateProperty.all(
+            const Color(0xFF00D47E).withOpacity(0.1), // Green overlay effect (from _buildStatusFilter)
           ),
         ),
-      ],
+        segments: [
+          ButtonSegment(
+            value: UserFilter.active,
+            label: Expanded( // Make the label take available width
+              child: Center( // Center the label text
+                child: _buildStatusSegmentLabel(
+                  Icons.check_circle,
+                  'Active'.tr(), // Ensure 'Active' is translated if needed
+                  _selectedFilter == UserFilter.active,
+                  color: Color(0xFF00D47E), // Green
+                ),
+              ),
+            ),
+          ),
+          ButtonSegment(
+            value: UserFilter.blocked,
+            label: Expanded( // Make the label take available width
+              child: Center( // Center the label text
+                child: _buildStatusSegmentLabel(
+                  Icons.block,
+                  'Blocked'.tr(), // Ensure 'Blocked' is translated if needed
+                  _selectedFilter == UserFilter.blocked,
+                  color: Colors.amber, // Orange
+                ),
+              ),
+            ),
+          ),
+          ButtonSegment(
+            value: UserFilter.deleted,
+            label: Expanded( // Make the label take available width
+              child: Center( // Center the label text
+                child: _buildStatusSegmentLabel(
+                  Icons.delete,
+                  'Deleted'.tr(), // Ensure 'Deleted' is translated if needed
+                  _selectedFilter == UserFilter.deleted,
+                  color: Colors.red, // Red
+                ),
+              ),
+            ),
+          ),
+        ],
+        selected: {_selectedFilter},
+        onSelectionChanged: (Set<UserFilter> newSelection) {
+          setState(() {
+            _selectedFilter = newSelection.first;
+            _fetchUsersBasedOnFilter();
+          });
+        },
+      ),
     );
   }
 
-
+  Widget _buildStatusSegmentLabel(IconData icon, String label, bool isSelected, {required Color color}) {
+    return Flexible(
+      child: Row(
+        mainAxisSize: MainAxisSize.min, // This helps minimize the row's width
+        children: [
+          Icon(
+            icon,
+            color: isSelected ? color : Colors.grey,
+            size: 18, // Make icons slightly smaller
+          ),
+          const SizedBox(width: 4), // Reduce spacing
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? color : Colors.grey,
+                fontSize: 13, // Smaller font size
+              ),
+              overflow: TextOverflow.ellipsis, // Add ellipsis if text overflows
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  Widget _buildRoleChips() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: _roles.map((role) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: FilterChip(
+              label: Text(
+                // Translate the role name using tr() method with 'incident_report' prefix
+                'registration.$role'.tr(),
+                style: TextStyle(
+                  color: selectedRole == role
+                      ? Colors.white // White text when selected
+                      : const Color(0xFF00D47E), // Green text when not selected
+                ),
+              ),
+              selected: selectedRole == role,
+              onSelected: (bool selected) {
+                setState(() {
+                  selectedRole = selected ? role : 'All';
+                });
+              },
+              selectedColor: const Color(0xFF00D47E), // Green background when selected
+              backgroundColor: Colors.white, // White background when unselected
+              checkmarkColor: Colors.white, // White checkmark
+              shadowColor: Colors.grey.withOpacity(0.2), // Softer shadow
+              elevation: 2, // Reduced shadow depth
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(25), // Rounded corners
+                side: const BorderSide(
+                  color: Colors.transparent, // No border for both states
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
 }

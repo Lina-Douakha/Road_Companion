@@ -20,17 +20,17 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
 
   // Define the user type colors
   final Map<String, Color> _userTypeColors = {
-    'user': const Color(0xFF1B9169), // Green for regular users
-    'mechanic': const Color(0xFF2196F3), // Blue for mechanics
-    'towing_service': const Color(0xFFFF9800), // Orange for towing services
-    'parts_supplier': const Color(0xFF9C27B0), // Purple for parts suppliers
+    'user': const Color(0xFF00D47E), // Green for regular users
+    'mechanic':  Colors.amber, // Blue for mechanics
+    'towing_service': Colors.blue, // Orange for towing services
+    'parts_supplier': const Color(0xFFE84D5E),
   };
 
   // Define status colors
   final Map<String, Color> _statusColors = {
-    'Active': const Color(0xFF4CAF50), // Green
-    'Blocked': const Color(0xFFFFA726), // Orange
-    'Deleted': const Color(0xFFE53935), // Red
+    'Active': const Color(0xFF00D47E), // Green
+    'Blocked': Colors.amber, // Orange
+    'Deleted':  Colors.red, // Red
   };
 
   @override
@@ -291,61 +291,50 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
     }}
 
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        title: Text("Admin Dashboard", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor:Color(0xFF1B9169),
+        centerTitle: true,
         elevation: 0,
-        systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-          statusBarColor: const Color(0xFF1B9169),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1B9169)),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Les statistiques'.tr(),
-          style: const TextStyle(
-            color: Color(0xFF1B9169),
-            fontSize: 20.0,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Color(0xFF1B9169)),
-            onPressed: _refreshData,
-          ),
-        ],
         bottom: TabBar(
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white,
           controller: _tabController,
-          labelColor: const Color(0xFF1B9169),
-          indicatorColor: const Color(0xFF1B9169),
           tabs: [
-            Tab(icon: Icon(Icons.dashboard), text: 'overview'.tr()),
-            Tab(icon: Icon(Icons.category), text: 'details'.tr()),
+            Tab(icon: Icon(Icons.analytics, color: Colors.white,), text: "Stats Overview"),
+            Tab(icon: Icon(Icons.stacked_line_chart, color: Colors.white), text: "Detailed Analysis"),
           ],
+          indicatorColor: Colors.white,
+          indicatorWeight: 3,
         ),
       ),
       body: Column(
         children: [
+
+
+          // Loading indicator
           if (_isLoading)
             LinearProgressIndicator(
               backgroundColor: Colors.grey[200],
               valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1B9169)),
             ),
 
+          // Error message if any
           if (_errorMessage.isNotEmpty)
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
                 _errorMessage,
-                style: const TextStyle(color: Colors.red),
+                style: TextStyle(color: Colors.red),
               ),
             ),
 
+          // Tab content
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -414,13 +403,13 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
                         const Color(0xFF1B9169), Icons.people),
                     _buildSummaryCard(
                         'active_users'.tr(), stats['activeUsers'].toString(),
-                        const Color(0xFF4CAF50), Icons.check_circle_outline),
+                        const Color(0xFF00D47E), Icons.check_circle_outline),
                     _buildSummaryCard(
                         'blocked_users'.tr(), stats['blockedUsers'].toString(),
-                        const Color(0xFFFFA726), Icons.block),
+                         Colors.amber, Icons.block),
                     _buildSummaryCard(
                         'deleted_users'.tr(), stats['deletedUsers'].toString(),
-                        const Color(0xFFE53935), Icons.delete_forever),
+                         Colors.red, Icons.delete_forever),
                   ],
                 ),
               ),
@@ -548,57 +537,56 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
   }
   Widget _buildSummaryCard(String title, String value, Color color, IconData icon) {
     return Container(
-      width: 160, // Updated width for consistency with the second design
-      margin: const EdgeInsets.only(right: 16),
+      width: 160,
+      margin: EdgeInsets.only(right: 16),
       decoration: BoxDecoration(
-        color: Colors.white, // Background color of the card
-        borderRadius: BorderRadius.circular(16), // Rounded edges
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.3), // Adding a border for better separation
-          width: 1.0,
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2), // Slight shadow to lift the card off the screen
+            color: Colors.grey.withOpacity(0.2),
             blurRadius: 10,
-            offset: const Offset(0, 4),
+            offset: Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Circular background with the icon inside
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1), // Light background color behind the icon
+              color: color.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: color, size: 30), // Adjusted icon size for consistency
+            child: Icon(
+              icon,
+              color: color,
+              size: 30,
+            ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Text(
             value,
             style: TextStyle(
-              fontSize: 28, // Increased font size for value to match the second design
+              fontSize: 28,
               fontWeight: FontWeight.bold,
               color: color,
             ),
           ),
-          const SizedBox(height: 8),
           Text(
             title,
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[600],
             ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
+
+
   Widget _buildUserTypeList(Map<String, int> typeStats) {
     final sortedEntries = typeStats.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
@@ -1082,9 +1070,9 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
                         toY: active + blocked + deleted,
                         width: 28,
                         rodStackItems: [
-                          BarChartRodStackItem(0, active, const Color(0xFF4CAF50)),
-                          BarChartRodStackItem(active, active + blocked, const Color(0xFFFFA726)),
-                          BarChartRodStackItem(active + blocked, active + blocked + deleted, const Color(0xFFE53935)),
+                          BarChartRodStackItem(0, active, const Color(0xFF00D47E)),
+                          BarChartRodStackItem(active, active + blocked, Colors.amber),
+                          BarChartRodStackItem(active + blocked, active + blocked + deleted,Colors.red),
                         ],
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -1100,9 +1088,9 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
           spacing: 24,
           runSpacing: 12,
           children: [
-            _buildLegendItem(color: const Color(0xFF4CAF50), label: 'Active'),
-            _buildLegendItem(color: const Color(0xFFFFA726), label: 'Blocked'),
-            _buildLegendItem(color: const Color(0xFFE53935), label: 'Deleted'),
+            _buildLegendItem(color: const Color(0xFF00D47E), label: 'Active'),
+            _buildLegendItem(color: Colors.amber, label: 'Blocked'),
+            _buildLegendItem(color: Colors.red, label: 'Deleted'),
           ],
         ),
         const SizedBox(height: 16),
@@ -1152,20 +1140,6 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
     );
   }
 
-  Color _getRoleColor(String Role) {
-    switch (Role.toLowerCase()) {
-      case 'user':
-        return Colors.grey;
-      case 'mechanic':
-        return Colors.orange;
-      case 'parts_supplier':
-        return Colors.green;
-      case 'towing_service':
-        return Colors.purple;
-      default:
-        return Colors.grey;
-    }
-  }
   IconData _getIconForUserType(String Role) {
     switch (Role.toLowerCase()) {
       case 'user':
@@ -1181,11 +1155,4 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
     }
   }
 
-
-
 }
-
-
-
-
-

@@ -137,6 +137,7 @@ class AuthService {
   }
 
 
+
   Future<String?> registerUser({
     required String email,
     required String password,
@@ -302,6 +303,7 @@ class AuthService {
     await prefs.remove('uid');
   }
 
+
   Future<String?> registerUserAdmin({
     required String email,
     required String password,
@@ -393,5 +395,7 @@ class AuthService {
     }
     return "auth.unknown_error".tr();
   }
+
+
 
 }

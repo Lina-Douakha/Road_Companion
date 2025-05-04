@@ -10,6 +10,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:road_companion/screens/incident_reporting/location_picker_screen.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:lottie/lottie.dart';
+import 'package:road_companion/screens/admin/Admin_Email_verification.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 
 
@@ -26,6 +29,8 @@ class UserRegistrationScreen extends StatefulWidget {
 }
 
 class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   // Role constants
   static const String userRole = 'user';
   static const String mechanicRole = 'mechanic';
@@ -742,7 +747,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                       if (_validateFields()) {
                         try {
                           final authService = AuthService();
-                          String? error = await authService.registerUserAdmin(
+                          String? error = await registerUserAdmin(
                             email: emailController.text.trim(),
                             password: passwordController.text.trim(),
                             name: nameController.text.trim(),
@@ -760,7 +765,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                                 backgroundColor: Colors.red,
                               ),
                             );
-                          } else {
+                          } /** else {
                             if (context.mounted) {
                               showDialog(
                                 context: context,
@@ -816,7 +821,8 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                                 ),
                               );
                             }
-                          }
+                          }**/
+
                         } catch (e) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -1005,4 +1011,115 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
       ),
     );
   }
+
+
+  Future<String?> registerUserAdmin({
+    required String email,
+    required String password,
+    required String name,
+    required String phone,
+    required String role,
+    required BuildContext context,
+    LatLng? location,
+    String? address,
+  }) async {
+    try {
+      // 1. Check if the email exists in the deleted_users collection
+      final deletedUserQuery = await _firestore
+          .collection('deleted_users')
+          .where('Email', isEqualTo: email)
+          .get();
+
+      if (deletedUserQuery.docs.isNotEmpty) {
+        // User was deleted
+        return "auth.account_deleted".tr();
+      }
+// 2. Check if the email exists in the users collection
+      final userQuery = await _firestore
+          .collection('users')
+          .where('Email', isEqualTo: email)
+          .get();
+      //block
+      if (userQuery.docs.isNotEmpty) {
+        final userData = userQuery.docs.first.data();
+        if (userData['isBlocked'] == true) {
+          return "auth.account_blocked".tr();
+        }
+        // Already registered
+        return "auth.email_already_in_use".tr();
+      }
+
+      final pendingQuery = await _firestore.collection('unverified_users').where('Email', isEqualTo: email).get();
+      if (pendingQuery.docs.isNotEmpty) {
+        for (var doc in pendingQuery.docs) {
+          await _firestore.collection('unverified_users').doc(doc.id).delete();
+        }
+        User? existingUser = _auth.currentUser;
+        if (existingUser != null && !existingUser.emailVerified) {
+          await existingUser.delete();
+        }
+      }
+
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      User? user = userCredential.user;
+      if (user != null) {
+        Map<String, dynamic> userData = {
+          'UserID': user.uid,
+          'Email': email,
+          'Name': name,
+          'Phone': phone,
+          'Role': role,
+          'Location': null,
+          'Address': null,
+          'CreatedAt': FieldValue.serverTimestamp(),
+          'EmailVerified': false,
+
+
+        };
+
+        if (role != userRole && location != null) {
+          userData.addAll({
+            'Location': GeoPoint(location.latitude, location.longitude),
+            'Address': address ?? '${location.latitude.toStringAsFixed(4)}, ${location.longitude.toStringAsFixed(4)}',
+          });
+        }
+
+        await _firestore.collection('unverified_users').doc(user.uid).set(userData);
+        await user.sendEmailVerification();
+
+        if (context.mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EmailVerificationScreen(
+                name: name,
+                phone: phone,
+                role: role,
+              ),
+            ),
+          );
+        }
+        return null;
+      }
+    } on FirebaseAuthException catch (e) {
+      return _getErrorMessageRegister(e.code);
+    }
+    return "auth.unknown_error".tr();
+  }
+
+  String _getErrorMessageRegister(String errorCode) {
+    switch (errorCode) {
+      case "invalid-email":
+        return "auth.invalid_email".tr();
+      case "weak-password":
+        return "auth.weak_password".tr();
+      default:
+        return "auth.unexpected_error".tr();
+    }
+  }
+
 }

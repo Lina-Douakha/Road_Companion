@@ -4,65 +4,264 @@ import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'Requests-Reviews.dart';
-import 'UserIncidentDetails.dart';
+import 'package:road_companion/screens/admin/Requests-Reviews.dart';
+import 'package:road_companion/screens/admin/UserIncidentDetails.dart';
 
 
 
-class UserDetailsScreen extends StatelessWidget {
+
+class UserDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> user;
-
-
 
   const UserDetailsScreen({
     Key? key,
     required this.user,
-
-
   }) : super(key: key);
 
+  @override
+  _UserDetailsScreenState createState() => _UserDetailsScreenState();
+}
 
+class _UserDetailsScreenState extends State<UserDetailsScreen>
+    with TickerProviderStateMixin {
+  late TabController _tabController;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+// Reused and adapted deleteUser function for UserDetailsScreen
+  Future<void> _deleteUser(String userId) async {
+    try {
+      // 1. Get the user document
+      DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+
+      if (!userSnapshot.exists) {
+        throw Exception('User not found.');
+      }
+
+      // 2. Copy data to deleted_users
+      await FirebaseFirestore.instance
+          .collection('deleted_users')
+          .doc(userId)
+          .set(userSnapshot.data() as Map<String, dynamic>);
+
+      // 3. Delete from original users collection
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .delete();
+
+      // 4. Update UI (in this context, we just go back)
+      Navigator.pop(context);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User moved to deleted_users and removed.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete user: $e')),
+      );
+    }
+  }// Enhanced version of your _toggleBlockUser method (without notification call)
+  Future<void> _toggleBlockUser(String userId, bool currentBlockedStatus) async {
+    try {
+      // Update Firestore
+      await _firestore.collection('users').doc(userId).update({
+        'isBlocked': !currentBlockedStatus,
+      });
+
+      // Update UI
+      setState(() {
+        // Re-fetch user details to reflect the change
+      });
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('User ${!currentBlockedStatus ? 'blocked' : 'active'} successfully.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to toggle block status: $e')),
+      );
+    }
+  }
+
+// Updated dialog to confirm block/unblock action for UserDetailsScreen
+  void _showBlockDialog(Map<String, dynamic> user, bool isBlocked) {
+    final String actionText = isBlocked ? "Unblock" : "Block";
+    final Color actionColor = isBlocked
+        ? const Color(0xFF00D47E)
+        : Colors.red;
+
+    final String message = isBlocked
+        ? 'Are you sure you want to unblock "${user['Name']}"?'
+        : 'Are you sure you want to block "${user['Name']}"?\n\nThis will immediately prevent the user from logging in again until unblocked.';
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          '$actionText User',
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+          ),
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(fontSize: 15),
+        ),
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _toggleBlockUser(user['UserID'], isBlocked); // Call the modified _toggleBlockUser
+            },
+            child: Text(
+              actionText,
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: isBlocked ? const Color(0xFF1B9169) : Colors.white,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isBlocked
+                  ? const Color(0xFF00D47E).withOpacity(0.1)
+                  : Colors.red,
+              foregroundColor: isBlocked ? const Color(0xFF00D47E) : Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  // Updated dialog to confirm delete action for UserDetailsScreen
+  void _showDeleteDialog(Map<String, dynamic> user) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Delete User',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+          ),
+        ),
+        content: const Text(
+          'Are you sure you want to permanently delete this user?',
+          style: TextStyle(fontSize: 15),
+        ),
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteUser(user['UserID']); // Call the adapted _deleteUser
+            },
+            child: const Text(
+              'Delete',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.withOpacity(0.1),
+              foregroundColor: Colors.red,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
 
   @override
   Widget build(BuildContext context) {
-    final isDriverRole =  (user['Role'] as String?)?.toLowerCase() == 'user';
-    GeoPoint? location = user['Location'];
+    final isDriverRole =  (widget.user['Role'] as String?)?.toLowerCase() == 'user';
+    GeoPoint? location = widget.user['Location'];
 
     return DefaultTabController(
       length: isDriverRole ? 2 : 2, // Adjust tab count based on role
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: const Color(0xFF1B9169),
           elevation: 0,
           scrolledUnderElevation: 0,
+          centerTitle: false, // Important for left alignment within FlexibleSpaceBar
           systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
             statusBarColor: const Color(0xFF1B9169),
           ),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: const Color(0xFF1B9169)),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.pop(context),
           ),
-          title: Text(
-            "${user['Name'] ?? 'User'}'s Profile",
-            style: const TextStyle(
-              color: Color(0xFF1B9169),
-              fontSize: 20.0,
-              fontWeight: FontWeight.bold,
+          flexibleSpace: FlexibleSpaceBar(
+            title: Align(
+              alignment: Alignment.centerLeft, // Align title to the left within FlexibleSpaceBar
+              child: Text(
+                "${widget.user['Name'] ?? 'User'}'s Profile",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20.0,
+                  fontWeight: FontWeight.bold,
+                ),
+                overflow: TextOverflow.ellipsis, // Handle long titles with ellipsis
+              ),
             ),
+            titlePadding: const EdgeInsets.only(left: 56, bottom: 16), // Adjust padding as needed
           ),
-          bottom: TabBar(
-            labelColor: Color(0xFF1B9169),
-            unselectedLabelColor: Colors.grey,
-            indicatorColor: Color(0xFF1B9169),
+          actions: [
+            _buildUserStatusActions(context, widget.user['UserID']!),
+            const SizedBox(width: 8),
+          ],
+          bottom: const TabBar(
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            indicatorColor: Colors.white,
             indicatorWeight: 3,
             tabs: [
-              const Tab(text: 'Details'),
-              Tab(text: isDriverRole ? 'Incidents' : 'Historique Requests'.tr()),
+              Tab(text: 'Details'),
+              Tab(text: 'Historique'),
             ],
           ),
-
         ),
         body: TabBarView(
           children: [
@@ -70,7 +269,7 @@ class UserDetailsScreen extends StatelessWidget {
             ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _buildProfileCard(user: user),
+                _buildProfileCard(user: widget.user),
 
                 const SizedBox(height: 24),
                 Text(
@@ -84,36 +283,36 @@ class UserDetailsScreen extends StatelessWidget {
                 ),
                 Divider(color: Colors.grey[300]),
                 _buildInfoCard(
-                    context, 'Name'.tr(), user['Name'], icon: Icons.person,
+                    context, 'Name'.tr(), widget.user['Name'], icon: Icons.person,
                     valueColor: Colors.grey[600]),
+             widget.user['Email']!= null
+            ? _buildEmailCard(context, widget.user['Email'])
+            : _buildInfoCard(context, 'Email'.tr(), widget.user['Email'], icon: Icons.email),
+                widget.user['Email']!= null
+                    ?  _buildPhoneCard(context, widget.user['Phone'])
+                    : _buildInfoCard(context, 'Phone'.tr(), widget.user['Phone'], icon: Icons.phone),
                 _buildInfoCard(
-                    context, 'Email'.tr(), user['Email'], icon: Icons.email,
-                    valueColor: Colors.grey[600]),
-                _buildInfoCard(
-                    context, 'Phone'.tr(), user['Phone'], icon: Icons.phone,
-                    valueColor: Colors.grey[600]),
-                _buildInfoCard(
-                    context, 'UserID'.tr(), user['UserID'], icon: Icons.tag,
+                    context, 'UserID'.tr(), widget.user['UserID'], icon: Icons.tag,
                     valueColor: Colors.grey[600],
                 showCopyIcon: true),
-                _buildInfoCard(context, 'registration.Role'.tr(), user['Role'],
+                _buildInfoCard(context, 'registration.Role'.tr(), widget.user['Role'],
                     icon: Icons.badge,
                     valueColor: Colors.grey[600]),
                 _buildInfoCard(
                   context,
                   'Verified At'.tr(),
-                  user['VerifiedAt'] != null
+                  widget.user['VerifiedAt'] != null
                       ? DateFormat('yyyy-MM-dd HH:mm:ss').format(
-                      (user['VerifiedAt'] as Timestamp).toDate())
+                      (widget.user['VerifiedAt'] as Timestamp).toDate())
                       : 'Not available'.tr(),
                   icon: Icons.calendar_today,
                   valueColor: Colors.grey[600],
                 ),
-                if ((user['Role'] as String?)?.toLowerCase() != 'driver' &&
-                    (user['Role'] as String?)?.toLowerCase() != 'user') ...[
+                if ((widget.user['Role'] as String?)?.toLowerCase() != 'driver' &&
+                    (widget.user['Role'] as String?)?.toLowerCase() != 'user') ...[
                   const SizedBox(height: 24),
                   Text(
-                    "${(user['Role'] as String?)?.capitalize()} Information"
+                    "${(widget.user['Role'] as String?)?.capitalize()} Information"
                         .tr(),
                     style: Theme
                         .of(context)
@@ -136,20 +335,20 @@ class UserDetailsScreen extends StatelessWidget {
                   ),
                   _buildInfoCard(
                     context,
-                    'Address'.tr(),user['Address'],
+                    'Address'.tr(),widget.user['Address'],
                     icon: Icons.location_on,
                     valueColor: Colors.grey[600],
                   ),
                   _buildInfoCard(
-                      context, 'Working Hours'.tr(), user['Working_hours'],
+                      context, 'Working Hours'.tr(), widget.user['Working_hours'],
                       icon: Icons.access_time,
                       valueColor: Colors.grey[600],
                      ),
-                  _buildLinkCard(context, 'Link'.tr(), user['Link'],
+                  _buildLinkCard(context, 'Link'.tr(), widget.user['Link'],
                       linkColor: Colors.blue),
-                  _buildPdfCard(context, 'Carte'.tr(), user['pdf_carte'],
+                  _buildPdfCard(context, 'Carte'.tr(),widget.user['pdf_carte'],
                       pdfColor: Colors.redAccent),
-                  _buildPdfCard(context, 'Registration'.tr(), user['pdf_reg'],
+                  _buildPdfCard(context, 'Registration'.tr(), widget.user['pdf_reg'],
                       pdfColor: Colors.redAccent),
                 ],
               ],
@@ -157,8 +356,8 @@ class UserDetailsScreen extends StatelessWidget {
 
             // Second Tab: Conditional Content
             isDriverRole
-                ? IncidentHistoryScreen(userId: user['UserID'])
-                : RequestReviewsScreen(UserID: user['UserID']),
+                ? IncidentHistoryScreen(userId: widget.user['UserID'])
+                : RequestReviewsScreen(UserID: widget.user['UserID']),
           ],
         ),
       ),
@@ -291,11 +490,11 @@ class UserDetailsScreen extends StatelessWidget {
   Color getStatusUserColor(String status) {
     switch (status.toLowerCase()) {
       case 'active':
-        return const Color(0xF023AC7F); // green
+        return const Color(0xFF00D47E); // green
       case 'blocked':
-        return Colors.redAccent;
+        return Colors.amber;
       case 'deleted':
-        return Colors.grey;
+        return Colors.red;
       default:
         return Colors.blueGrey;
     }
@@ -366,6 +565,62 @@ class UserDetailsScreen extends StatelessWidget {
       ),
     );
   }
+
+
+  Widget _buildEmailCard(BuildContext context, String email) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.email, color: Theme.of(context).colorScheme.secondary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Email',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                GestureDetector(
+                  onTap: () async {
+                    final emailUri = Uri(scheme: 'mailto', path: email);
+                    if (await canLaunchUrl(emailUri)) {
+                      await launchUrl(emailUri);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Could not launch email app')),
+                      );
+                    }
+                  },
+                  child: Text(
+                    email,
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      fontSize: 14,
+                      decoration: TextDecoration.underline,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showEditDialog(BuildContext context, String fieldLabel, String fieldKey,
       String currentValue) {
     final TextEditingController controller = TextEditingController(
@@ -396,11 +651,11 @@ class UserDetailsScreen extends StatelessWidget {
                 }
 
                 if (fieldKey == 'UserID') {
-                  await _updateUserID(user['UserID'], newValue);
+                  await _updateUserID(widget.user['UserID'], newValue);
                 } else {
                   await FirebaseFirestore.instance
                       .collection('users')
-                      .doc(user['UserID'])
+                      .doc(widget.user['UserID'])
                       .update({fieldKey: newValue});
                 }
 
@@ -457,7 +712,7 @@ class UserDetailsScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () async {
                 Navigator.pop(context);
-                if (user['UserID'] == null) {
+                if (widget.user['UserID'] == null) {
                   print("Error: User ID is null. Cannot update role.");
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text(
@@ -468,7 +723,7 @@ class UserDetailsScreen extends StatelessWidget {
                 try {
                   await FirebaseFirestore.instance
                       .collection('users')
-                      .doc(user['UserID'])
+                      .doc(widget.user['UserID'])
                       .update({'Role': selectedRole});
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Role updated successfully")),
@@ -656,9 +911,131 @@ class UserDetailsScreen extends StatelessWidget {
     // Default is "Active" if the user is not blocked
     return 'Active';
   }
+  Widget _buildUserStatusActions(BuildContext context, String userId) {
+    return FutureBuilder<String>(
+      future: determineUserStatus(userId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox(
+            height: 24,
+            width: 24,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1B9169)),
+            ),
+          );
+        }
 
+        if (snapshot.hasError) {
+          return const SizedBox.shrink();
+        }
+
+        final status = snapshot.data ?? 'Active';
+        final isCurrentlyBlocked = widget.user['isBlocked'] == true;
+
+        if (status == 'Deleted') {
+          return const SizedBox.shrink();
+        }
+
+        if (status == 'Active') {
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.lock, color: Colors.white), // Use lock icon for blocking
+                tooltip: 'Block User',
+                onPressed: () => _showBlockDialog(widget.user, false),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.white),
+                tooltip: 'Delete User',
+                onPressed: () => _showDeleteDialog(widget.user),
+              ),
+            ],
+          );
+        }
+
+        if (status == 'Blocked') {
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.lock_open_outlined, color: Colors.white), // Use open lock for unblocking
+                tooltip: 'Unblock User',
+                onPressed: () => _showBlockDialog(widget.user, true),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.white),
+                tooltip: 'Delete User',
+                onPressed: () => _showDeleteDialog(widget.user),
+              ),
+            ],
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  Widget _buildPhoneCard(BuildContext context, String phoneNumber) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.phone, color: Theme.of(context).colorScheme.secondary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Phone',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                GestureDetector(
+                  onTap: () async {
+                    final phoneUri = Uri(scheme: 'tel', path: phoneNumber);
+                    if (await canLaunchUrl(phoneUri)) {
+                      await launchUrl(phoneUri);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Could not launch phone app')),
+                      );
+                    }
+                  },
+                  child: Text(
+                    phoneNumber,
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      fontSize: 14,
+                      decoration: TextDecoration.underline,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
 }
+
+
+
 
   extension StringExtension on String {
   String capitalize() {
@@ -666,8 +1043,3 @@ class UserDetailsScreen extends StatelessWidget {
     return "${this[0].toUpperCase()}${substring(1).toLowerCase()}";
   }
 }
-
-
-
-
-

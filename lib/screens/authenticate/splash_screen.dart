@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
-import 'onboarding_screen.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:road_companion/services/auth_service.dart';
 import 'package:road_companion/screens/home/home.dart';
 import 'package:road_companion/screens/roadside_assistance/roadside_assistance_screen.dart';
-import 'package:road_companion/screens/authenticate/login.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:road_companion/screens/admin/admin_menu.dart';
+import 'onboarding_screen.dart';
+import 'package:lottie/lottie.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -18,35 +18,53 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
-  int _currentLight = 0;
-  late Timer _timer;
-  int _cycleCount = 0;
+class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
   final AuthService _authService = AuthService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Animation controllers
+  late AnimationController _lottieController;
+  late AnimationController _textController;
+  late Animation<double> _nameAnimation;
+  late Animation<double> _sloganAnimation;
 
   @override
   void initState() {
     super.initState();
-    _startAnimation();
-  }
 
-  void _startAnimation() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) return;
+    // Lottie animation controller
+    _lottieController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    );
 
-      setState(() {
-        _currentLight = (_currentLight + 1) % 3;
+    // Text animation controller
+    _textController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
 
-        if (_currentLight == 0) {
-          _cycleCount++;
-        }
+    _nameAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _textController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      ),
+    );
 
-        if (_cycleCount == 1) {
-          _timer.cancel();
-          _checkLoginStatus();
-        }
-      });
+    _sloganAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _textController,
+        curve: const Interval(0.4, 1.0, curve: Curves.easeOut),
+      ),
+    );
+
+    // Start animations
+    _lottieController.forward();
+    _textController.forward();
+
+    // Schedule navigation after animations complete
+    Future.delayed(const Duration(seconds: 4), () {
+      _checkLoginStatus();
     });
   }
 
@@ -71,7 +89,7 @@ class _SplashScreenState extends State<SplashScreen> {
       if (user != null) {
         String? userRole = await _getUserRole(user.uid);
 
-        if (userRole == 'mechanic'||
+        if (userRole == 'mechanic' ||
             userRole == 'parts_supplier' ||
             userRole == 'towing_service') {
           // Navigate to service provider home
@@ -80,12 +98,12 @@ class _SplashScreenState extends State<SplashScreen> {
             MaterialPageRoute(builder: (context) => RoadsideAssistanceScreen()),
           );
         } else if (userRole == 'admin') {
-            // Navigate to admin dashboard
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => AdminDashboardScreen()),
-            );
-             } else {
+          // Navigate to admin dashboard
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => AdminDashboardScreen()),
+          );
+        } else {
           // Navigate to regular user home
           Navigator.pushReplacement(
             context,
@@ -112,62 +130,108 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
-        statusBarColor: Color(0xFF1B9169),
-        statusBarIconBrightness: Brightness.light,
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 100,
-                height: 250,
-                decoration: BoxDecoration(
-                  color: Colors.grey[800],
-                  borderRadius: BorderRadius.circular(20),
+        body: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Spacer(flex: 2),
+
+                // App Name with animation
+                AnimatedBuilder(
+                  animation: _nameAnimation,
+                  builder: (context, child) {
+                    return Opacity(
+                      opacity: _nameAnimation.value,
+                      child: Transform.translate(
+                        offset: Offset(0, -30 * (1 - _nameAnimation.value)),
+                        child: Text(
+                          "ROAD COMPANION",
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF1B9169),
+                            letterSpacing: 1.8,
+                            height: 1.2,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildLight(0, Colors.red),
-                    _buildLight(1, Colors.orange),
-                    _buildLight(2, Colors.green),
-                  ],
+
+                const SizedBox(height: 40),
+
+                // Lottie animation
+                SizedBox(
+                  height: 240, // Control the size of the animation
+                  width: 240,
+                  child: Lottie.asset(
+                    'assets/animation/map.json',
+                    controller: _lottieController,
+                    fit: BoxFit.contain,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                "splash.app_name".tr(),
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
+
+                const SizedBox(height: 40),
+
+                // Slogan with animation
+                AnimatedBuilder(
+                  animation: _sloganAnimation,
+                  builder: (context, child) {
+                    return Opacity(
+                      opacity: _sloganAnimation.value,
+                      child: Transform.translate(
+                        offset: Offset(0, 30 * (1 - _sloganAnimation.value)),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 40),
+                          child: Text(
+                            "Your all-in-one road assistant — from help on the road to passing the code.",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black54,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              ),
-            ],
+
+                const Spacer(flex: 2),
+
+                // Subtle loading indicator
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: CircularProgressIndicator(
+                      color: const Color(0xFF1B9169).withOpacity(0.7),
+                      strokeWidth: 2,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildLight(int index, Color color) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 500),
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        color: _currentLight == index ? color : Colors.grey[400],
-        shape: BoxShape.circle,
-      ),
-    );
-  }
-
   @override
   void dispose() {
-    _timer.cancel();
+    _lottieController.dispose();
+    _textController.dispose();
     super.dispose();
   }
 }

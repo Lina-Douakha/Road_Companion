@@ -69,7 +69,6 @@ class _AdminReviewManagerState extends State<AdminReviewManager> {
       ),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     final double screenHeight = MediaQuery.of(context).size.height;
@@ -104,8 +103,6 @@ class _AdminReviewManagerState extends State<AdminReviewManager> {
                   centerTitle: true,
                 ),
               ),
-
-              // ← here’s the ONLY change:
               if (isLoading)
                 SliverFillRemaining(
                   hasScrollBody: false,
@@ -120,137 +117,186 @@ class _AdminReviewManagerState extends State<AdminReviewManager> {
                   delegate: SliverChildBuilderDelegate(
                         (context, index) {
                       final providerNum = index + 1;
-                      final id          = providers[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12.0),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.1),
-                                blurRadius: 8,
-                                spreadRadius: 1,
-                                offset: const Offset(0, 3),
+                      final id = providers[index];
+
+                      return FutureBuilder<DocumentSnapshot>(
+                        future: firestore.collection('users').doc(id).get(),
+                        builder: (context, snapshot) {
+
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                              child: Container(
+                                height: 72,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12.0),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.1),
+                                      blurRadius: 8,
+                                      spreadRadius: 1,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Color(0xFF00D47E),
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12.0),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                  onTap: () async {
-                                    try {
+                            );
+                          }
+                          if (snapshot.hasError) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                              child: Container(
+                                padding: EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12.0),
+                                  boxShadow: [BoxShadow(
+                                    color: Colors.grey.withOpacity(0.1),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                    offset: const Offset(0, 3),
+                                  )],
+                                ),
+                                child: Text('Error loading provider data'),
+                              ),
+                            );
+                          }
+                          Map<String, dynamic>? userData = snapshot.data?.data() as Map<String, dynamic>?;
+                          String providerName = userData?['Name'] ?? 'Provider $providerNum';
 
-                                      final snapshot = await firestore.collection('users').doc(id).get();
-
-                                      if (snapshot.exists) {
-
-                                        Map<String, dynamic> userData = snapshot.data() as Map<String, dynamic>? ?? {};
-
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (context) => UserDetailsScreen(user: userData),
-                                          ),
-                                        );
-                                      } else {
-
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('User profile not found')),
-                                        );
-                                      }
-                                    } catch (e) {
-
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Error loading user profile: ${e.toString()}')),
-                                      );
-                                      print('Error navigating to user profile: $e');
-                                    }
-                                  },
-
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 40,
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                          color: Color(0xFF00D47E).withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            '$providerNum',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFF1B9169),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      SizedBox(width: 16),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Provider $providerNum',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.grey[900],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-
-                                          Navigator.push(
-                                            context,
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12.0),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.1),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12.0),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () async {
+                                      try {
+                                        if (userData != null) {
+                                          Navigator.of(context).push(
                                             MaterialPageRoute(
-                                              builder: (context) => AdminLoadReviews(providerId: id),
+                                              builder: (context) => UserDetailsScreen(user: userData),
                                             ),
                                           );
-                                        },
-                                        style: TextButton.styleFrom(
-                                          backgroundColor: Color(0xFF00D47E).withOpacity(0.1),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons.rate_review,
-                                              size: 16,
-                                              color: Color(0xFF00D47E),
+                                        } else {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('User profile not found')),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Error loading user profile: ${e.toString()}')),
+                                        );
+                                        print('Error navigating to user profile: $e');
+                                      }
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 40,
+                                            height: 40,
+                                            decoration: BoxDecoration(
+                                              color: Color(0xFF00D47E).withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(8),
                                             ),
-                                            SizedBox(width: 4),
-                                            Text(
-                                              'Check Reviews',
-                                              style: TextStyle(
-                                                color: Color(0xFF00D47E),
-                                                fontWeight: FontWeight.w500,
+                                            child: Center(
+                                              child: Text(
+                                                '$providerNum',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Color(0xFF1B9169),
+                                                ),
                                               ),
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                          SizedBox(width: 16),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  providerName,
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.grey[900],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => AdminLoadReviews(providerId: id),
+                                                ),
+                                              );
+                                            },
+                                            style: TextButton.styleFrom(
+                                              backgroundColor: Color(0xFF00D47E).withOpacity(0.1),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  Icons.rate_review,
+                                                  size: 16,
+                                                  color: Color(0xFF00D47E),
+                                                ),
+                                                SizedBox(width: 4),
+                                                Text(
+                                                  'Check Reviews',
+                                                  style: TextStyle(
+                                                    color: Color(0xFF00D47E),
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
+                          );
+                        },
                       );
                     },
                     childCount: providers.length,

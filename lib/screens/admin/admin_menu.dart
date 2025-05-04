@@ -68,19 +68,25 @@ class AdminDashboardScreen extends StatelessWidget {
               // Logout button remains in original position
               Padding(
                 padding: EdgeInsets.only(
-                  left: isSmallScreen ? 320.0 : 380.0,
+                  left: isSmallScreen ? 255.0 : 315.0,
                   top: 7.0,
                 ),
                 child: Align(
                   alignment: Alignment.topLeft,
-                  child: IconButton(
+                  child: TextButton.icon(
+                    label: Text(
+                      'Logout',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontSize: isSmallScreen ? 14 : 16,
+                      ),
+                    ),
                     icon: Icon(
                       Icons.logout,
                       color: Colors.red,
                       size: isSmallScreen ? 23 : 28,
                     ),
                     onPressed: () => _logout(context),
-                    tooltip: 'Logout',
                   ),
                 ),
               ),
