@@ -74,7 +74,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
         SnackBar(content: Text('Failed to delete user: $e')),
       );
     }
-  }// Enhanced version of your _toggleBlockUser method (without notification call)
+  }// Enhanced version of your _toggleBlockUser method
   Future<void> _toggleBlockUser(String userId, bool currentBlockedStatus) async {
     try {
       // Update Firestore
@@ -1043,3 +1043,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
     return "${this[0].toUpperCase()}${substring(1).toLowerCase()}";
   }
 }
+
+
+
+

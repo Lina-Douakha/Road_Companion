@@ -11,7 +11,7 @@ import 'package:road_companion/services/auth_service.dart';
 import 'package:road_companion/screens/authenticate/login.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:road_companion/screens/profile/display_announcements.dart';
 class ProfilePage extends StatefulWidget {
   final int selectedIndex;
 
@@ -296,7 +296,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 MaterialPageRoute(builder: (context) => ChangePasswordPage()),
               );
             }),
-            _buildListTile(Icons.send, "profile.send_feedback".tr()),
+            _buildListTile(Icons.send, "profile.send_feedback".tr(),onTap: () {
+              String userRole = _userData?['Role'] ?? 'user';
+              String userID = _userData?['UserID'];
+              Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AnnouncementsScreen(currentUserRole:userRole , currentUserId:userID)),
+              );
+            }),
           ]),
 
           SizedBox(height: 16),

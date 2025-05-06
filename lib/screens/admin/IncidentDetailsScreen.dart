@@ -51,138 +51,6 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
     });
   }
 
-  Future<void> _markAsResolved(BuildContext context) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('Incident Reports')
-          .doc(widget.incidentId)
-          .update({
-        'Status': 'Resolved',
-        'resolvedAt': FieldValue.serverTimestamp(),
-      });
-
-      // Show success dialog
-      _showSuccessDialog(context, 'Incident marked as resolved');
-
-      // Refresh the data
-      setState(() {
-        _incidentFuture = _fetchIncidentDetails();
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-    }
-  }
-
-  void _showSuccessDialog(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(
-                  height: 60,
-                  width: 60,
-                  child: Icon(
-                    Icons.check_circle_outline,
-                    size: 50,
-                    color: Color(0xFF00D47E),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  message,
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-
-    // Automatically close the dialog after 2 seconds
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.of(context).pop();
-    });
-  }
-
-  Future<void> _confirmDelete(BuildContext context) async {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text(
-            "Confirm Rejection",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          ),
-          content: const Text(
-            "Are you sure you want to reject this incident?",
-            style: TextStyle(fontSize: 16),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text(
-                "Cancel",
-                style: TextStyle(color: Colors.blue),
-              ),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              child: const Text(
-                "Reject",
-                style: TextStyle(color: Colors.white),
-              ),
-              onPressed: () async {
-                Navigator.of(context).pop();
-                try {
-                  await FirebaseFirestore.instance
-                      .collection('Incident Reports')
-                      .doc(widget.incidentId)
-                      .update({
-                    'Status': 'Rejected',
-                    'rejectedAt': FieldValue.serverTimestamp(),
-                  });
-
-                  // Show success dialog
-                  _showSuccessDialog(context, 'Incident marked as rejected');
-
-                  // Refresh the data
-                  setState(() {
-                    _incidentFuture = _fetchIncidentDetails();
-                  });
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error rejecting incident: $e')),
-                  );
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   String _formatDate(BuildContext context, DateTime date) {
     final locale = context.locale.toString();
     final format = DateFormat.yMMMMd(locale).add_jm();
@@ -243,7 +111,7 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
       ),
       child: Row(
         children: [
-          Icon(icon ?? Icons.info_outline, color: const Color(0xFF1B9169)),
+          Icon(icon ?? Icons.info_outline, color: Colors.black38),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -486,49 +354,6 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
     );
   }
 
-  Widget _buildActionButtons(String status) {
-    if (status.toLowerCase() != 'pending') {
-      return const SizedBox.shrink();
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 20.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          // Mark as Resolved Button
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: () => _markAsResolved(context),
-              icon: const Icon(Icons.check, color: Colors.white),
-              label: const Text("Mark Resolved", style: TextStyle(color: Colors.white)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00D47E),
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 2,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Reject Button
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: () => _confirmDelete(context),
-              icon: const Icon(Icons.cancel_outlined, color: Colors.red),
-              label: const Text("Reject", style: TextStyle(color: Colors.red)),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Colors.red, width: 1.5),
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -587,6 +412,7 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
           final rejectedAt = incident['rejectedAt'] is Timestamp
               ? (incident['rejectedAt'] as Timestamp).toDate()
               : null;
+
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -697,8 +523,11 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
                   ),
                 ],
 
-                // Action Buttons (only for pending incidents)
-                _buildActionButtons(status),
+                // Action buttons - Directly include them in the main Column
+                const SizedBox(height: 24),
+
+                // Build action buttons based on status
+                ..._buildActionButtons(status),
 
                 const SizedBox(height: 24),
               ],
@@ -708,4 +537,348 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
       ),
     );
   }
+
+  // Modified to return a list of individual widgets instead of wrapped in a Column
+  List<Widget> _buildActionButtons(String status) {
+    List<Widget> buttons = [];
+
+    if (status == 'Pending') {
+      buttons.addAll([
+        _buildQuickActionButton(Icons.check_circle, 'Resolve', const Color(0xFF00D47E), () {
+          _updateIncidentStatus(widget.incidentId, 'Resolved');
+        }),
+        const SizedBox(height: 12), // Vertical spacing between buttons
+        _buildQuickActionButton(Icons.cancel, 'Reject', Colors.red, () {
+          _updateIncidentStatus(widget.incidentId, 'Rejected');
+        }),
+      ]);
+    } else if (status == 'Resolved' || status == 'Rejected') {
+      buttons.add(
+        _buildQuickActionButton(Icons.refresh, 'Reset', Colors.blue, () {
+          _updateIncidentStatus(widget.incidentId, 'Pending');
+        }),
+      );
+    }
+
+    return buttons; // Return buttons directly, without wrapping in additional widgets
+  }
+
+  Widget _buildQuickActionButton(
+      IconData icon,
+      String label,
+      Color color,
+      VoidCallback onPressed,
+      ) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        splashColor: color.withOpacity(0.1),
+        highlightColor: Colors.transparent,
+        onTap: onPressed,
+        child: Container(
+          width: double.infinity, // Make button take full width
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: color.withOpacity(0.3),
+              width: 1.2,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center, // Center the content horizontally
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: color,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  //Show confirmation dialog before updating status
+  void _updateIncidentStatus(String incidentId, String status) {
+    // Determine confirmation message and colors based on status
+    String actionVerb;
+    String confirmButtonText;
+    Color confirmColor;
+    IconData confirmIcon;
+
+    switch (status.toLowerCase()) {
+      case 'resolved':
+        actionVerb = 'approve';
+        confirmButtonText = 'Approve';
+        confirmColor = const Color(0xFF00D47E);
+        confirmIcon = Icons.check_circle;
+        break;
+      case 'rejected':
+        actionVerb = 'reject';
+        confirmButtonText = 'Reject';
+        confirmColor = Colors.red;
+        confirmIcon = Icons.cancel;
+        break;
+      case 'pending':
+        actionVerb = 'reset';
+        confirmButtonText = 'Reset';
+        confirmColor = Colors.blue;
+        confirmIcon = Icons.refresh;
+        break;
+      default:
+        actionVerb = 'update';
+        confirmButtonText = 'Update';
+        confirmColor = Colors.blue;
+        confirmIcon = Icons.update;
+    }
+
+    // Show confirmation dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: confirmColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    confirmIcon,
+                    color: confirmColor,
+                    size: 36,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Confirm Action',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Are you sure you want to $actionVerb this incident?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.grey[700],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _performStatusUpdate(incidentId, status);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: confirmColor,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: Text(confirmButtonText),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+// Actually perform the status update after confirmation
+  Future<void> _performStatusUpdate(String incidentId, String status) async {
+    try {
+      // Prepare update data with appropriate timestamp field
+      final Map<String, dynamic> updateData = {
+        'Status': status,
+      };
+
+      // Add appropriate timestamp based on status
+      if (status == 'Resolved') {
+        updateData['resolvedAt'] = FieldValue.serverTimestamp();
+      } else if (status == 'Rejected') {
+        updateData['rejectedAt'] = FieldValue.serverTimestamp();
+      } else if (status == 'Pending') {
+        // Reset timestamps when returning to pending
+        updateData['resolvedAt'] = null;
+        updateData['rejectedAt'] = null;
+      }
+
+      // Update the document
+      await FirebaseFirestore.instance
+          .collection('Incident Reports')
+          .doc(incidentId)
+          .update(updateData);
+
+      if (mounted) {
+        setState(() {
+          _incidentFuture = _fetchIncidentDetails();
+        });
+      }
+
+
+      // Show success message
+      _showStatusUpdateSuccessDialog(status);
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating status: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+// Show success dialog with custom message based on status
+  void _showStatusUpdateSuccessDialog(String status) {
+    String message;
+    Color iconColor;
+
+    switch (status.toLowerCase()) {
+      case 'resolved':
+        message = 'Incident successfully marked as resolved';
+        iconColor = const Color(0xFF00D47E);
+        break;
+      case 'rejected':
+        message = 'Incident has been rejected';
+        iconColor = Colors.red;
+        break;
+      case 'pending':
+        message = 'Incident status reset to pending';
+        iconColor = Colors.blue;
+        break;
+      default:
+        message = 'Status updated successfully';
+        iconColor = Colors.blue;
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: iconColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.check_circle,
+                    color: iconColor,
+                    size: 36,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: iconColor,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text('OK'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
 }

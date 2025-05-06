@@ -6,6 +6,7 @@ import 'package:road_companion/screens/admin/Admin_management_users.dart';
 import 'package:road_companion/screens/admin/Admin_management_incidents.dart';
 import 'package:road_companion/services/auth_service.dart';
 import 'package:road_companion/screens/authenticate/login.dart';
+import 'package:road_companion/screens/admin/manage_announcements.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({Key? key}) : super(key: key);
@@ -181,6 +182,17 @@ class AdminDashboardScreen extends StatelessWidget {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => AdminReviewManager()),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildAdminCard(
+              context,
+              title: 'Send Announcements',
+              subtitle: 'Send and manage announcements',
+              icon: Icons.school,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ManageAnnouncementsScreen()),
               ),
             ),
           ],
