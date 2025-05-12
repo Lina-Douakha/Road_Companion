@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:road_companion/screens/admin/Add_announcement.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class AnnouncementDetailScreen extends StatelessWidget {
   final String announcementId;
@@ -22,13 +23,20 @@ class AnnouncementDetailScreen extends StatelessWidget {
       formattedDate = DateFormat('MMMM d, yyyy • h:mm a').format(timestamp.toDate());
     }
 
-    // Format audience for display
+    dynamic audienceRaw = announcementData['audience'];
+
     String audienceDisplay = 'Unknown';
-    if (announcementData['audience'] == 'All') {
-      audienceDisplay = 'All Users';
-    } else if (announcementData['audience'] is List) {
-      audienceDisplay = (announcementData['audience'] as List).join(', ');
+
+    if (audienceRaw is String && audienceRaw == 'All') {
+      audienceDisplay = getTranslatedAudience('All');
+    } else if (audienceRaw is List) {
+      audienceDisplay = audienceRaw
+          .map((role) => getTranslatedAudience(role.toString()))
+          .join(', ');
+    } else if (audienceRaw is String) {
+      audienceDisplay = getTranslatedAudience(audienceRaw);
     }
+
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -38,7 +46,7 @@ class AnnouncementDetailScreen extends StatelessWidget {
         centerTitle: true,
         iconTheme: IconThemeData(color: Color(0xFF1B9169)),
         title: Text(
-          'Announcement Details',
+          'admin.announcement_details'.tr(),
           style: TextStyle(
             color: Color(0xFF1B9169),
             fontWeight: FontWeight.bold,
@@ -157,14 +165,19 @@ class AnnouncementDetailScreen extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        _buildInfoRow(Icons.schedule, 'Posted on $formattedDate'),
+                        _buildInfoRow(Icons.schedule,'admin.posted_on'.tr(namedArgs: {'date': formattedDate})),
                         const SizedBox(height: 10),
                         _buildInfoRow(
                           Icons.person,
-                          'Posted by ${announcementData['createdBy'] ?? 'Admin'}',
+                          'admin.posted_by'.tr(namedArgs: {'user': announcementData['createdBy']}),
                         ),
                         const SizedBox(height: 10),
-                        _buildInfoRow(Icons.group, 'Audience: $audienceDisplay'),
+                        _buildInfoRow(
+                          Icons.group,
+                          'admin.audience-detail'.tr(namedArgs: {'audience': audienceDisplay}),
+                        ),
+
+
                       ],
                     ),
                   ),
@@ -173,7 +186,7 @@ class AnnouncementDetailScreen extends StatelessWidget {
 
                   // Message header
                   Text(
-                    'Message',
+                    'admin.message'.tr(),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -202,7 +215,7 @@ class AnnouncementDetailScreen extends StatelessWidget {
                       ],
                     ),
                     child: Text(
-                      announcementData['message'] ?? 'No message content',
+                      announcementData['message'] ?? 'admin.no_message'.tr(),
                       style: TextStyle(
                         fontSize: 16,
                         height: 1.5,
@@ -264,124 +277,23 @@ class AnnouncementDetailScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _showDeleteConfirmation(BuildContext context) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Center(
-            child: Column(
-              children: [
-                Icon(
-                  Icons.warning_amber_rounded,
-                  color: Colors.orange.shade600, // A more visually appealing warning color
-                  size: 36,
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Confirm Delete', // More direct title
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                    fontSize: 18,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          content: const Padding(
-            padding: EdgeInsets.only(top: 16.0),
-            child: Text(
-              'Are you sure you want to delete this announcement? This action cannot be undone.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.black54,
-              ),
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text(
-                'Cancel',
-                style: TextStyle(
-                  color: Colors.black54,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 16,
-                ),
-              ),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent, // A more modern red
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                textStyle: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              child: const Text('Delete'),
-              onPressed: () async {
-                Navigator.of(context).pop();
-                await _deleteAnnouncement(context); // Assuming _deleteAnnouncement still takes context
-              },
-            ),
-          ],
-          actionsAlignment: MainAxisAlignment.spaceAround, // Distribute buttons nicely
-          contentPadding: const EdgeInsets.fromLTRB(24.0, 16.0, 24.0, 24.0), // Adjust content padding
-        );
-      },
-    );
-  }
-
-  Future<void> _deleteAnnouncement(BuildContext context) async {
-    try {
-      // Delete the document from Firestore
-      await FirebaseFirestore.instance
-          .collection('announcements')
-          .doc(announcementId)
-          .delete();
-
-      // Show success message
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Announcement deleted successfully'),
-            backgroundColor: Color(0xFF1B9169),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        );
-
-        // Navigate back to the manage screen with refresh flag
-        Navigator.pop(context, true);
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error deleting announcement: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        );
-      }
+  String getTranslatedAudience(String audienceKey) {
+    switch (audienceKey) {
+      case 'All':
+        return 'registration.All'.tr();
+      case 'user':
+        return 'registration.user'.tr();
+      case 'mechanic':
+        return 'registration.mechanic'.tr();
+      case 'towing_service':
+        return 'registration.towing_service'.tr();
+      case 'parts_supplier':
+        return 'registration.parts_supplier'.tr();
+      default:
+        return audienceKey;
     }
   }
+
+
+
 }

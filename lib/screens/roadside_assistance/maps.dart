@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -7,6 +8,8 @@ import 'dart:ui' as ui;
 import 'dart:typed_data';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:road_companion/screens/GPS_navigation/Search_page.dart';
+import 'package:http/http.dart' as http;
+
 
 class ServiceProviderMapPage extends StatefulWidget {
   // Service provider's location will be obtained from device
@@ -46,6 +49,9 @@ class _ServiceProviderMapPageState extends State<ServiceProviderMapPage> {
   // For custom markers
   final Map<String, BitmapDescriptor> _markerIcons = {};
 
+  // For routing
+  bool _isLoadingRoute = false;
+
   @override
   void initState() {
     super.initState();
@@ -76,16 +82,16 @@ class _ServiceProviderMapPageState extends State<ServiceProviderMapPage> {
   Future<void> _loadMarkerIcons() async {
     try {
       _markerIcons['provider'] = await _getBitmapDescriptorFromAssetBytes(
-        'assets/GPS/marker_service.png',
-        100
+          'assets/GPS/marker_service.png',
+          100
       );
       _markerIcons['client'] = await _getBitmapDescriptorFromAssetBytes(
-        'assets/GPS/marker_client.png',
-        100
+          'assets/GPS/marker_client.png',
+          100
       );
       _markerIcons['search'] = await _getBitmapDescriptorFromAssetBytes(
-        'assets/GPS/marker_search.png',
-        100
+          'assets/GPS/marker_search.png',
+          100
       );
     } catch (e) {
       print('Error loading marker icons: $e');
@@ -122,7 +128,7 @@ class _ServiceProviderMapPageState extends State<ServiceProviderMapPage> {
       _startLocationTracking();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Location permission is required for this app to function properly"))
+          const SnackBar(content: Text("Location permission is required for this app to function properly"))
       );
     }
   }
@@ -141,6 +147,11 @@ class _ServiceProviderMapPageState extends State<ServiceProviderMapPage> {
           CameraUpdate.newLatLngZoom(_serviceProviderLocation!, 15),
         );
       });
+
+      // If client location exists, fetch the route
+      if (widget.clientLocation != null) {
+        _getRoute(_serviceProviderLocation!, widget.clientLocation!);
+      }
     });
 
     // Then start continuous tracking
@@ -172,7 +183,6 @@ class _ServiceProviderMapPageState extends State<ServiceProviderMapPage> {
     });
   }
 
-
   Future<void> _centerOnServiceProvider() async {
     if (_serviceProviderLocation != null) {
       final GoogleMapController controller = await _controller.future;
@@ -195,6 +205,11 @@ class _ServiceProviderMapPageState extends State<ServiceProviderMapPage> {
     // Add all markers to calculate bounds
     for (Marker marker in markers) {
       points.add(marker.position);
+    }
+
+    // Add all polyline points for more accurate bounds
+    for (Polyline polyline in polylines) {
+      points.addAll(polyline.points);
     }
 
     // Ensure we have at least two points
@@ -246,7 +261,7 @@ class _ServiceProviderMapPageState extends State<ServiceProviderMapPage> {
   }
 
   void _fitAllMarkers() async {
-    if (markers.length >= 2) {
+    if (markers.isNotEmpty) {
       final GoogleMapController controller = await _controller.future;
       controller.animateCamera(
         CameraUpdate.newLatLngBounds(_getBounds(), 50),
@@ -256,222 +271,342 @@ class _ServiceProviderMapPageState extends State<ServiceProviderMapPage> {
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Not enough markers to fit")),
+        const SnackBar(content: Text("No markers to fit")),
       );
     }
   }
 
   void _handleSearchResult(LatLng result) {
-      setState(() {
-        _searchResultLocation = result;
-        _followProvider = false;
-        _updateMarkers();
-      });
+    setState(() {
+      _searchResultLocation = result;
+      _followProvider = false;
+    });
 
-      // Animate camera to show the search result
-      _controller.future.then((controller) {
-        controller.animateCamera(
-          CameraUpdate.newLatLngZoom(_searchResultLocation!, 14),
-        );
-      });
+    // Animate camera to show the search result
+    _controller.future.then((controller) {
+      controller.animateCamera(
+        CameraUpdate.newLatLngZoom(_searchResultLocation!, 14),
+      );
+    });
+
+    // Calculate route to the search result
+    if (_serviceProviderLocation != null) {
+      _getRoute(_serviceProviderLocation!, _searchResultLocation!);
     }
 
-    @override
-    Widget build(BuildContext context) {
-      final screenWidth = MediaQuery.of(context).size.width;
-      final screenHeight = MediaQuery.of(context).size.height;
+    _updateMarkers();
+  }
 
-      return Scaffold(
-        body: Stack(
-          children: [
-            // Map
-            GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: _serviceProviderLocation ?? const LatLng(36.7538, 3.0588),
-                zoom: 14,
+  Future<void> _getRoute(LatLng origin, LatLng destination) async {
+    setState(() {
+      _isLoadingRoute = true;
+    });
+
+    try {
+      // Get API key from environment variables
+      final apiKey = "AIzaSyCcq9cNPuV2llNxo_rMg59nw-6I2t5aYOk";
+
+      final response = await http.get(
+        Uri.parse(
+            'https://maps.googleapis.com/maps/api/directions/json?'
+                'origin=${origin.latitude},${origin.longitude}'
+                '&destination=${destination.latitude},${destination.longitude}'
+                '&mode=driving'
+                '&key=$apiKey'
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        if (data['status'] == 'OK') {
+          // Decode polyline points
+          final points = _decodePolyline(data['routes'][0]['overview_polyline']['points']);
+
+          setState(() {
+            String polylineId = destination == widget.clientLocation
+                ? 'route'
+                : 'search_route';
+
+            Color polylineColor = destination == widget.clientLocation
+                ? Colors.blue
+                : Colors.green;
+
+            // Remove any existing polyline with the same ID
+            polylines.removeWhere((p) => p.polylineId.value == polylineId);
+
+            // Add the new polyline with the decoded points
+            polylines.add(
+              Polyline(
+                polylineId: PolylineId(polylineId),
+                points: points,
+                color: polylineColor,
+                width: 5,
               ),
-              onMapCreated: (GoogleMapController controller) {
-                _controller.complete(controller);
-                if (mapStyle.isNotEmpty) {
-                  controller.setMapStyle(mapStyle);
-                }
+            );
+          });
+        } else {
+          print('Directions API error: ${data['status']}');
+          // Fall back to straight line if route not found
+          _createStraightLinePolyline(origin, destination);
+        }
+      } else {
+        print('Failed to get directions: ${response.statusCode}');
+        // Fall back to straight line if API request fails
+        _createStraightLinePolyline(origin, destination);
+      }
+    } catch (e) {
+      print('Error getting route: $e');
+      // Fall back to straight line if there's an exception
+      _createStraightLinePolyline(origin, destination);
+    } finally {
+      setState(() {
+        _isLoadingRoute = false;
+      });
+    }
+  }
 
-                // If we have both provider and client, fit bounds to show both
-                if (_serviceProviderLocation != null && widget.clientLocation != null) {
-                  Future.delayed(const Duration(milliseconds: 500), _fitAllMarkers);
-                }
-              },
-              markers: markers,
-              polylines: polylines,
-              myLocationEnabled: false,
-              zoomControlsEnabled: false,
-              mapToolbarEnabled: true,
-              compassEnabled: true,
-              onTap: (_) => setState(() {
-                _followProvider = false;
-              }),
-              onCameraMove: (_) {
-                setState(() {
-                  _followProvider = false;
-                });
-              },
+  void _createStraightLinePolyline(LatLng origin, LatLng destination) {
+    String polylineId = destination == widget.clientLocation
+        ? 'route'
+        : 'search_route';
+
+    Color polylineColor = destination == widget.clientLocation
+        ? Colors.blue
+        : Colors.green;
+
+    List<PatternItem> pattern = destination == widget.clientLocation
+        ? [PatternItem.dash(20), PatternItem.gap(10)]
+        : [PatternItem.dot, PatternItem.gap(10)];
+
+    // Remove any existing polyline with the same ID
+    polylines.removeWhere((p) => p.polylineId.value == polylineId);
+
+    // Add straight line polyline
+    polylines.add(
+      Polyline(
+        polylineId: PolylineId(polylineId),
+        points: [origin, destination],
+        color: polylineColor,
+        width: 5,
+        patterns: pattern,
+      ),
+    );
+  }
+
+  List<LatLng> _decodePolyline(String encoded) {
+    List<LatLng> points = [];
+    int index = 0, len = encoded.length;
+    int lat = 0, lng = 0;
+
+    while (index < len) {
+      int b, shift = 0, result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+
+      points.add(LatLng(lat / 1E5, lng / 1E5));
+    }
+    return points;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Map
+          GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target: _serviceProviderLocation ?? const LatLng(36.7538, 3.0588),
+              zoom: 14,
             ),
+            onMapCreated: (GoogleMapController controller) {
+              _controller.complete(controller);
+              if (mapStyle.isNotEmpty) {
+                controller.setMapStyle(mapStyle);
+              }
 
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  height: screenHeight * 0.04,
-                  color: const Color(0xFF1B9169),
-                ),
-                const SizedBox(height: 30),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: SizedBox(
-                    width: screenWidth * 0.9,
-                    child: GestureDetector(
-                      onTap: () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const LocationAutoComplete(),
+              // If we have both provider and client, fit bounds to show both
+              if (_serviceProviderLocation != null && widget.clientLocation != null) {
+                Future.delayed(const Duration(milliseconds: 500), _fitAllMarkers);
+              }
+            },
+            markers: markers,
+            polylines: polylines,
+            myLocationEnabled: false,
+            zoomControlsEnabled: false,
+            mapToolbarEnabled: true,
+            compassEnabled: true,
+            onTap: (_) => setState(() {
+              _followProvider = false;
+            }),
+            onCameraMove: (_) {
+              setState(() {
+                _followProvider = false;
+              });
+            },
+          ),
+
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: screenHeight * 0.04,
+                color: const Color(0xFF1B9169),
+              ),
+              const SizedBox(height: 30),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: SizedBox(
+                  width: screenWidth * 0.9,
+                  child: GestureDetector(
+                    onTap: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const LocationAutoComplete(),
+                        ),
+                      );
+
+                      if (result != null && result is LatLng) {
+                        _handleSearchResult(result);
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
-                        );
-
-                        if (result != null && result is LatLng) {
-                          _handleSearchResult(result);
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(30),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.search, color: Colors.grey),
-                            SizedBox(width: 8),
-                            Text(
-                              "Rechercher un lieu",
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ],
-                        ),
+                        ],
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.search, color: Colors.grey),
+                          SizedBox(width: 8),
+                          Text(
+                            "Rechercher un lieu",
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
+              ),
+            ],
+          ),
+
+          // Loading indicator
+          if (_isLoadingRoute)
+            const Center(
+              child: Card(
+                color: Colors.white,
+                child: Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+            ),
+
+          Positioned(
+            bottom: 47,
+            right: 16,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton(
+                  heroTag: 'locate',
+                  onPressed: _centerOnServiceProvider,
+                  backgroundColor: Colors.white,
+                  child: Icon(
+                    Icons.my_location,
+                    color: _followProvider ? Theme.of(context).primaryColor : Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                if (markers.length >= 2)
+                  FloatingActionButton(
+                    heroTag: 'fit',
+                    onPressed: _fitAllMarkers,
+                    backgroundColor: Colors.white,
+                    child: const Icon(Icons.zoom_out_map, color: Colors.black),
+                  ),
               ],
             ),
-
-            Positioned(
-              bottom: 47,
-              right: 16,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FloatingActionButton(
-                    heroTag: 'locate',
-                    onPressed: _centerOnServiceProvider,
-                    backgroundColor: Colors.white,
-                    child: Icon(
-                      Icons.my_location,
-                      color: _followProvider ? Theme.of(context).primaryColor : Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  if (widget.clientLocation != null)
-                    FloatingActionButton(
-                      heroTag: 'fit',
-                      onPressed: _fitAllMarkers,
-                      backgroundColor: Colors.white,
-                      child: const Icon(Icons.zoom_out_map, color: Colors.black),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    void _updateMarkers() {
-      setState(() {
-        markers.clear();
-        polylines.clear();
-
-        if (_serviceProviderLocation != null) {
-          markers.add(
-            Marker(
-              markerId: const MarkerId('provider'),
-              position: _serviceProviderLocation!,
-              icon: _markerIcons['provider'] ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-              infoWindow: const InfoWindow(
-                title: 'My Location',
-                snippet: 'You are here',
-              ),
-            ),
-          );
-        }
-
-        if (widget.clientLocation != null) {
-          markers.add(
-            Marker(
-              markerId: const MarkerId('client'),
-              position: widget.clientLocation!,
-              icon: _markerIcons['client'] ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-              infoWindow: InfoWindow(
-                title: widget.clientAddress ?? 'Client',
-              ),
-            ),
-          );
-          if (_serviceProviderLocation != null) {
-            polylines.add(
-              Polyline(
-                polylineId: const PolylineId('route'),
-                points: [_serviceProviderLocation!, widget.clientLocation!],
-                color: Colors.blue,
-                width: 5,
-                patterns: [PatternItem.dash(20), PatternItem.gap(10)],
-              ),
-            );
-          }
-        }
-
-        if (_searchResultLocation != null) {
-          markers.add(
-            Marker(
-              markerId: const MarkerId('search_result'),
-              position: _searchResultLocation!,
-              icon: _markerIcons['search'] ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
-              infoWindow: const InfoWindow(
-                title: 'Lieu recherché',
-              ),
-            ),
-          );
-
-          // Add polyline to search result if service provider location is available
-          if (_serviceProviderLocation != null) {
-            polylines.add(
-              Polyline(
-                polylineId: const PolylineId('search_route'),
-                points: [_serviceProviderLocation!, _searchResultLocation!],
-                color: Colors.green,
-                width: 5,
-                patterns: [PatternItem.dot, PatternItem.gap(10)],
-              ),
-            );
-          }
-        }
-      });
-    }
+          ),
+        ],
+      ),
+    );
   }
+
+  void _updateMarkers() {
+    setState(() {
+      markers.clear();
+
+      if (_serviceProviderLocation != null) {
+        markers.add(
+          Marker(
+            markerId: const MarkerId('provider'),
+            position: _serviceProviderLocation!,
+            icon: _markerIcons['provider'] ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+            infoWindow: const InfoWindow(
+              title: 'My Location',
+              snippet: 'You are here',
+            ),
+          ),
+        );
+      }
+
+      if (widget.clientLocation != null) {
+        markers.add(
+          Marker(
+            markerId: const MarkerId('client'),
+            position: widget.clientLocation!,
+            icon: _markerIcons['client'] ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+            infoWindow: InfoWindow(
+              title: widget.clientAddress ?? 'Client',
+            ),
+          ),
+        );
+      }
+
+      if (_searchResultLocation != null) {
+        markers.add(
+          Marker(
+            markerId: const MarkerId('search_result'),
+            position: _searchResultLocation!,
+            icon: _markerIcons['search'] ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
+            infoWindow: const InfoWindow(
+              title: 'Lieu recherché',
+            ),
+          ),
+        );
+      }
+    });
+  }
+}

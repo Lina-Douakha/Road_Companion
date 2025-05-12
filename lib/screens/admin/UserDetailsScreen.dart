@@ -10,6 +10,7 @@ import 'package:road_companion/screens/admin/UserIncidentDetails.dart';
 
 
 
+
 class UserDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> user;
 
@@ -48,7 +49,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
           .get();
 
       if (!userSnapshot.exists) {
-        throw Exception('User not found.');
+        throw Exception('admin.user_not_found'.tr());
       }
 
       // 2. Copy data to deleted_users
@@ -66,9 +67,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
       // 4. Update UI (in this context, we just go back)
       Navigator.pop(context);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User moved to deleted_users and removed.')),
-      );
+      _showUserActionSuccessDialog('delete');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to delete user: $e')),
@@ -88,33 +87,26 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
       });
 
       // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('User ${!currentBlockedStatus ? 'blocked' : 'active'} successfully.')),
-      );
+      _showUserActionSuccessDialog(!currentBlockedStatus ? 'block' : 'unblock');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to toggle block status: $e')),
       );
     }
-  }
-
-// Updated dialog to confirm block/unblock action for UserDetailsScreen
+  }// Updated dialog to confirm block/unblock action for UserDetailsScreen
   void _showBlockDialog(Map<String, dynamic> user, bool isBlocked) {
-    final String actionText = isBlocked ? "Unblock" : "Block";
-    final Color actionColor = isBlocked
-        ? const Color(0xFF00D47E)
-        : Colors.red;
+    final String actionText = isBlocked ? 'admin.Unblock'.tr() : 'admin.Block'.tr();
 
     final String message = isBlocked
-        ? 'Are you sure you want to unblock "${user['Name']}"?'
-        : 'Are you sure you want to block "${user['Name']}"?\n\nThis will immediately prevent the user from logging in again until unblocked.';
+        ? 'admin.unblock_message'.tr()
+        : 'admin.block_message'.tr() ;
 
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          '$actionText User',
+          '$actionText',
           style: const TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 18,
@@ -128,8 +120,8 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
+            child: Text(
+              'admin.cancel'.tr(),
               style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
             ),
           ),
@@ -140,16 +132,13 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
             },
             child: Text(
               actionText,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: isBlocked ? const Color(0xFF1B9169) : Colors.white,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w500),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: isBlocked
                   ? const Color(0xFF00D47E).withOpacity(0.1)
-                  : Colors.red,
-              foregroundColor: isBlocked ? const Color(0xFF00D47E) : Colors.white,
+                  : Colors.red.withOpacity(0.1),
+              foregroundColor: isBlocked ? const Color(0xFF00D47E) : Colors.amber,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -167,23 +156,23 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Delete User',
+        title: Text(
+          'admin.Delete'.tr(),
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 18,
           ),
         ),
-        content: const Text(
-          'Are you sure you want to permanently delete this user?',
+        content:  Text(
+          'admin.delete_message'.tr(),
           style: TextStyle(fontSize: 15),
         ),
         actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
+            child:  Text(
+              'admin.cancel'.tr(),
               style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
             ),
           ),
@@ -192,8 +181,8 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
               Navigator.pop(context);
               _deleteUser(user['UserID']); // Call the adapted _deleteUser
             },
-            child: const Text(
-              'Delete',
+            child:  Text(
+              'admin.Delete'.tr(),
               style: TextStyle(fontWeight: FontWeight.w500),
             ),
             style: ElevatedButton.styleFrom(
@@ -216,53 +205,65 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
   Widget build(BuildContext context) {
     final isDriverRole =  (widget.user['Role'] as String?)?.toLowerCase() == 'user';
     GeoPoint? location = widget.user['Location'];
+    final role = widget.user['Role'];
+    final key = 'registration.$role';
 
     return DefaultTabController(
       length: isDriverRole ? 2 : 2, // Adjust tab count based on role
       child: Scaffold(
         backgroundColor: Colors.white,
+
+// Then use it in your build method
         appBar: AppBar(
           backgroundColor: const Color(0xFF1B9169),
           elevation: 0,
           scrolledUnderElevation: 0,
-          centerTitle: false, // Important for left alignment within FlexibleSpaceBar
+          centerTitle: false,
           systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
             statusBarColor: const Color(0xFF1B9169),
           ),
+          automaticallyImplyLeading: false,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.pop(context),
           ),
-          flexibleSpace: FlexibleSpaceBar(
-            title: Align(
-              alignment: Alignment.centerLeft, // Align title to the left within FlexibleSpaceBar
-              child: Text(
-                "${widget.user['Name'] ?? 'User'}'s Profile",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20.0,
-                  fontWeight: FontWeight.bold,
+          flexibleSpace: Builder(
+            builder: (context) {
+              return FlexibleSpaceBar(
+                title: Align(
+                  alignment: _isRTL(context) ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Text(
+                    'admin.profile_title'.tr(namedArgs: {'name': widget.user['Name'] ?? 'User'}),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                overflow: TextOverflow.ellipsis, // Handle long titles with ellipsis
-              ),
-            ),
-            titlePadding: const EdgeInsets.only(left: 56, bottom: 16), // Adjust padding as needed
+                titlePadding: _isRTL(context)
+                    ? const EdgeInsets.only(right: 56, bottom: 16, left: 100) // RTL padding
+                    : const EdgeInsets.only(left: 56, bottom: 16, right: 100), // LTR padding
+              );
+            },
           ),
           actions: [
             _buildUserStatusActions(context, widget.user['UserID']!),
             const SizedBox(width: 8),
           ],
-          bottom: const TabBar(
+          bottom: TabBar(
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white70,
             indicatorColor: Colors.white,
             indicatorWeight: 3,
             tabs: [
-              Tab(text: 'Details'),
-              Tab(text: 'Historique'),
+              Tab(text: 'admin.Details'.tr()),
+              Tab(text: 'admin.Historique'.tr()),
             ],
           ),
         ),
+
         body: TabBarView(
           children: [
             // First Tab: Existing User Details UI
@@ -273,7 +274,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
 
                 const SizedBox(height: 24),
                 Text(
-                  "Personal Information".tr(),
+                  "admin.Personal_Information".tr(),
                   style: Theme
                       .of(context)
                       .textTheme
@@ -283,28 +284,29 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                 ),
                 Divider(color: Colors.grey[300]),
                 _buildInfoCard(
-                    context, 'Name'.tr(), widget.user['Name'], icon: Icons.person,
+                    context, 'admin.Name'.tr(), widget.user['Name'], icon: Icons.person,
                     valueColor: Colors.grey[600]),
              widget.user['Email']!= null
             ? _buildEmailCard(context, widget.user['Email'])
-            : _buildInfoCard(context, 'Email'.tr(), widget.user['Email'], icon: Icons.email),
+            : _buildInfoCard(context, 'admin.Email'.tr(), widget.user['Email'], icon: Icons.email),
                 widget.user['Email']!= null
                     ?  _buildPhoneCard(context, widget.user['Phone'])
-                    : _buildInfoCard(context, 'Phone'.tr(), widget.user['Phone'], icon: Icons.phone),
+                    : _buildInfoCard(context, 'admin.Phone'.tr(), widget.user['Phone'], icon: Icons.phone),
                 _buildInfoCard(
-                    context, 'UserID'.tr(), widget.user['UserID'], icon: Icons.tag,
+                    context, 'admin.UserID'.tr(), widget.user['UserID'], icon: Icons.tag,
                     valueColor: Colors.grey[600],
                 showCopyIcon: true),
-                _buildInfoCard(context, 'registration.Role'.tr(), widget.user['Role'],
+
+                _buildInfoCard(context, 'admin.Role'.tr(), 'registration.${widget.user['Role']}'.tr(),
                     icon: Icons.badge,
                     valueColor: Colors.grey[600]),
                 _buildInfoCard(
                   context,
-                  'Verified At'.tr(),
+                  'admin.VerifiedAt'.tr(),
                   widget.user['VerifiedAt'] != null
                       ? DateFormat('yyyy-MM-dd HH:mm:ss').format(
                       (widget.user['VerifiedAt'] as Timestamp).toDate())
-                      : 'Not available'.tr(),
+                      : 'admin.not_available'.tr(),
                   icon: Icons.calendar_today,
                   valueColor: Colors.grey[600],
                 ),
@@ -312,8 +314,9 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                     (widget.user['Role'] as String?)?.toLowerCase() != 'user') ...[
                   const SizedBox(height: 24),
                   Text(
-                    "${(widget.user['Role'] as String?)?.capitalize()} Information"
-                        .tr(),
+
+           'admin.Informations'.tr(namedArgs: {'role': 'registration.${widget.user['Role']}'.tr()}),
+
                     style: Theme
                         .of(context)
                         .textTheme
@@ -325,7 +328,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
 
                   _buildInfoCard(
                     context,
-                    'Location'.tr(),
+                    'admin.location'.tr(),
                     location != null
                         ? '${location.latitude.toStringAsFixed(5)}, ${location.longitude.toStringAsFixed(5)}'
                         : null,
@@ -335,20 +338,20 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                   ),
                   _buildInfoCard(
                     context,
-                    'Address'.tr(),widget.user['Address'],
+                    'admin.Address'.tr(),widget.user['Address'],
                     icon: Icons.location_on,
                     valueColor: Colors.grey[600],
                   ),
                   _buildInfoCard(
-                      context, 'Working Hours'.tr(), widget.user['Working_hours'],
+                      context, 'admin.Working_Hours'.tr(), widget.user['Working_hours'],
                       icon: Icons.access_time,
                       valueColor: Colors.grey[600],
                      ),
-                  _buildLinkCard(context, 'Link'.tr(), widget.user['Link'],
+                  _buildLinkCard(context, 'admin.Link'.tr(), widget.user['Link'],
                       linkColor: Colors.blue),
-                  _buildPdfCard(context, 'Carte'.tr(),widget.user['pdf_carte'],
+                  _buildPdfCard(context, 'admin.Carte'.tr(),widget.user['pdf_carte'],
                       pdfColor: Colors.redAccent),
-                  _buildPdfCard(context, 'Registration'.tr(), widget.user['pdf_reg'],
+                  _buildPdfCard(context, 'admin.Registration'.tr(), widget.user['pdf_reg'],
                       pdfColor: Colors.redAccent),
                 ],
               ],
@@ -376,7 +379,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return const Text('Error loading status');
+          return Text('admin.Error_loading_status'.tr());
         }
         final String status = snapshot.data ?? 'Unknown';
         final Color statusColor = getStatusUserColor(status);
@@ -419,7 +422,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      user?['Name'] ?? 'No Name',
+                      user?['Name'] ?? 'admin.No_Name'.tr(),
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -445,7 +448,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                status,
+                               'admin.$status'.tr() ,
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
@@ -537,7 +540,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                   children: [
                     Expanded(
                       child: Text(
-                        value ?? 'Not available',
+                        value ?? 'admin.Not_available'.tr(),
                         style: TextStyle(
                           color: valueColor ?? Colors.black54,
                           fontSize: 14,
@@ -548,12 +551,10 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                     if (showCopyIcon && value != null)
                       IconButton(
                         icon: const Icon(Icons.copy, size: 18),
-                        tooltip: 'Copy',
+                        tooltip: 'admin.copy',
                         onPressed: () {
                           Clipboard.setData(ClipboardData(text: value));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Copied to clipboard')),
-                          );
+
                         },
                       ),
                   ],
@@ -583,8 +584,8 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Email',
+                Text(
+                  'admin.Email'.tr(),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
@@ -599,7 +600,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                       await launchUrl(emailUri);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Could not launch email app')),
+                         SnackBar(content: Text('admin.Could_not_launch_email_app'.tr())),
                       );
                     }
                   },
@@ -620,149 +621,6 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
       ),
     );
   }
-
-  void _showEditDialog(BuildContext context, String fieldLabel, String fieldKey,
-      String currentValue) {
-    final TextEditingController controller = TextEditingController(
-        text: currentValue);
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Edit $fieldLabel'),
-          content: TextField(
-            controller: controller,
-            decoration: InputDecoration(labelText: fieldLabel),
-          ),
-          actions: [
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            ElevatedButton(
-              child: const Text('Save'),
-              onPressed: () async {
-                final newValue = controller.text.trim();
-
-                if (newValue.isEmpty || newValue == currentValue) {
-                  Navigator.of(context).pop();
-                  return;
-                }
-
-                if (fieldKey == 'UserID') {
-                  await _updateUserID(widget.user['UserID'], newValue);
-                } else {
-                  await FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(widget.user['UserID'])
-                      .update({fieldKey: newValue});
-                }
-
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showEditRoleDialog(BuildContext context, String currentRole) {
-    final List<String> roles = [
-      'User',
-      'mechanic',
-      'towing_service',
-      'parts_supplier'
-    ];
-    String selectedRole = currentRole;
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit Role'),
-          content: StatefulBuilder(
-            builder: (context, setState) {
-              return DropdownButtonFormField<String>(
-                value: selectedRole,
-                items: roles.map((role) {
-                  return DropdownMenuItem<String>(
-                    value: role,
-                    child: Text(role),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      selectedRole = value;
-                    });
-                  }
-                },
-                decoration: const InputDecoration(
-                  labelText: 'Select Role',
-                  border: OutlineInputBorder(),
-                ),
-              );
-            },
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context),
-                child: const Text("Cancel")),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                if (widget.user['UserID'] == null) {
-                  print("Error: User ID is null. Cannot update role.");
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text(
-                        "Error: Could not update role (User ID missing).")),
-                  );
-                  return;
-                }
-                try {
-                  await FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(widget.user['UserID'])
-                      .update({'Role': selectedRole});
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Role updated successfully")),
-                  );
-                } catch (e) {
-                  print("Firestore update error: $e"); // Added for debugging
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Failed to update role: $e")),
-                  );
-                }
-              },
-              child: const Text("Save"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _updateUserID(String oldUserID, String newUserID) async {
-    try {
-      final usersRef = FirebaseFirestore.instance.collection('users');
-
-      final oldDoc = await usersRef.doc(oldUserID).get();
-      if (!oldDoc.exists) throw Exception("Old document not found");
-
-      final userData = oldDoc.data()!;
-      userData['UserID'] = newUserID;
-
-      await usersRef.doc(newUserID).set(userData);
-      await usersRef.doc(oldUserID).delete();
-
-      print("UserID updated successfully.");
-    } catch (e) {
-      print("Error updating UserID: $e");
-    }
-  }
-
-
   Widget _buildLinkCard(BuildContext context, String title, String? url,
       {Color? linkColor}) {
     return Container(
@@ -791,7 +649,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  url ?? 'Not available',
+                  url ?? 'admin.Not_available'.tr(),
                   style: TextStyle(
                     color: linkColor ?? Colors.blue,
                     fontSize: 14,
@@ -813,14 +671,14 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                 ),
               ),
               icon: const Icon(Icons.open_in_browser, size: 18),
-              label: const Text('Open', style: TextStyle(fontSize: 12)),
+              label:  Text('admin.Open'.tr(), style: TextStyle(fontSize: 12)),
               onPressed: () async {
                 final Uri uri = Uri.parse(url);
                 if (await canLaunchUrl(uri)) {
                   await launchUrl(uri, mode: LaunchMode.externalApplication);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Could not launch URL')),
+                     SnackBar(content: Text('admin.Could_not_launch_URL'.tr())),
                   );
                 }
               },
@@ -857,7 +715,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  pdfUrl ?? 'Not uploaded',
+                  pdfUrl ?? 'admin.Not_uploaded'.tr(),
                   style: TextStyle(
                     color: pdfColor ?? Colors.redAccent,
                     fontSize: 14,
@@ -878,10 +736,10 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                 ),
               ),
               icon: const Icon(Icons.visibility, size: 18),
-              label: const Text('View', style: TextStyle(fontSize: 12)),
+              label:  Text('admin.View'.tr(), style: TextStyle(fontSize: 12)),
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('PDF viewing not yet implemented')),
+                   SnackBar(content: Text('admin.PDF_viewing_not_yet_implemented'.tr())),
                 );
               },
             ),
@@ -994,8 +852,8 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Phone',
+                 Text(
+                  'admin.Phone'.tr(),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
@@ -1010,7 +868,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                       await launchUrl(phoneUri);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Could not launch phone app')),
+                        SnackBar(content: Text('admin.Could_not_launch_phone_app'.tr())),
                       );
                     }
                   },
@@ -1031,6 +889,106 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
       ),
     );
   }
+
+// Show success dialog with custom message based on user actions
+  void _showUserActionSuccessDialog(String actionType) {
+    String message;
+    Color iconColor;
+    IconData iconData;
+
+    switch (actionType.toLowerCase()) {
+      case 'block':
+        message = 'admin.user_successfully_blocked'.tr();
+        iconColor = Colors.amber;
+        iconData = Icons.block;
+        break;
+      case 'unblock':
+        message = 'admin.user_successfully_unblocked'.tr();
+        iconColor = const Color(0xFF00D47E); // Green
+        iconData = Icons.check_circle;
+        break;
+      case 'delete':
+        message = 'admin.user_successfully_deleted'.tr();
+        iconColor = Colors.red;
+        iconData = Icons.delete_forever;
+        break;
+      default:
+        message = 'admin.action_completed_successfully'.tr();
+        iconColor = Colors.blue;
+        iconData = Icons.check_circle;
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: iconColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    iconData,
+                    color: iconColor,
+                    size: 36,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: iconColor,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text('admin.OK'.tr()),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+  bool _isRTL(BuildContext context) {
+    return Localizations.localeOf(context).languageCode == 'ar';
+  }
+
 
 }
 

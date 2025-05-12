@@ -57,7 +57,11 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
 
 
   Future<Map<String, dynamic>> fetchPanelData(String id, String languageCode) async {
-    String collection = languageCode == 'ar' ? 'Traffic-laws-ar' : 'Traffic-Laws';
+    String collection = languageCode == 'ar'
+        ? 'Traffic-laws-ar'
+        : languageCode == 'fr'
+        ? 'Traffic-Laws'
+        : 'Traffic-laws-en';
     final doc = await FirebaseFirestore.instance.collection(collection).doc(id).get();
     return doc.data() ?? {};
   }
@@ -69,10 +73,11 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
     });
 
     try {
-
       String collectionName = selectedLanguage == "fr"
           ? "Traffic-Laws"
-          : "Traffic-laws-ar";
+          : selectedLanguage == "ar"
+          ? "Traffic-laws-ar"
+          : "Traffic-laws-en";
 
 
       QuerySnapshot snapshot = await FirebaseFirestore.instance
@@ -101,14 +106,28 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
 
   Future<void> editPanelDialog(BuildContext context, Map<String, dynamic> itemData) async {
     final String id = itemData['id'];
-    final String languageCode = selectedLanguage; // 'fr' or 'ar'
-    final String otherLanguage = languageCode == 'ar' ? 'fr' : 'ar';
-    final String otherLanguageName = languageCode == 'ar' ? 'French' : 'Arabic';
+    final String languageCode = selectedLanguage;
 
+    Map<String, Map<String, String>> languageMappings = {
+      'ar': {'code': 'fr', 'name': 'French'},
+      'fr': {'code': 'ar', 'name': 'Arabic'},
+      'en': {'code': 'ar', 'name': 'Arabic'},
+    };
+
+    List<Map<String, String>> otherLanguages = [];
+    if (languageCode == 'ar') {
+      otherLanguages.add({'code': 'fr', 'name': 'French'});
+      otherLanguages.add({'code': 'en', 'name': 'English'});
+    } else if (languageCode == 'fr') {
+      otherLanguages.add({'code': 'ar', 'name': 'Arabic'});
+      otherLanguages.add({'code': 'en', 'name': 'English'});
+    } else if (languageCode == 'en') {
+      otherLanguages.add({'code': 'ar', 'name': 'Arabic'});
+      otherLanguages.add({'code': 'fr', 'name': 'French'});
+    }
 
     final bool hasPendingChanges = pendingPanelChanges.containsKey(id) &&
         pendingPanelChanges[id]!.containsKey(languageCode);
-
 
     Map<String, dynamic> data;
     if (hasPendingChanges) {
@@ -127,9 +146,15 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
     final TextEditingController titleController = TextEditingController(text: data['Title'] ?? '');
     final TextEditingController imageUrlController = TextEditingController(text: data['ImageUrl'] ?? '');
 
-
-    bool hasOtherLanguageChanges = pendingPanelChanges.containsKey(id) &&
-        pendingPanelChanges[id]!.containsKey(otherLanguage);
+    bool hasAllOtherLanguageChanges = true;
+    for (var otherLang in otherLanguages) {
+      bool hasThisLanguageChanges = pendingPanelChanges.containsKey(id) &&
+          pendingPanelChanges[id]!.containsKey(otherLang['code']);
+      if (!hasThisLanguageChanges) {
+        hasAllOtherLanguageChanges = false;
+        break;
+      }
+    }
 
     final String imageAssetPath = 'assets/images/Panels/${data['ImageUrl'] ?? ''}';
 
@@ -148,7 +173,6 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -180,18 +204,17 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                   ),
                   const SizedBox(height: 8),
 
-
                   if (pendingPanelChanges.containsKey(id))
                     Container(
                       padding: EdgeInsets.all(10),
                       margin: EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: hasOtherLanguageChanges
+                        color: hasAllOtherLanguageChanges
                             ? Color(0xFF00D47E).withOpacity(0.2)
                             : Colors.amber.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: hasOtherLanguageChanges
+                            color: hasAllOtherLanguageChanges
                                 ? Color(0xFF00D47E).withOpacity(0.5)
                                 : Colors.amber.withOpacity(0.5)
                         ),
@@ -199,10 +222,10 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                       child: Row(
                         children: [
                           Icon(
-                              hasOtherLanguageChanges
+                              hasAllOtherLanguageChanges
                                   ? Icons.check_circle_outline
                                   : Icons.warning_amber_rounded,
-                              color: hasOtherLanguageChanges
+                              color: hasAllOtherLanguageChanges
                                   ? Color(0xFF00D47E)
                                   : Colors.amber[700],
                               size: 18
@@ -210,12 +233,12 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              hasOtherLanguageChanges
-                                  ? "The ${otherLanguageName} version has been modified. Save this version to update both simultaneously."
-                                  : "You must edit this panel in ${otherLanguageName} as well before changes take effect.",
+                              hasAllOtherLanguageChanges
+                                  ? "All other language versions have been modified. Update this version and save now to update them all simultaneously."
+                                  : "You must edit this panel in all languages before changes take effect.",
                               style: TextStyle(
                                 fontSize: 12,
-                                color: hasOtherLanguageChanges
+                                color: hasAllOtherLanguageChanges
                                     ? Color(0xFF00D47E)
                                     : Colors.amber[700],
                               ),
@@ -232,74 +255,72 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                               Theme(
-                                data: Theme.of(context).copyWith(
-                                  textSelectionTheme: TextSelectionThemeData(
-                                    cursorColor: Color(0xFF00D47E),
-                                    selectionColor: Color(0xFF00D47E).withOpacity(0.3),
-                                    selectionHandleColor: Color(0xFF00D47E),
-                                  ),
-                                ),
-                                child: TextField(
-                                  cursorColor: Color(0xFF00D47E),
-                                  controller: titleController,
-                                  style: TextStyle(fontSize: 15),
-                                  textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
-                                  decoration: InputDecoration(
-                                    labelText: 'Panel Title',
-                                    alignLabelWithHint: true,
-                                    labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(color: Color(0xFF1B9169).withOpacity(0.3)),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(color: Color(0xFF00D47E), width: 1.5),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                    fillColor: Color(0xFF1B9169).withOpacity(0.05),
-                                    filled: true,
-                                  ),
-                                ),
+                          Theme(
+                            data: Theme.of(context).copyWith(
+                              textSelectionTheme: TextSelectionThemeData(
+                                cursorColor: Color(0xFF00D47E),
+                                selectionColor: Color(0xFF00D47E).withOpacity(0.3),
+                                selectionHandleColor: Color(0xFF00D47E),
                               ),
+                            ),
+                            child: TextField(
+                              cursorColor: Color(0xFF00D47E),
+                              controller: titleController,
+                              style: TextStyle(fontSize: 15),
+                              textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
+                              decoration: InputDecoration(
+                                labelText: 'Panel Title',
+                                alignLabelWithHint: true,
+                                labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(color: Color(0xFF1B9169).withOpacity(0.3)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(color: Color(0xFF00D47E), width: 1.5),
+                                ),
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                fillColor: Color(0xFF1B9169).withOpacity(0.05),
+                                filled: true,
+                              ),
+                            ),
+                          ),
 
                           const SizedBox(height: 16),
 
-
-                         Theme(
-                                data: Theme.of(context).copyWith(
-                                  textSelectionTheme: TextSelectionThemeData(
-                                    cursorColor: Color(0xFF00D47E),
-                                    selectionColor: Color(0xFF00D47E).withOpacity(0.3),
-                                    selectionHandleColor: Color(0xFF00D47E),
-                                  ),
-                                ),
-                                child: TextField(
-                                  cursorColor: Color(0xFF00D47E),
-                                  controller: imageUrlController,
-                                  style: TextStyle(fontSize: 15),
-                                  decoration: InputDecoration(
-                                    labelText: 'Image URL',
-                                    alignLabelWithHint: true,
-                                    labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(color: Color(0xFF1B9169).withOpacity(0.3)),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(color: Color(0xFF00D47E), width: 1.5),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                    fillColor: Color(0xFF1B9169).withOpacity(0.05),
-                                    filled: true,
-                                    prefixIcon: languageCode != 'ar' ? Icon(Icons.image_outlined, color: Color(0xFF1B9169), size: 20) : null,
-                                    suffixIcon: languageCode == 'ar' ? Icon(Icons.image_outlined, color: Color(0xFF1B9169), size: 20) : null,
-                                  ),
-                                ),
+                          Theme(
+                            data: Theme.of(context).copyWith(
+                              textSelectionTheme: TextSelectionThemeData(
+                                cursorColor: Color(0xFF00D47E),
+                                selectionColor: Color(0xFF00D47E).withOpacity(0.3),
+                                selectionHandleColor: Color(0xFF00D47E),
                               ),
-
+                            ),
+                            child: TextField(
+                              cursorColor: Color(0xFF00D47E),
+                              controller: imageUrlController,
+                              style: TextStyle(fontSize: 15),
+                              decoration: InputDecoration(
+                                labelText: 'Image URL',
+                                alignLabelWithHint: true,
+                                labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(color: Color(0xFF1B9169).withOpacity(0.3)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(color: Color(0xFF00D47E), width: 1.5),
+                                ),
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                fillColor: Color(0xFF1B9169).withOpacity(0.05),
+                                filled: true,
+                                prefixIcon: languageCode != 'ar' ? Icon(Icons.image_outlined, color: Color(0xFF1B9169), size: 20) : null,
+                                suffixIcon: languageCode == 'ar' ? Icon(Icons.image_outlined, color: Color(0xFF1B9169), size: 20) : null,
+                              ),
+                            ),
+                          ),
 
                           if (data['ImageUrl'] != null && data['ImageUrl'].toString().isNotEmpty)
                             Container(
@@ -404,47 +425,51 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                             'Category': data['Category']
                           };
 
-
                           bool hasChanges = false;
                           if (data['Title'] != updatedData['Title'] ||
                               data['ImageUrl'] != updatedData['ImageUrl']) {
                             hasChanges = true;
                           }
 
-
                           if (hasChanges) {
-
                             if (!pendingPanelChanges.containsKey(id)) {
                               pendingPanelChanges[id] = {};
                             }
                             pendingPanelChanges[id]![languageCode] = updatedData;
 
-
+                            // Check if all required languages have changes
                             bool readyToSave = pendingPanelChanges[id]!.containsKey('ar') &&
-                                pendingPanelChanges[id]!.containsKey('fr');
+                                pendingPanelChanges[id]!.containsKey('fr') &&
+                                pendingPanelChanges[id]!.containsKey('en');
 
                             if (readyToSave) {
-
                               try {
                                 final batch = FirebaseFirestore.instance.batch();
 
-
+                                // Update French version
                                 final frDocRef = FirebaseFirestore.instance
                                     .collection('Traffic-Laws')
                                     .doc(id);
                                 batch.update(frDocRef, pendingPanelChanges[id]!['fr']!);
 
+                                // Update Arabic version
                                 final arDocRef = FirebaseFirestore.instance
                                     .collection('Traffic-laws-ar')
                                     .doc(id);
                                 batch.update(arDocRef, pendingPanelChanges[id]!['ar']!);
+
+                                // Update English version
+                                final enDocRef = FirebaseFirestore.instance
+                                    .collection('Traffic-laws-en')
+                                    .doc(id);
+                                batch.update(enDocRef, pendingPanelChanges[id]!['en']!);
 
                                 await batch.commit();
 
                                 pendingPanelChanges.remove(id);
 
                                 Navigator.pop(context);
-                                showSuccessDialog(context, "Both versions updated successfully!");
+                                showSuccessDialog(context, "All language versions updated successfully!");
                                 fetchItems();
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -457,14 +482,21 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                 return;
                               }
                             } else {
-
                               this.setState(() {});
                               Navigator.pop(context);
+
+                              // Create a list of missing languages
+                              List<String> missingLanguages = [];
+                              if (!pendingPanelChanges[id]!.containsKey('ar')) missingLanguages.add('Arabic');
+                              if (!pendingPanelChanges[id]!.containsKey('fr')) missingLanguages.add('French');
+                              if (!pendingPanelChanges[id]!.containsKey('en')) missingLanguages.add('English');
+
+                              String missingLanguagesText = missingLanguages.join(', ');
 
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Changes saved. Please edit the ${otherLanguageName} version to complete the update.',
+                                    'Changes saved. Please edit the $missingLanguagesText ${missingLanguages.length > 1 ? "versions" : "version"} to complete the update.',
                                     style: TextStyle(color: Colors.amber[700], fontWeight: FontWeight.bold),
                                   ),
                                   backgroundColor: Colors.amber[50],
@@ -473,12 +505,11 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                               );
                             }
                           } else {
-
                             Navigator.pop(context);
                           }
                         },
                         child: Text(
-                          hasOtherLanguageChanges ? 'Save Both Versions' : 'Save Changes',
+                          hasAllOtherLanguageChanges ? 'Save All Versions' : 'Save Changes',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -497,14 +528,30 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
   }
   Future<void> editPriorityDialog(BuildContext context, Map<String, dynamic> itemData) async {
     final String id = itemData['id'];
-    final String languageCode = selectedLanguage; // 'fr' or 'ar'
-    final String otherLanguage = languageCode == 'ar' ? 'fr' : 'ar';
-    final String otherLanguageName = languageCode == 'ar' ? 'French' : 'Arabic';
+    final String languageCode = selectedLanguage;
 
-    Map<String, dynamic> data;
+    Map<String, Map<String, String>> languageMappings = {
+      'ar': {'code': 'fr', 'name': 'French'},
+      'fr': {'code': 'ar', 'name': 'Arabic'},
+      'en': {'code': 'ar', 'name': 'Arabic'},
+    };
+
+    List<Map<String, String>> otherLanguages = [];
+    if (languageCode == 'ar') {
+      otherLanguages.add({'code': 'fr', 'name': 'French'});
+      otherLanguages.add({'code': 'en', 'name': 'English'});
+    } else if (languageCode == 'fr') {
+      otherLanguages.add({'code': 'ar', 'name': 'Arabic'});
+      otherLanguages.add({'code': 'en', 'name': 'English'});
+    } else if (languageCode == 'en') {
+      otherLanguages.add({'code': 'ar', 'name': 'Arabic'});
+      otherLanguages.add({'code': 'fr', 'name': 'French'});
+    }
+
     final bool hasPendingChanges = pendingChanges.containsKey(id) &&
         pendingChanges[id]!.containsKey(languageCode);
 
+    Map<String, dynamic> data;
     if (hasPendingChanges) {
       data = pendingChanges[id]![languageCode]!;
     } else {
@@ -515,8 +562,15 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
     final TextEditingController questionController = TextEditingController(text: data['Question'] ?? '');
     final TextEditingController imageUrlController = TextEditingController(text: data['imageURL'] ?? '');
 
-    bool hasOtherLanguageChanges = pendingChanges.containsKey(id) &&
-        pendingChanges[id]!.containsKey(otherLanguage);
+    bool hasAllOtherLanguageChanges = true;
+    for (var otherLang in otherLanguages) {
+      bool hasThisLanguageChanges = pendingChanges.containsKey(id) &&
+          pendingChanges[id]!.containsKey(otherLang['code']);
+      if (!hasThisLanguageChanges) {
+        hasAllOtherLanguageChanges = false;
+        break;
+      }
+    }
 
     final String imageAssetPath = 'assets/images/priorities/${data['imageURL'] ?? ''}';
 
@@ -535,7 +589,6 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -567,18 +620,17 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                   ),
                   const SizedBox(height: 8),
 
-
                   if (pendingChanges.containsKey(id))
                     Container(
                       padding: EdgeInsets.all(10),
                       margin: EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: hasOtherLanguageChanges
+                        color: hasAllOtherLanguageChanges
                             ? Color(0xFF00D47E).withOpacity(0.2)
                             : Colors.amber.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: hasOtherLanguageChanges
+                            color: hasAllOtherLanguageChanges
                                 ? Color(0xFF00D47E).withOpacity(0.5)
                                 : Colors.amber.withOpacity(0.5)
                         ),
@@ -586,10 +638,10 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                       child: Row(
                         children: [
                           Icon(
-                              hasOtherLanguageChanges
+                              hasAllOtherLanguageChanges
                                   ? Icons.check_circle_outline
                                   : Icons.warning_amber_rounded,
-                              color: hasOtherLanguageChanges
+                              color: hasAllOtherLanguageChanges
                                   ? Color(0xFF00D47E)
                                   : Colors.amber[700],
                               size: 18
@@ -597,12 +649,12 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              hasOtherLanguageChanges
-                                  ? "The ${otherLanguageName} version has been modified. Save this version to update both simultaneously."
-                                  : "You must edit this priority in ${otherLanguageName} as well before changes take effect.",
+                              hasAllOtherLanguageChanges
+                                  ? "All other language versions have been modified. Update this version and save now to update them all simultaneously."
+                                  : "You must edit this priority in all languages before changes take effect.",
                               style: TextStyle(
                                 fontSize: 12,
-                                color: hasOtherLanguageChanges
+                                color: hasAllOtherLanguageChanges
                                     ? Color(0xFF00D47E)
                                     : Colors.amber[700],
                               ),
@@ -619,115 +671,109 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Description field
-                           Theme(
-                                data: Theme.of(context).copyWith(
-                                  textSelectionTheme: TextSelectionThemeData(
-                                    cursorColor: Color(0xFF00D47E),
-                                    selectionColor: Color(0xFF00D47E).withOpacity(0.3),
-                                    selectionHandleColor: Color(0xFF00D47E),
-                                  ),
+                          Theme(
+                            data: Theme.of(context).copyWith(
+                              textSelectionTheme: TextSelectionThemeData(
+                                cursorColor: Color(0xFF00D47E),
+                                selectionColor: Color(0xFF00D47E).withOpacity(0.3),
+                                selectionHandleColor: Color(0xFF00D47E),
+                              ),
+                            ),
+                            child: TextField(
+                              cursorColor: Color(0xFF00D47E),
+                              controller: descriptionController,
+                              style: TextStyle(fontSize: 15),
+                              maxLines: 3,
+                              minLines: 1,
+                              textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
+                              decoration: InputDecoration(
+                                labelText: 'Description',
+                                alignLabelWithHint: true,
+                                labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(color: Color(0xFF1B9169).withOpacity(0.3)),
                                 ),
-                                child:TextField(
-                                  cursorColor: Color(0xFF00D47E),
-                                  controller: descriptionController,
-                                  style: TextStyle(fontSize: 15),
-                                  maxLines: 3,
-                                  minLines: 1,
-                                  textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
-                                  decoration: InputDecoration(
-                                    labelText: 'Description',
-                                    alignLabelWithHint: true,
-                                    labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(color: Color(0xFF1B9169).withOpacity(0.3)),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(color: Color(0xFF00D47E), width: 1.5),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                    fillColor: Color(0xFF1B9169).withOpacity(0.05),
-                                    filled: true,
-                                  ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(color: Color(0xFF00D47E), width: 1.5),
                                 ),
-
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                fillColor: Color(0xFF1B9169).withOpacity(0.05),
+                                filled: true,
+                              ),
+                            ),
                           ),
 
                           const SizedBox(height: 16),
 
-                       Theme(
-                                data: Theme.of(context).copyWith(
-                                  textSelectionTheme: TextSelectionThemeData(
-                                    cursorColor: Color(0xFF00D47E),
-                                    selectionColor: Color(0xFF00D47E).withOpacity(0.3),
-                                    selectionHandleColor: Color(0xFF00D47E),
-                                  ),
+                          Theme(
+                            data: Theme.of(context).copyWith(
+                              textSelectionTheme: TextSelectionThemeData(
+                                cursorColor: Color(0xFF00D47E),
+                                selectionColor: Color(0xFF00D47E).withOpacity(0.3),
+                                selectionHandleColor: Color(0xFF00D47E),
+                              ),
+                            ),
+                            child: TextField(
+                              cursorColor: Color(0xFF00D47E),
+                              controller: questionController,
+                              style: TextStyle(fontSize: 15),
+                              maxLines: 2,
+                              minLines: 1,
+                              textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
+                              decoration: InputDecoration(
+                                labelText: 'Question',
+                                alignLabelWithHint: true,
+                                labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(color: Color(0xFF1B9169).withOpacity(0.3)),
                                 ),
-                                child:TextField(
-                                  cursorColor: Color(0xFF00D47E),
-                                  controller: questionController,
-                                  style: TextStyle(fontSize: 15),
-                                  maxLines: 2,
-                                  minLines: 1,
-                                  textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
-                                  decoration: InputDecoration(
-                                    labelText: 'Question',
-                                    alignLabelWithHint: true,
-                                    labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(color: Color(0xFF1B9169).withOpacity(0.3)),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(color: Color(0xFF00D47E), width: 1.5),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                    fillColor: Color(0xFF1B9169).withOpacity(0.05),
-                                    filled: true,
-                                  ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(color: Color(0xFF00D47E), width: 1.5),
                                 ),
-
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                fillColor: Color(0xFF1B9169).withOpacity(0.05),
+                                filled: true,
+                              ),
+                            ),
                           ),
 
                           const SizedBox(height: 16),
 
-
-                         Theme(
-                                data: Theme.of(context).copyWith(
-                                  textSelectionTheme: TextSelectionThemeData(
-                                    cursorColor: Color(0xFF00D47E),
-                                    selectionColor: Color(0xFF00D47E).withOpacity(0.3),
-                                    selectionHandleColor: Color(0xFF00D47E),
-                                  ),
+                          Theme(
+                            data: Theme.of(context).copyWith(
+                              textSelectionTheme: TextSelectionThemeData(
+                                cursorColor: Color(0xFF00D47E),
+                                selectionColor: Color(0xFF00D47E).withOpacity(0.3),
+                                selectionHandleColor: Color(0xFF00D47E),
+                              ),
+                            ),
+                            child: TextField(
+                              cursorColor: Color(0xFF00D47E),
+                              controller: imageUrlController,
+                              style: TextStyle(fontSize: 15),
+                              decoration: InputDecoration(
+                                labelText: 'Image URL',
+                                alignLabelWithHint: true,
+                                labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(color: Color(0xFF1B9169).withOpacity(0.3)),
                                 ),
-                                child: TextField(
-                                  cursorColor: Color(0xFF00D47E),
-                                  controller: imageUrlController,
-                                  style: TextStyle(fontSize: 15),
-
-                                  decoration: InputDecoration(
-                                    labelText: 'Image URL',
-                                    alignLabelWithHint: true,
-                                    labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(color: Color(0xFF1B9169).withOpacity(0.3)),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(color: Color(0xFF00D47E), width: 1.5),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                    fillColor: Color(0xFF1B9169).withOpacity(0.05),
-                                    filled: true,
-                                    prefixIcon: languageCode != 'ar' ? Icon(Icons.image_outlined, color: Color(0xFF1B9169), size: 20) : null,
-                                    suffixIcon: languageCode == 'ar' ? Icon(Icons.image_outlined, color: Color(0xFF1B9169), size: 20) : null,
-                                  ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(color: Color(0xFF00D47E), width: 1.5),
                                 ),
-
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                fillColor: Color(0xFF1B9169).withOpacity(0.05),
+                                filled: true,
+                                prefixIcon: languageCode != 'ar' ? Icon(Icons.image_outlined, color: Color(0xFF1B9169), size: 20) : null,
+                                suffixIcon: languageCode == 'ar' ? Icon(Icons.image_outlined, color: Color(0xFF1B9169), size: 20) : null,
+                              ),
+                            ),
                           ),
 
                           if (data['imageURL'] != null && data['imageURL'].toString().isNotEmpty)
@@ -741,7 +787,6 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-
                                   Padding(
                                     padding: const EdgeInsets.only(bottom: 8.0),
                                     child: Text(
@@ -791,7 +836,6 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
 
                   const SizedBox(height: 24),
 
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -825,12 +869,10 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                           ),
                         ),
                         onPressed: () async {
-
                           final updatedData = {
                             'Description': descriptionController.text.trim(),
                             'Question': questionController.text.trim(),
                             'imageURL': imageUrlController.text.trim(),
-
                             'Category': data['Category']
                           };
 
@@ -842,22 +884,18 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                           }
 
                           if (hasChanges) {
-
                             if (!pendingChanges.containsKey(id)) {
                               pendingChanges[id] = {};
                             }
                             pendingChanges[id]![languageCode] = updatedData;
 
-
                             bool readyToSave = pendingChanges[id]!.containsKey('ar') &&
-                                pendingChanges[id]!.containsKey('fr');
+                                pendingChanges[id]!.containsKey('fr') &&
+                                pendingChanges[id]!.containsKey('en');
 
                             if (readyToSave) {
-
                               try {
-
                                 final batch = FirebaseFirestore.instance.batch();
-
 
                                 final frDocRef = FirebaseFirestore.instance
                                     .collection('Traffic-Laws')
@@ -870,13 +908,17 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                     .doc(id);
                                 batch.update(arDocRef, pendingChanges[id]!['ar']!);
 
+                                final enDocRef = FirebaseFirestore.instance
+                                    .collection('Traffic-laws-en')
+                                    .doc(id);
+                                batch.update(enDocRef, pendingChanges[id]!['en']!);
 
                                 await batch.commit();
 
                                 pendingChanges.remove(id);
 
                                 Navigator.pop(context);
-                                showSuccessDialog(context, "Both versions updated successfully!");
+                                showSuccessDialog(context, "All language versions updated successfully!");
                                 fetchItems();
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -889,14 +931,20 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                 return;
                               }
                             } else {
-
                               this.setState(() {});
                               Navigator.pop(context);
+
+                              List<String> missingLanguages = [];
+                              if (!pendingChanges[id]!.containsKey('ar')) missingLanguages.add('Arabic');
+                              if (!pendingChanges[id]!.containsKey('fr')) missingLanguages.add('French');
+                              if (!pendingChanges[id]!.containsKey('en')) missingLanguages.add('English');
+
+                              String missingLanguagesText = missingLanguages.join(', ');
 
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Changes saved. Please edit the ${otherLanguageName} version to complete the update.',
+                                    'Changes saved. Please edit the $missingLanguagesText ${missingLanguages.length > 1 ? "versions" : "version"} to complete the update.',
                                     style: TextStyle(color: Colors.amber[700], fontWeight: FontWeight.bold),
                                   ),
                                   backgroundColor: Colors.amber[50],
@@ -909,7 +957,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                           }
                         },
                         child: Text(
-                          hasOtherLanguageChanges ? 'Save Both Versions' : 'Save Changes',
+                          hasAllOtherLanguageChanges ? 'Save All Versions' : 'Save Changes',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -928,9 +976,26 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
   }
   Future<void> editQuestionDialog(BuildContext context, Map<String, dynamic> itemData) async {
     final String id = itemData['id'];
-    final String languageCode = selectedLanguage; // 'fr' or 'ar'
-    final String otherLanguage = languageCode == 'ar' ? 'fr' : 'ar';
-    final String otherLanguageName = languageCode == 'ar' ? 'French' : 'Arabic';
+    final String languageCode = selectedLanguage;
+
+    Map<String, Map<String, String>> languageMappings = {
+      'ar': {'code': 'fr', 'name': 'French'},
+      'fr': {'code': 'ar', 'name': 'Arabic'},
+      'en': {'code': 'ar', 'name': 'Arabic'},
+    };
+
+
+    List<Map<String, String>> otherLanguages = [];
+    if (languageCode == 'ar') {
+      otherLanguages.add({'code': 'fr', 'name': 'French'});
+      otherLanguages.add({'code': 'en', 'name': 'English'});
+    } else if (languageCode == 'fr') {
+      otherLanguages.add({'code': 'ar', 'name': 'Arabic'});
+      otherLanguages.add({'code': 'en', 'name': 'English'});
+    } else if (languageCode == 'en') {
+      otherLanguages.add({'code': 'ar', 'name': 'Arabic'});
+      otherLanguages.add({'code': 'fr', 'name': 'French'});
+    }
 
     Map<String, dynamic> data;
     final bool hasPendingChanges = pendingQuestionChanges.containsKey(id) &&
@@ -945,8 +1010,15 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
     final TextEditingController questionTextController = TextEditingController(text: data['QuestionText'] ?? '');
     final TextEditingController answerController = TextEditingController(text: data['Answer'] ?? '');
 
-    bool hasOtherLanguageChanges = pendingQuestionChanges.containsKey(id) &&
-        pendingQuestionChanges[id]!.containsKey(otherLanguage);
+    bool hasAllOtherLanguageChanges = true;
+    for (var otherLang in otherLanguages) {
+      bool hasThisLanguageChanges = pendingQuestionChanges.containsKey(id) &&
+          pendingQuestionChanges[id]!.containsKey(otherLang['code']);
+      if (!hasThisLanguageChanges) {
+        hasAllOtherLanguageChanges = false;
+        break;
+      }
+    }
 
     await showDialog(
       context: context,
@@ -963,7 +1035,6 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -995,18 +1066,17 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                   ),
                   const SizedBox(height: 8),
 
-
                   if (pendingQuestionChanges.containsKey(id))
                     Container(
                       padding: EdgeInsets.all(10),
                       margin: EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: hasOtherLanguageChanges
+                        color: hasAllOtherLanguageChanges
                             ? Color(0xFF00D47E).withOpacity(0.2)
                             : Colors.amber.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: hasOtherLanguageChanges
+                            color: hasAllOtherLanguageChanges
                                 ? Color(0xFF00D47E).withOpacity(0.5)
                                 : Colors.amber.withOpacity(0.5)
                         ),
@@ -1014,10 +1084,10 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                       child: Row(
                         children: [
                           Icon(
-                              hasOtherLanguageChanges
+                              hasAllOtherLanguageChanges
                                   ? Icons.check_circle_outline
                                   : Icons.warning_amber_rounded,
-                              color: hasOtherLanguageChanges
+                              color: hasAllOtherLanguageChanges
                                   ? Color(0xFF00D47E)
                                   : Colors.amber[700],
                               size: 18
@@ -1025,12 +1095,12 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              hasOtherLanguageChanges
-                                  ? "The ${otherLanguageName} version has been modified. Save this version to update both simultaneously."
-                                  : "You must edit this question in ${otherLanguageName} as well before changes take effect.",
+                              hasAllOtherLanguageChanges
+                                  ? "All other language versions have been modified. Update this version and save now to update them all simultaneously."
+                                  : "You must edit this question in all languages before changes take effect.",
                               style: TextStyle(
                                 fontSize: 12,
-                                color: hasOtherLanguageChanges
+                                color: hasAllOtherLanguageChanges
                                     ? Color(0xFF00D47E)
                                     : Colors.amber[700],
                               ),
@@ -1049,75 +1119,73 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                         children: [
                           // Question text field
                           Theme(
-                                data: Theme.of(context).copyWith(
-                                  textSelectionTheme: TextSelectionThemeData(
-                                    cursorColor: Color(0xFF00D47E),
-                                    selectionColor: Color(0xFF00D47E).withOpacity(0.3),
-                                    selectionHandleColor: Color(0xFF00D47E),
-                                  ),
+                            data: Theme.of(context).copyWith(
+                              textSelectionTheme: TextSelectionThemeData(
+                                cursorColor: Color(0xFF00D47E),
+                                selectionColor: Color(0xFF00D47E).withOpacity(0.3),
+                                selectionHandleColor: Color(0xFF00D47E),
+                              ),
+                            ),
+                            child:TextField(
+                              cursorColor: Color(0xFF00D47E),
+                              controller: questionTextController,
+                              style: TextStyle(fontSize: 15),
+                              maxLines: 3,
+                              minLines: 1,
+                              textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
+                              decoration: InputDecoration(
+                                labelText: 'Question Text',
+                                alignLabelWithHint: true,
+                                labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(color: Color(0xFF1B9169).withOpacity(0.3)),
                                 ),
-                                child:TextField(
-                                  cursorColor: Color(0xFF00D47E),
-                                  controller: questionTextController,
-                                  style: TextStyle(fontSize: 15),
-                                  maxLines: 3,
-                                  minLines: 1,
-                                  textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
-                                  decoration: InputDecoration(
-                                    labelText: 'Question Text',
-                                    alignLabelWithHint: true,
-                                    labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(color: Color(0xFF1B9169).withOpacity(0.3)),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(color: Color(0xFF00D47E), width: 1.5),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                    fillColor: Color(0xFF1B9169).withOpacity(0.05),
-                                    filled: true,
-                                  ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(color: Color(0xFF00D47E), width: 1.5),
                                 ),
-
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                fillColor: Color(0xFF1B9169).withOpacity(0.05),
+                                filled: true,
+                              ),
+                            ),
                           ),
 
                           const SizedBox(height: 16),
 
-                         Theme(
-                                data: Theme.of(context).copyWith(
-                                  textSelectionTheme: TextSelectionThemeData(
-                                    cursorColor: Color(0xFF00D47E),
-                                    selectionColor: Color(0xFF00D47E).withOpacity(0.3),
-                                    selectionHandleColor: Color(0xFF00D47E),
-                                  ),
+                          Theme(
+                            data: Theme.of(context).copyWith(
+                              textSelectionTheme: TextSelectionThemeData(
+                                cursorColor: Color(0xFF00D47E),
+                                selectionColor: Color(0xFF00D47E).withOpacity(0.3),
+                                selectionHandleColor: Color(0xFF00D47E),
+                              ),
+                            ),
+                            child: TextField(
+                              cursorColor: Color(0xFF00D47E),
+                              controller: answerController,
+                              style: TextStyle(fontSize: 15),
+                              maxLines: 3,
+                              minLines: 1,
+                              textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
+                              decoration: InputDecoration(
+                                labelText: 'Answer',
+                                alignLabelWithHint: true,
+                                labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(color: Color(0xFF1B9169).withOpacity(0.3)),
                                 ),
-                                child: TextField(
-                                  cursorColor: Color(0xFF00D47E),
-                                  controller: answerController,
-                                  style: TextStyle(fontSize: 15),
-                                  maxLines: 3,
-                                  minLines: 1,
-                                  textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
-                                  decoration: InputDecoration(
-                                    labelText: 'Answer',
-                                    alignLabelWithHint: true,
-                                    labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(color: Color(0xFF1B9169).withOpacity(0.3)),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(color: Color(0xFF00D47E), width: 1.5),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                    fillColor: Color(0xFF1B9169).withOpacity(0.05),
-                                    filled: true,
-                                  ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(color: Color(0xFF00D47E), width: 1.5),
                                 ),
-
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                fillColor: Color(0xFF1B9169).withOpacity(0.05),
+                                filled: true,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -1125,7 +1193,6 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                   ),
 
                   const SizedBox(height: 24),
-
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -1160,11 +1227,9 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                           ),
                         ),
                         onPressed: () async {
-
                           final updatedData = {
                             'QuestionText': questionTextController.text.trim(),
                             'Answer': answerController.text.trim(),
-
                             'Category': data['Category'] ?? itemData['Category']
                           };
 
@@ -1175,19 +1240,16 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                           }
 
                           if (hasChanges) {
-
                             if (!pendingQuestionChanges.containsKey(id)) {
                               pendingQuestionChanges[id] = {};
                             }
                             pendingQuestionChanges[id]![languageCode] = updatedData;
-
                             bool readyToSave = pendingQuestionChanges[id]!.containsKey('ar') &&
-                                pendingQuestionChanges[id]!.containsKey('fr');
+                                pendingQuestionChanges[id]!.containsKey('fr') &&
+                                pendingQuestionChanges[id]!.containsKey('en');
 
                             if (readyToSave) {
-
                               try {
-
                                 final batch = FirebaseFirestore.instance.batch();
 
                                 final frDocRef = FirebaseFirestore.instance
@@ -1195,22 +1257,28 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                     .doc(id);
                                 batch.update(frDocRef, pendingQuestionChanges[id]!['fr']!);
 
+
                                 final arDocRef = FirebaseFirestore.instance
                                     .collection('Traffic-laws-ar')
                                     .doc(id);
                                 batch.update(arDocRef, pendingQuestionChanges[id]!['ar']!);
+
+                                final enDocRef = FirebaseFirestore.instance
+                                    .collection('Traffic-laws-en')
+                                    .doc(id);
+                                batch.update(enDocRef, pendingQuestionChanges[id]!['en']!);
 
                                 await batch.commit();
 
                                 pendingQuestionChanges.remove(id);
 
                                 Navigator.pop(context);
-                                showSuccessDialog(context, "Both versions updated successfully!");
-                                fetchItems(); // Refresh list after update
+                                showSuccessDialog(context, "All language versions updated successfully!");
+                                fetchItems();
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Error updating question: $e'),
+                                    content: Text('Error updating priority: $e'),
                                     backgroundColor: Colors.red,
                                   ),
                                 );
@@ -1218,14 +1286,20 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                 return;
                               }
                             } else {
-
                               this.setState(() {});
                               Navigator.pop(context);
+
+                              List<String> missingLanguages = [];
+                              if (!pendingQuestionChanges[id]!.containsKey('ar')) missingLanguages.add('Arabic');
+                              if (!pendingQuestionChanges[id]!.containsKey('fr')) missingLanguages.add('French');
+                              if (!pendingQuestionChanges[id]!.containsKey('en')) missingLanguages.add('English');
+
+                              String missingLanguagesText = missingLanguages.join(', ');
 
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Changes saved. Please edit the ${otherLanguageName} version to complete the update.',
+                                    'Changes saved. Please edit the $missingLanguagesText ${missingLanguages.length > 1 ? "versions" : "version"} to complete the update.',
                                     style: TextStyle(color: Colors.amber[700], fontWeight: FontWeight.bold),
                                   ),
                                   backgroundColor: Colors.amber[50],
@@ -1234,12 +1308,11 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                               );
                             }
                           } else {
-
                             Navigator.pop(context);
                           }
                         },
                         child: Text(
-                          hasOtherLanguageChanges ? 'Save Both Versions' : 'Save Changes',
+                          hasAllOtherLanguageChanges ? 'Save All Versions' : 'Save Changes',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -1291,7 +1364,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Container(
-                      width: 150,
+                      width: 200,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(14),
                         color: Color(0xFF1B9169).withOpacity(0.1),
@@ -1308,16 +1381,15 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // FR button
                           GestureDetector(
                             onTap: () {
                               setState(() {
                                 selectedLanguage = "fr";
+                                fetchItems();
                               });
-                              fetchItems();
                             },
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
                                 color: selectedLanguage == "fr" ? Color(0xFF00D47E) : Colors.transparent,
                                 borderRadius: BorderRadius.circular(8),
@@ -1327,21 +1399,43 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                 style: TextStyle(
                                   color: selectedLanguage == "fr" ? Colors.white : Color(0xFF1B9169),
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 12,
                                 ),
                               ),
                             ),
                           ),
-
-                          // AR button
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selectedLanguage = "en";
+                                fetchItems();
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: selectedLanguage == "en" ? Color(0xFF00D47E) : Colors.transparent,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                "EN",
+                                style: TextStyle(
+                                  color: selectedLanguage == "en" ? Colors.white : Color(0xFF1B9169),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
                           GestureDetector(
                             onTap: () {
                               setState(() {
                                 selectedLanguage = "ar";
+                                fetchItems();
                               });
-                              fetchItems();
                             },
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
                                 color: selectedLanguage == "ar" ? Color(0xFF00D47E) : Colors.transparent,
                                 borderRadius: BorderRadius.circular(8),
@@ -1351,6 +1445,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                 style: TextStyle(
                                   color: selectedLanguage == "ar" ? Colors.white : Color(0xFF1B9169),
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 12,
                                 ),
                               ),
                             ),
@@ -2387,10 +2482,13 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
   }
   Future<void> deleteItem(String id) async {
     try {
-      String collectionName = selectedLanguage == "fr"
-          ? "Traffic-Laws"
-          : "Traffic-laws-ar";
-      await FirebaseFirestore.instance.collection(collectionName)
+      String collectionName1 = "Traffic-Laws";
+
+      await FirebaseFirestore.instance.collection(collectionName1)
+          .doc(id)
+          .delete();
+      String collectionName2 = "Traffic-laws-ar";
+      await FirebaseFirestore.instance.collection(collectionName2)
           .doc(id)
           .delete();
       fetchItems();

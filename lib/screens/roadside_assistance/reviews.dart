@@ -13,26 +13,31 @@ class ForumScreen extends StatefulWidget {
 
 class _ForumScreenState extends State<ForumScreen> {
   List<Map<String, dynamic>> reviews = [];
-  String status = 'Loading...'; // Added status variable for user feedback
-
+  String status = 'Loading...';
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  String  providerID ="";
+  String providerID = "";
 
-  void fetchCurrentUser() {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      setState(() {
-        providerID = user.uid;
-      });
-    } else {
-      print("No user logged in.");
-    }
-  }
   @override
   void initState() {
     super.initState();
     fetchCurrentUser();
-    loadReviews();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      loadReviews();
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  void fetchCurrentUser() {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null && mounted) {
+      setState(() {
+        providerID = user.uid;
+      });
+    }
   }
 
   Future<void> loadReviews() async {
@@ -40,28 +45,20 @@ class _ForumScreenState extends State<ForumScreen> {
       DocumentReference providerRef = _db.collection('Reviews').doc(providerID);
       DocumentSnapshot providerDoc = await providerRef.get();
 
+      if (!mounted) return;
+
       if (providerDoc.exists) {
         Map<String, dynamic> data = providerDoc.data() as Map<String, dynamic>;
-
-        debugPrint('Top-level keys in document: ${data.keys}');
-        debugPrint('Data fetched: $data');
-
-        // Access the "reviews" map inside the document
         Map<String, dynamic> reviewsMap = data['reviews'] ?? {};
-        debugPrint('Reviews map: $reviewsMap');
 
         if (reviewsMap.isNotEmpty) {
-          // First collect all sender IDs
           Set<String> senderIds = {};
           reviewsMap.forEach((key, value) {
             var reviewData = value as Map<String, dynamic>;
             String? senderId = reviewData['senderID'] as String?;
-            if (senderId != null) {
-              senderIds.add(senderId);
-            }
+            if (senderId != null) senderIds.add(senderId);
           });
 
-          // Fetch all sender data in one batch
           Map<String, Map<String, dynamic>> sendersData = {};
           if (senderIds.isNotEmpty) {
             final sendersSnapshot = await _db.collection('users')
@@ -73,52 +70,33 @@ class _ForumScreenState extends State<ForumScreen> {
             }
           }
 
-          setState(() {
-            reviews = reviewsMap.entries.map((entry) {
-              var value = entry.value as Map<String, dynamic>;
-              debugPrint('Review data: $value');
+          if (mounted) {
+            setState(() {
+              reviews = reviewsMap.entries.map((entry) {
+                var value = entry.value as Map<String, dynamic>;
+                if (value['isVisible'] == false) return null;
+                String senderId = value['senderID'] as String? ?? '';
+                if (!sendersData.containsKey(senderId)) return null;
 
-              // Check if the review is visible (default to true if not specified)
-              bool isVisible = value['isVisible'] ?? true;
-
-              // Skip hidden reviews
-              if (!isVisible) {
-                return null;
-              }
-
-              double rating = value['rating'] is num ? value['rating'].toDouble() : 0.0;
-              String senderId = value['senderID'] as String? ?? '';
-              Map<String, dynamic>? senderData = sendersData[senderId];
-
-              return {
-                'name': senderData?['Name'] ?? senderData?['name'] ?? 'Anonymous',
-                'image': senderData?['ProfilePhoto'] ?? senderData?['image'] ?? '',
-                'rating': rating,
-                'comment': value['comment'] ?? 'No comment',
-                'date': value['date'] ?? 'No date',
-              };
-            })
-                .where((review) => review != null) // Filter out null entries (hidden reviews)
-                .cast<Map<String, dynamic>>() // Cast to the correct type
-                .toList();
-
-            status = '✅ Reviews loaded!';
-          });
-        } else {
-          setState(() {
-            status = '❌ No reviews found.';
-          });
+                return {
+                  'name': sendersData[senderId]?['Name'] ?? 'Anonymous',
+                  'image': sendersData[senderId]?['ProfilePhoto'] ?? '',
+                  'rating': (value['rating'] as num?)?.toDouble() ?? 0.0,
+                  'comment': value['comment'] ?? 'No comment',
+                  'date': value['date'] ?? 'No date',
+                };
+              }).where((r) => r != null).cast<Map<String,dynamic>>().toList();
+            });
+          }
         }
-      } else {
-        setState(() {
-          status = '❌ Document does not exist!';
-        });
       }
     } catch (e) {
-      setState(() {
-        status = '❌ Error: $e';
-      });
       debugPrint('Error loading reviews: $e');
+      if (mounted) {
+        setState(() {
+          status = '❌ Error: $e';
+        });
+      }
     }
   }
 

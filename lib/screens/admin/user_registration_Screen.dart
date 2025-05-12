@@ -467,7 +467,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "registration.location".tr(),
+          "admin.location".tr(),
           style: const TextStyle(fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
@@ -625,8 +625,8 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
             icon: const Icon(Icons.arrow_back, color: Color(0xFF4CAF50)),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text(
-            'Add New User',
+          title: Text(
+            'admin.Add_User'.tr(),
             style: TextStyle(
               color: Color(0xFF4CAF50),
               fontWeight: FontWeight.bold,
@@ -653,7 +653,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                 const SizedBox(height: 30),
                 Center(
                   child: Text(
-                    'Fill in the details below to add a new user.',
+                    'admin.add_user_instruction'.tr(),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 16,

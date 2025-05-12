@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'incidents_management_screen.dart';
-import 'Incidents_statistics.dart';
+import 'package:road_companion/screens/admin/incidents_management_screen.dart';
+import 'package:road_companion/screens/admin/Incidents_statistics.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ManagementIncidents extends StatefulWidget {
   const ManagementIncidents({Key? key}) : super(key: key);
@@ -34,14 +35,14 @@ class _ManagementIncidentsState extends State<ManagementIncidents> {
         selectedItemColor: const Color(0xFF1B9169),
         unselectedItemColor: Colors.grey[500],
         elevation: 8,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.report),  // Changed to a report icon for incidents
-            label: 'Manage Incidents',
+            icon: Icon(Icons.report),
+            label: 'admin.manage_incidents'.tr(),
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.bar_chart),
-            label: 'Statistics',
+            label: 'admin.statistics'.tr(),
           ),
         ],
       ),

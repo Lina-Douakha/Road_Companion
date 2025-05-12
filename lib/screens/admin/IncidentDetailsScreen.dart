@@ -130,7 +130,7 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        value ?? 'Not available',
+                        value ?? 'admin.not_available'.tr(),
                         style: TextStyle(
                           color: valueColor ?? Colors.black54,
                           fontSize: 14,
@@ -140,14 +140,12 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
                     if (showCopyIcon && value != null)
                       IconButton(
                         icon: const Icon(Icons.copy, size: 18),
-                        tooltip: 'Copy',
+                        tooltip: 'admin.copy'.tr(),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: () {
                           Clipboard.setData(ClipboardData(text: value));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Copied to clipboard')),
-                          );
+
                         },
                       ),
                   ],
@@ -368,8 +366,8 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1B9169)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          "Incident Details",
+        title:  Text(
+          'admin.incident_details'.tr(),
           style: TextStyle(
             color: Color(0xFF1B9169),
             fontSize: 20.0,
@@ -389,7 +387,7 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
             );
           }
           if (!snapshot.hasData || snapshot.data == null || !snapshot.data!.exists) {
-            return const Center(child: Text('Incident details not found.'));
+            return  Center(child: Text('admin.Incident_details_not_found'.tr()));
           }
 
           final incident = snapshot.data!.data()!;
@@ -433,7 +431,7 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
                 if (description.isNotEmpty)
                   _buildInfoCard(
                     context,
-                    'Description'.tr(),
+                    'incident_report.Description'.tr(),
                     description,
                     icon: Icons.description,
                   ),
@@ -442,7 +440,7 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
                 if (date != null)
                   _buildInfoCard(
                     context,
-                    'Reported On'.tr(),
+                    'incident_report.Reported-on'.tr(),
                     _formatDate(context, date),
                     icon: Icons.calendar_today,
                   ),
@@ -451,7 +449,7 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
                 if (userID.isNotEmpty)
                   _buildInfoCard(
                     context,
-                    'Reported By'.tr(),
+                    'admin.Reported_By'.tr(),
                     userID,
                     icon: Icons.person_outline,
                     showCopyIcon: true,
@@ -461,7 +459,7 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
                 if (location != null)
                   _buildInfoCard(
                     context,
-                    'Location'.tr(),
+                    'incident_report.Location'.tr(),
                     location,
                     icon: Icons.location_on_outlined,
                     showCopyIcon: true,
@@ -471,7 +469,7 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
                 if (status == 'Resolved' && resolvedAt != null)
                   _buildInfoCard(
                     context,
-                    'Resolved At'.tr(),
+                    'admin.Resolved_At'.tr(),
                     _formatDate(context, resolvedAt),
                     icon: Icons.check_circle_outline,
                   ),
@@ -479,7 +477,7 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
                 if (status == 'Rejected' && rejectedAt != null)
                   _buildInfoCard(
                     context,
-                    'Rejected At'.tr(),
+                    'admin.Rejected_At'.tr(),
                     _formatDate(context, rejectedAt),
                     icon: Icons.cancel_outlined,
                   ),
@@ -488,7 +486,7 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
                 if (imageUrl != null) ...[
                   const SizedBox(height: 20),
                   const Text(
-                    "Attached Image",
+                    "Attached_Image",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
@@ -544,17 +542,17 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
 
     if (status == 'Pending') {
       buttons.addAll([
-        _buildQuickActionButton(Icons.check_circle, 'Resolve', const Color(0xFF00D47E), () {
+        _buildQuickActionButton(Icons.check_circle, 'admin.resolve'.tr(), const Color(0xFF00D47E), () {
           _updateIncidentStatus(widget.incidentId, 'Resolved');
         }),
         const SizedBox(height: 12), // Vertical spacing between buttons
-        _buildQuickActionButton(Icons.cancel, 'Reject', Colors.red, () {
+        _buildQuickActionButton(Icons.cancel, 'admin.reject'.tr(), Colors.red, () {
           _updateIncidentStatus(widget.incidentId, 'Rejected');
         }),
       ]);
     } else if (status == 'Resolved' || status == 'Rejected') {
       buttons.add(
-        _buildQuickActionButton(Icons.refresh, 'Reset', Colors.blue, () {
+        _buildQuickActionButton(Icons.refresh, 'admin.reset'.tr(), Colors.blue, () {
           _updateIncidentStatus(widget.incidentId, 'Pending');
         }),
       );
@@ -620,26 +618,26 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
 
     switch (status.toLowerCase()) {
       case 'resolved':
-        actionVerb = 'approve';
-        confirmButtonText = 'Approve';
+        actionVerb = 'resolve';
+        confirmButtonText = 'admin.resolve'.tr();
         confirmColor = const Color(0xFF00D47E);
         confirmIcon = Icons.check_circle;
         break;
       case 'rejected':
         actionVerb = 'reject';
-        confirmButtonText = 'Reject';
+        confirmButtonText = 'admin.reject'.tr();
         confirmColor = Colors.red;
         confirmIcon = Icons.cancel;
         break;
       case 'pending':
         actionVerb = 'reset';
-        confirmButtonText = 'Reset';
+        confirmButtonText = 'admin.reset'.tr();
         confirmColor = Colors.blue;
         confirmIcon = Icons.refresh;
         break;
       default:
         actionVerb = 'update';
-        confirmButtonText = 'Update';
+        confirmButtonText = 'admin.Update'.tr();
         confirmColor = Colors.blue;
         confirmIcon = Icons.update;
     }
@@ -684,7 +682,7 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Confirm Action',
+                  'admin.confirm_action'.tr(),
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -692,7 +690,11 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Are you sure you want to $actionVerb this incident?',
+                  status.toLowerCase() == 'resolved'
+                      ? 'admin.confirm_resolve_action'.tr()
+                      : status.toLowerCase() == 'rejected'
+                      ? 'admin.confirm_reject_action'.tr()
+                      : 'admin.confirm_reset_action'.tr(),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,
@@ -713,7 +715,7 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
-                        child: Text('Cancel'),
+                        child: Text('admin.cancel'.tr()),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -789,7 +791,6 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
       );
     }
   }
-
 // Show success dialog with custom message based on status
   void _showStatusUpdateSuccessDialog(String status) {
     String message;
@@ -797,19 +798,19 @@ class _IncidentDetailsScreenState extends State<IncidentDetailsScreen> {
 
     switch (status.toLowerCase()) {
       case 'resolved':
-        message = 'Incident successfully marked as resolved';
+        message = 'admin.incident_successfully_marked_as_resolved'.tr();
         iconColor = const Color(0xFF00D47E);
         break;
       case 'rejected':
-        message = 'Incident has been rejected';
+        message = 'admin.incident_has_been_rejected'.tr();
         iconColor = Colors.red;
         break;
       case 'pending':
-        message = 'Incident status reset to pending';
+        message = 'admin.incident_status_reset_to_pending'.tr();
         iconColor = Colors.blue;
         break;
       default:
-        message = 'Status updated successfully';
+        message = 'admin.status_updated_successfully'.tr();
         iconColor = Colors.blue;
     }
 

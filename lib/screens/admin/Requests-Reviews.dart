@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:lottie/lottie.dart';
-import 'package:intl/intl.dart';
-import 'historiques_requests.dart';
+import 'package:road_companion/screens/admin/historiques_requests.dart';
 
 class RequestReviewsScreen extends StatefulWidget {
   final String UserID;
@@ -204,7 +202,7 @@ class _RequestReviewsScreenState extends State<RequestReviewsScreen> {
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                'Service Provider Reviews'.tr(),
+                'admin.Service_Provider_Reviews'.tr(),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFF1B9169)),
@@ -217,7 +215,7 @@ class _RequestReviewsScreenState extends State<RequestReviewsScreen> {
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                'Request History'.tr(),
+                'admin.Request_History'.tr(),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFF1B9169)),

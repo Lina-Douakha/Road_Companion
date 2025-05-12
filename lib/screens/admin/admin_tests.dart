@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
-import 'package:lottie/lottie.dart';
 
 
 class AdminExamManager extends StatefulWidget {
@@ -59,23 +58,36 @@ class _AdminExamManagerState extends State<AdminExamManager> {
     setState(() {});
   }
 
+
   Future<Map<String, dynamic>> fetchQuestionData(String id, String languageCode) async {
     String collection;
 
     if (languageCode == 'ar') {
       collection = id.startsWith('Theo') ? 'theoquestions-ar' : 'Questions-arb';
-    } else {
-      // Default to French
+    } else if (languageCode == 'fr') {
       collection = id.startsWith('Theo') ? 'Theoquestions' : 'Questions';
+    } else { // 'en' case
+      collection = id.startsWith('Theo') ? 'Theoquestions-en' : 'Questions-en';
     }
 
     final doc = await FirebaseFirestore.instance.collection(collection).doc(id).get();
     return doc.data() ?? {};
   }
+
   Future<void> editQuestionDialog(BuildContext context, String questionId, String languageCode) async {
     final isTheo = questionId.startsWith('TheoQuestion');
-    final otherLanguage = languageCode == 'ar' ? 'fr' : 'ar';
-    final Language = languageCode == 'ar' ? 'French' : 'Arabic';
+
+    // Get language display names
+    String getLanguageName(String code) {
+      switch(code) {
+        case 'fr': return 'French';
+        case 'ar': return 'Arabic';
+        case 'en': return 'English';
+        default: return code;
+      }
+    }
+
+    final otherLanguages = ['fr', 'en', 'ar']..removeWhere((lang) => lang == languageCode);
 
     final bool hasPendingChanges = pendingChanges.containsKey(questionId) &&
         pendingChanges[questionId]!.containsKey(languageCode);
@@ -84,7 +96,6 @@ class _AdminExamManagerState extends State<AdminExamManager> {
     if (hasPendingChanges) {
       data = pendingChanges[questionId]![languageCode]!;
     } else {
-
       data = await fetchQuestionData(questionId, languageCode);
     }
 
@@ -94,6 +105,7 @@ class _AdminExamManagerState extends State<AdminExamManager> {
       );
       return;
     }
+
     final String category = data['Category'] ?? '';
     final String imageAssetPath = 'assets/images/$category/${data['ImageURL'] ?? ''}';
     final questionController = TextEditingController(text: data['QuestionText']);
@@ -110,8 +122,12 @@ class _AdminExamManagerState extends State<AdminExamManager> {
       correctAnswer = data['CorrectAnswer'] ?? '';
     }
 
-    bool hasOtherLanguageChanges = pendingChanges.containsKey(questionId) &&
-        pendingChanges[questionId]!.containsKey(otherLanguage);
+    List<String> completedLanguages = [];
+    if (pendingChanges.containsKey(questionId)) {
+      completedLanguages = pendingChanges[questionId]!.keys.toList();
+    }
+
+    bool allLanguagesComplete = otherLanguages.every((lang) => completedLanguages.contains(lang));
 
     await showDialog(
       context: context,
@@ -165,12 +181,12 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                       padding: EdgeInsets.all(10),
                       margin: EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: hasOtherLanguageChanges
+                        color: allLanguagesComplete
                             ? Color(0xFF00D47E).withOpacity(0.2)
                             : Colors.amber.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: hasOtherLanguageChanges
+                            color: allLanguagesComplete
                                 ? Color(0xFF00D47E).withOpacity(0.5)
                                 : Colors.amber.withOpacity(0.5)
                         ),
@@ -178,10 +194,10 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                       child: Row(
                         children: [
                           Icon(
-                              hasOtherLanguageChanges
+                              allLanguagesComplete
                                   ? Icons.check_circle_outline
                                   : Icons.warning_amber_rounded,
-                              color: hasOtherLanguageChanges
+                              color: allLanguagesComplete
                                   ? Color(0xFF00D47E)
                                   : Colors.amber[700],
                               size: 18
@@ -190,12 +206,12 @@ class _AdminExamManagerState extends State<AdminExamManager> {
 
                           Expanded(
                             child: Text(
-                              hasOtherLanguageChanges
-                                  ? "The ${Language} version has been modified. Save this version to update both simultaneously."
-                                  : "You must edit this question in ${Language} as well before changes take effect.",
+                              allLanguagesComplete
+                                  ? "All other language translations have been changed. If you update this version and save now, all translations will be updated at once."
+                                  : "You must edit this question in all languages before changes take effect.",
                               style: TextStyle(
                                 fontSize: 12,
-                                color: hasOtherLanguageChanges
+                                color: allLanguagesComplete
                                     ? Color(0xFF00D47E)
                                     : Colors.amber[700],
                               ),
@@ -206,13 +222,14 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                     ),
                   const SizedBox(height: 20),
 
+                  // Rest of your dialog content remains the same until saving logic
                   Flexible(
                     child: SingleChildScrollView(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-
+                          // Question text field
                           Theme(
                             data: Theme.of(context).copyWith(
                               textSelectionTheme: TextSelectionThemeData(
@@ -221,31 +238,31 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                 selectionHandleColor: Color(0xFF00D47E),
                               ),
                             ),
-                              child: TextField(
-                                cursorColor: Color(0xFF00D47E),
-                                controller: questionController,
-                                style: TextStyle(fontSize: 15),
-                                maxLines: 3,
-                                minLines: 1,
-                                textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
-                                decoration: InputDecoration(
-                                  labelText: 'Question Text',
-                                  alignLabelWithHint: true,
-                                  labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                    borderSide: BorderSide(color: Color(0xFF1B9169).withOpacity(0.3)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                    borderSide: BorderSide(color: Color(0xFF00D47E), width: 1.5),
-                                  ),
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  fillColor: Color(0xFF1B9169).withOpacity(0.05),
-                                  filled: true,
+                            child: TextField(
+                              cursorColor: Color(0xFF00D47E),
+                              controller: questionController,
+                              style: TextStyle(fontSize: 15),
+                              maxLines: 3,
+                              minLines: 1,
+                              textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
+                              decoration: InputDecoration(
+                                labelText: 'Question Text',
+                                alignLabelWithHint: true,
+                                labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(color: Color(0xFF1B9169).withOpacity(0.3)),
                                 ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(color: Color(0xFF00D47E), width: 1.5),
+                                ),
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                fillColor: Color(0xFF1B9169).withOpacity(0.05),
+                                filled: true,
                               ),
                             ),
+                          ),
 
                           if (!isTheo)
                             Padding(
@@ -258,32 +275,31 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                     selectionHandleColor: Color(0xFF00D47E),
                                   ),
                                 ),
-
-                                  child: TextField(
-                                    cursorColor: Color(0xFF00D47E),
-                                    controller: imageController,
-                                    style: TextStyle(fontSize: 15),
-                                    decoration: InputDecoration(
-                                      labelText: 'Image URL',
-                                      alignLabelWithHint: true,
-                                      labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(14),
-                                        borderSide: BorderSide(color: Color(0xFF1B9169).withOpacity(0.3)),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(14),
-                                        borderSide: BorderSide(color: Color(0xFF00D47E), width: 1.5),
-                                      ),
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                      fillColor: Color(0xFF1B9169).withOpacity(0.05),
-                                      filled: true,
-                                      prefixIcon: languageCode != 'ar' ? Icon(Icons.image_outlined, color: Color(0xFF1B9169), size: 20) : null,
-                                      suffixIcon: languageCode == 'ar' ? Icon(Icons.image_outlined, color: Color(0xFF1B9169), size: 20) : null,
+                                child: TextField(
+                                  cursorColor: Color(0xFF00D47E),
+                                  controller: imageController,
+                                  style: TextStyle(fontSize: 15),
+                                  decoration: InputDecoration(
+                                    labelText: 'Image URL',
+                                    alignLabelWithHint: true,
+                                    labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                      borderSide: BorderSide(color: Color(0xFF1B9169).withOpacity(0.3)),
                                     ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                      borderSide: BorderSide(color: Color(0xFF00D47E), width: 1.5),
+                                    ),
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    fillColor: Color(0xFF1B9169).withOpacity(0.05),
+                                    filled: true,
+                                    prefixIcon: languageCode != 'ar' ? Icon(Icons.image_outlined, color: Color(0xFF1B9169), size: 20) : null,
+                                    suffixIcon: languageCode == 'ar' ? Icon(Icons.image_outlined, color: Color(0xFF1B9169), size: 20) : null,
                                   ),
                                 ),
                               ),
+                            ),
 
                           if (data['ImageURL'] != null && data['ImageURL'].toString().isNotEmpty)
                             Container(
@@ -388,7 +404,6 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                 textDirection: languageCode == 'ar' ? TextDirection.rtl : TextDirection.ltr,
                                 child: Row(
                                   children: [
-
                                     Container(
                                       padding: EdgeInsets.symmetric(horizontal: 8),
                                       child: isTheo
@@ -501,8 +516,6 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-
-
                         onPressed: () async {
                           final updatedOptions = optionControllers.map((e) => e.text.trim()).toList();
 
@@ -545,7 +558,6 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                             if (originalCorrect.length != correctIndices.length) {
                               hasChanges = true;
                             } else {
-
                               originalCorrect.sort();
                               List<int> sortedCorrectIndices = List<int>.from(correctIndices)..sort();
 
@@ -563,34 +575,40 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                           }
 
                           if (hasChanges) {
-
                             if (!pendingChanges.containsKey(questionId)) {
                               pendingChanges[questionId] = {};
                             }
                             pendingChanges[questionId]![languageCode] = updatedData;
 
-
+                            // Check if all three language versions are ready
                             bool readyToSave = pendingChanges[questionId]!.containsKey('ar') &&
-                                pendingChanges[questionId]!.containsKey('fr');
+                                pendingChanges[questionId]!.containsKey('fr') &&
+                                pendingChanges[questionId]!.containsKey('en');
 
                             if (readyToSave) {
-
                               try {
-
                                 final batch = FirebaseFirestore.instance.batch();
 
+                                // Update French version
                                 final frCollection = isTheo ? 'Theoquestions' : 'Questions';
                                 final frDocRef = FirebaseFirestore.instance
                                     .collection(frCollection)
                                     .doc(questionId);
                                 batch.update(frDocRef, pendingChanges[questionId]!['fr']!);
 
-
-                                final arCollection = isTheo ? 'Theoquestions-ar' : 'Questions-arb';
+                                // Update Arabic version
+                                final arCollection = isTheo ? 'theoquestions-ar' : 'Questions-arb';
                                 final arDocRef = FirebaseFirestore.instance
                                     .collection(arCollection)
                                     .doc(questionId);
                                 batch.update(arDocRef, pendingChanges[questionId]!['ar']!);
+
+                                // Update English version
+                                final enCollection = isTheo ? 'Theoquestions-en' : 'Questions-en';
+                                final enDocRef = FirebaseFirestore.instance
+                                    .collection(enCollection)
+                                    .doc(questionId);
+                                batch.update(enDocRef, pendingChanges[questionId]!['en']!);
 
                                 await batch.commit();
 
@@ -602,36 +620,43 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                     backgroundColor: Colors.red,
                                   ),
                                 );
-
                                 return;
                               }
                               Navigator.pop(context);
-                              showSuccessDialog(context,  "Both versions updated successfully!");
+                              showSuccessDialog(context, "All language versions updated successfully!");
                               fetchTestQuestions();
                             } else {
-
-                              this.setState(() {}); // Update parent widget state
+                              // Not all languages updated yet
+                              setState(() {}); // Update dialog state
                               Navigator.pop(context);
+
+                              // Create missing languages list
+                              List<String> missingLanguages = ['fr', 'en', 'ar']
+                                  .where((lang) => !pendingChanges[questionId]!.containsKey(lang))
+                                  .map((lang) => getLanguageName(lang))
+                                  .toList();
+
+                              String missingLanguagesText = missingLanguages.join(' and ');
 
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Changes saved. Please edit the ${Language} version to complete the update.',
-                                  style: TextStyle(color: Colors.amber[700], fontWeight: FontWeight.bold),
+                                    'Changes saved. Please edit the $missingLanguagesText ${missingLanguages.length > 1 ? 'versions' : 'version'} to complete the update.',
+                                    style: TextStyle(color: Colors.amber[700], fontWeight: FontWeight.bold),
                                   ),
                                   backgroundColor: Colors.amber[50],
-
                                   duration: Duration(seconds: 3),
                                 ),
                               );
+                              // Update parent UI
+                              this.setState(() {});
                             }
                           } else {
-
                             Navigator.pop(context);
                           }
                         },
                         child: Text(
-                          hasOtherLanguageChanges ? 'Save Both Versions' : 'Save Changes',
+                          allLanguagesComplete ? 'Save All Versions' : 'Save Changes',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -812,7 +837,7 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                     ),
 
                     Container(
-                      width: 150,
+                      width: 200,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(14),
                         color: Color(0xFF1B9169).withOpacity(0.1),
@@ -836,7 +861,7 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                               });
                             },
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
                                 color: selectedLanguage == "fr" ? Color(0xFF00D47E) : Colors.transparent,
                                 borderRadius: BorderRadius.circular(8),
@@ -846,6 +871,29 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                 style: TextStyle(
                                   color: selectedLanguage == "fr" ? Colors.white : Color(0xFF1B9169),
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selectedLanguage = "en";
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: selectedLanguage == "en" ? Color(0xFF00D47E) : Colors.transparent,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                "EN",
+                                style: TextStyle(
+                                  color: selectedLanguage == "en" ? Colors.white : Color(0xFF1B9169),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
                                 ),
                               ),
                             ),
@@ -857,7 +905,7 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                               });
                             },
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
                                 color: selectedLanguage == "ar" ? Color(0xFF00D47E) : Colors.transparent,
                                 borderRadius: BorderRadius.circular(8),
@@ -867,6 +915,7 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                 style: TextStyle(
                                   color: selectedLanguage == "ar" ? Colors.white : Color(0xFF1B9169),
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 12,
                                 ),
                               ),
                             ),
@@ -947,91 +996,6 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                     color: const Color(0xFF1B9169),
                                     onTap: () {
                                       editQuestionDialog(context, id, selectedLanguage);
-                                    },
-                                  ),
-                                  const SizedBox(width: 8),
-                                  buildIconCircle(
-                                    icon: Icons.delete_outlined,
-                                    color: Colors.orange,
-                                    onTap: () {
-                                      showDialog(
-                                        context: context,
-                                        builder: (context) => AlertDialog(
-                                          title: Center(
-                                            child: Text(
-                                              'Question removal',
-                                              style: TextStyle(
-                                                color: Colors.black,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
-                                              ),
-                                            ),
-                                          ),
-                                          content: Text(
-                                            'Are you sure you want to delete this question?',
-                                            style: TextStyle(color: Colors.grey[800]),
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              child: const Text(
-                                                'Cancel',
-                                                style: TextStyle(color: Color(0xFF00D47E)),
-                                              ),
-                                              onPressed: () => Navigator.of(context).pop(),
-                                            ),
-                                            TextButton(
-                                              onPressed: () async {
-                                                Navigator.of(context).pop();
-                                                showDialog(
-                                                  context: context,
-                                                  barrierDismissible: false,
-                                                  builder: (context) {
-                                                    Future.delayed(Duration(seconds: 2), () {
-                                                      Navigator.of(context).pop();
-                                                    });
-                                                    return Dialog(
-                                                      backgroundColor: Colors.white,
-                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                                      child: Padding(
-                                                        padding: const EdgeInsets.all(20),
-                                                        child: Column(
-                                                          mainAxisSize: MainAxisSize.min,
-                                                          children: [
-                                                            SizedBox(
-                                                              height: 60,
-                                                              width: 60,
-                                                              child: Lottie.asset('assets/animation/deleted.json'),
-                                                            ),
-                                                            const SizedBox(height: 12),
-                                                            const Text(
-                                                              'Question deleted!',
-                                                              style: TextStyle(
-                                                                color: Colors.black87,
-                                                                fontWeight: FontWeight.w600,
-                                                                fontSize: 16,
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    );
-                                                  },
-                                                );
-                                              },
-                                              style: TextButton.styleFrom(
-                                                backgroundColor: const Color(0xFF00D47E),
-                                                foregroundColor: Colors.white,
-                                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                                textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(20),
-                                                ),
-                                              ),
-                                              child: const Text('Confirm'),
-                                            ),
-                                          ],
-                                        ),
-                                      );
                                     },
                                   ),
                                 ],

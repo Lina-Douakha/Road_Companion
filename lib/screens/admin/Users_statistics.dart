@@ -3,8 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import 'dart:math';
 
 class StatisticsUsers extends StatefulWidget {
@@ -263,41 +261,57 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
     return 'Active';
   }
 
-
-
+  // Modified version of this function to correctly handle normalization for storage
+  // and proper translation for display
   String _normalizeUserType(dynamic type) {
     if (type == null) return 'user';  // Default to user if null
 
     // Convert to lowercase for case-insensitive comparison
     String typeStr = type.toString().toLowerCase();
 
+    // Return the standardized internal type names for database use
     switch (typeStr) {
       case 'user':
+      case 'registration.user':
         return 'user';
       case 'mechanic':
+      case 'registration.mechanic':
         return 'mechanic';
-      case 'towing':
       case 'towing_service':
-      case 'towing service':
+      case 'registration.towing_service':
         return 'towing_service';
-      case 'parts':
       case 'parts_supplier':
-      case 'parts supplier':
+      case 'registration.parts_supplier':
         return 'parts_supplier';
       default:
       // Return 'user' as default for unrecognized types
         print('Unrecognized user type: $type, defaulting to "user"');
         return 'user';
-    }}
+    }
+  }
 
-
+  // New function to get translated display name for user types
+  String _getTranslatedUserType(String userType) {
+    switch (userType) {
+      case 'user':
+        return 'registration.user'.tr();
+      case 'mechanic':
+        return 'registration.mechanic'.tr();
+      case 'towing_service':
+        return 'registration.towing_service'.tr();
+      case 'parts_supplier':
+        return 'registration.parts_supplier'.tr();
+      default:
+        return userType;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: Text("Admin Dashboard", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text('admin.Admin_Dashboard'.tr(), style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor:Color(0xFF1B9169),
         centerTitle: true,
         elevation: 0,
@@ -306,8 +320,8 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
           unselectedLabelColor: Colors.white,
           controller: _tabController,
           tabs: [
-            Tab(icon: Icon(Icons.analytics, color: Colors.white,), text: "Stats Overview"),
-            Tab(icon: Icon(Icons.stacked_line_chart, color: Colors.white), text: "Detailed Analysis"),
+            Tab(icon: Icon(Icons.analytics, color: Colors.white,), text: 'admin.stats_overview'.tr()),
+            Tab(icon: Icon(Icons.stacked_line_chart, color: Colors.white), text: 'admin.detailed_analysis'.tr()),
           ],
           indicatorColor: Colors.white,
           indicatorWeight: 3,
@@ -315,8 +329,6 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
       ),
       body: Column(
         children: [
-
-
           // Loading indicator
           if (_isLoading)
             LinearProgressIndicator(
@@ -370,7 +382,7 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFF1B9169),
                   ),
-                  child: Text('retry'.tr()),
+                  child: Text('admin.retry'.tr()),
                 ),
               ],
             ),
@@ -385,7 +397,7 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'overview'.tr(),
+                'admin.overview'.tr(),
                 style: const TextStyle(fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF1B9169)),
@@ -399,17 +411,17 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
                   scrollDirection: Axis.horizontal,
                   children: [
                     _buildSummaryCard(
-                        'total_users'.tr(), stats['totalUsers'].toString(),
+                        'admin.total_users'.tr(), stats['totalUsers'].toString(),
                         const Color(0xFF1B9169), Icons.people),
                     _buildSummaryCard(
-                        'active_users'.tr(), stats['activeUsers'].toString(),
+                        'admin.active_users'.tr(), stats['activeUsers'].toString(),
                         const Color(0xFF00D47E), Icons.check_circle_outline),
                     _buildSummaryCard(
-                        'blocked_users'.tr(), stats['blockedUsers'].toString(),
-                         Colors.amber, Icons.block),
+                        'admin.blocked_users'.tr(), stats['blockedUsers'].toString(),
+                        Colors.amber, Icons.block),
                     _buildSummaryCard(
-                        'deleted_users'.tr(), stats['deletedUsers'].toString(),
-                         Colors.red, Icons.delete_forever),
+                        'admin.deleted_users'.tr(), stats['deletedUsers'].toString(),
+                        Colors.red, Icons.delete_forever),
                   ],
                 ),
               ),
@@ -421,7 +433,7 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Text(
-                  'distribution'.tr(),
+                  'admin.distribution'.tr(),
                   style: const TextStyle(fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1B9169)),
@@ -433,14 +445,14 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
                 future: fetchUserTypeCounts(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: Text('Loading distribution...',
+                    return  Center(
+                      child: Text('admin.Loading_distribution'.tr(),
                           style: TextStyle(color: Colors.grey)),
                     );
                   } else if (snapshot.hasError) {
-                    return Center(child: Text('error_loading_data'.tr()));
+                    return Center(child: Text('admin.error_loading_data'.tr()));
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(child: Text('no_data_available'.tr()));
+                    return Center(child: Text('admin.no_data_available'.tr()));
                   } else {
                     final userTypeStats = snapshot.data!;
                     return Column(
@@ -457,7 +469,7 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 16.0),
                           child: Text(
-                            'Statut par Type'.tr(),
+                            'admin.Status_by_Type'.tr(),
                             style: const TextStyle(fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF1B9169)),
@@ -470,12 +482,12 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {
                               return const Center(
-                                child: Text('Loading status by type...', style: TextStyle(color: Colors.grey)),
+                                child: Text('admin.Loading_status_by_type', style: TextStyle(color: Colors.grey)),
                               );
                             } else if (snapshot.hasError) {
-                              return Center(child: Text('error_loading_data'.tr()));
+                              return Center(child: Text('admin.error_loading_data'.tr()));
                             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                              return Center(child: Text('no_data_available'.tr()));
+                              return Center(child: Text('admin.no_data_available'.tr()));
                             } else {
                               final userStatusData = snapshot.data!;
                               print(userStatusData);  // Add this line to print the data and debug
@@ -494,7 +506,9 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
         );
       },
     );
-  }Widget _buildDetailsTab() {
+  }
+
+  Widget _buildDetailsTab() {
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -502,7 +516,7 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Les types des utilisateurs'.tr(),
+              'admin.users_types'.tr(),
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -517,9 +531,9 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
                   return const Center(child: CircularProgressIndicator(
                       color: Color(0xFF1B9169)));
                 } else if (snapshot.hasError) {
-                  return Center(child: Text('error_loading_data'.tr()));
+                  return Center(child: Text('admin.error_loading_data'.tr()));
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text('no_data_available'.tr()));
+                  return Center(child: Text('admin.no_data_available'.tr()));
                 } else {
                   final userTypeStats = snapshot.data!;
                   return _buildUserTypeList(userTypeStats);
@@ -528,13 +542,14 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
             ),
 
             const SizedBox(height: 24),
-           // Divider(height: 32, thickness: 1, color: Colors.grey[300]),
+            // Divider(height: 32, thickness: 1, color: Colors.grey[300]),
 
           ],
         ),
       ),
     );
   }
+
   Widget _buildSummaryCard(String title, String value, Color color, IconData icon) {
     return Container(
       width: 160,
@@ -586,7 +601,6 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
     );
   }
 
-
   Widget _buildUserTypeList(Map<String, int> typeStats) {
     final sortedEntries = typeStats.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
@@ -601,6 +615,9 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
         final userType = entry.key;
         final count = entry.value;
         final softColor = _userTypeColors[userType] ?? Colors.grey;
+
+        // Get translated name for display
+        final displayName = _getTranslatedUserType(userType);
 
         return Container(
           decoration: BoxDecoration(
@@ -647,9 +664,9 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
                 ),
               ),
 
-              // Title
+              // Title - Use translated display name
               title: Text(
-                userType,
+                displayName,
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
@@ -661,7 +678,7 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
               subtitle: Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  '$count utilisateurs',
+                  '$count',
                   style: const TextStyle(
                     fontSize: 14,
                     color: Color(0xFF9A9A9A),
@@ -698,7 +715,7 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
                     if (!snapshot.hasData || snapshot.hasError) {
                       return Center(
                         child: Text(
-                          'no_status_data'.tr(),
+                          'admin.no_status_data'.tr(),
                           style: TextStyle(color: Colors.grey.shade600),
                         ),
                       );
@@ -708,7 +725,7 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
                     if (statusCounts.isEmpty) {
                       return Center(
                         child: Text(
-                          'no_status_data'.tr(),
+                          'admin.no_status_data'.tr(),
                           style: TextStyle(color: Colors.grey.shade600),
                         ),
                       );
@@ -721,7 +738,7 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
                       children: [
                         // Status distribution heading
                         Text(
-                          'Status Distribution'.tr(),
+                          'admin.Status_Distribution'.tr(),
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
@@ -811,7 +828,7 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
               ),
               const SizedBox(width: 8),
               Text(
-                statusName.tr(),
+                'admin.$statusName'.tr(),
                 style: TextStyle(
                   color: color.withOpacity(0.8),
                   fontSize: 12,
@@ -876,7 +893,7 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
             ),
             const SizedBox(height: 6),
             Text(
-              'Users',
+              'admin.Users'.tr(),
               style: TextStyle(
                 fontSize: 13,
                 color: Colors.grey[600],
@@ -899,6 +916,9 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
       final percentage = total > 0 ? (entry.value / total) * 100 : 0.0;
       final showTitle = percentage >= 5; // Show label if >=5%
 
+      // Get translated display name for tooltip
+      final displayName = _getTranslatedUserType(entry.key);
+
       return PieChartSectionData(
         color: _userTypeColors[entry.key] ?? Colors.grey.shade400,
         value: entry.value.toDouble(),
@@ -909,7 +929,7 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
           fontWeight: FontWeight.bold,
           color: Colors.white,
         ),
-        badgeWidget: showTitle ? _getPieChartBadge(entry.key) : null,
+        badgeWidget: showTitle ? _getPieChartBadge(displayName) : null,
         badgePositionPercentageOffset: 1.15,
       );
     }).toList();
@@ -917,18 +937,19 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
 
   Widget? _getPieChartBadge(String userType) {
     return null; // Optional: Return a small icon or indicator for the pie chart section
-  }Widget _buildUserStatusByTypeBarChart(
+  }
+  Widget _buildUserStatusByTypeBarChart(
       Map<String, Map<String, int>> userStatusData, {
         bool isLoading = false,
       }) {
     if (isLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('Loading user statistics...'),
+            Text('admin.Loading_user_statistics'.tr()),
           ],
         ),
       );
@@ -940,7 +961,7 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
     }).toList();
 
     if (filteredTypes.isEmpty) {
-      return Center(child: Text('no_data_available'.tr()));
+      return Center(child: Text('admin.no_data_available'.tr()));
     }
 
     double maxY = 0;
@@ -950,7 +971,7 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
     });
 
     if (maxY == 0) {
-      return Center(child: Text('no_data_available'.tr()));
+      return Center(child: Text('admin.no_data_available'.tr()));
     }
 
     return Column(
@@ -1088,9 +1109,9 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
           spacing: 24,
           runSpacing: 12,
           children: [
-            _buildLegendItem(color: const Color(0xFF00D47E), label: 'Active'),
-            _buildLegendItem(color: Colors.amber, label: 'Blocked'),
-            _buildLegendItem(color: Colors.red, label: 'Deleted'),
+            _buildLegendItem(color: const Color(0xFF00D47E), label: 'admin.Active'.tr()),
+            _buildLegendItem(color: Colors.amber, label: 'admin.Blocked'.tr()),
+            _buildLegendItem(color: Colors.red, label: 'admin.Deleted'.tr()),
           ],
         ),
         const SizedBox(height: 16),
@@ -1099,28 +1120,6 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
     );
   }
 
-
-  // Helper function to format user type labels
-  String _formatTypeLabel(String type) {
-    // Convert snake_case to Title Case
-    return type
-        .split('_')
-        .map((word) => word.isNotEmpty
-        ? '${word[0].toUpperCase()}${word.substring(1)}'
-        : '')
-        .join(' ');
-  }
-
-  // Calculate total users across all types and statuses
-  int _calculateTotalUsers(Map<String, Map<String, int>> data) {
-    int total = 0;
-    data.forEach((type, statusMap) {
-      statusMap.forEach((status, count) {
-        total += count;
-      });
-    });
-    return total;
-  }
 
   Widget _buildLegendItem({required Color color, required String label}) {
     return Row(
@@ -1155,4 +1154,25 @@ class _StatisticsUsersState extends State<StatisticsUsers> with SingleTickerProv
     }
   }
 
+  String _formatTypeLabel(String Role) {
+    switch (Role.toLowerCase()) {
+      case 'user':
+        return 'registration.user'.tr();
+      case 'mechanic':
+        return 'registration.mechanic'.tr();
+      case 'parts_supplier':
+        return 'registration.parts_supplier'.tr();
+      case 'towing_service':
+        return 'registration.towing_service'.tr();
+      default:
+        return 'registration.user'.tr();
+    }
+  }
+
+
+
 }
+
+
+
+

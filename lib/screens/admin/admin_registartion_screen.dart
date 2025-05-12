@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class AdminRegistrationScreen extends StatefulWidget {
   const AdminRegistrationScreen({Key? key}) : super(key: key);
@@ -114,8 +115,8 @@ class _AdminRegistrationScreenState extends State<AdminRegistrationScreen> {
               repeat: false,
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Success!',
+            Text(
+              'admin.Success'.tr(),
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -123,8 +124,8 @@ class _AdminRegistrationScreenState extends State<AdminRegistrationScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'The admin has been registered successfully.',
+             Text(
+              'admin.admin_registered_success'.tr(),
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16, color: Colors.black54),
             ),
@@ -141,8 +142,8 @@ class _AdminRegistrationScreenState extends State<AdminRegistrationScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text(
-                'OK',
+              child: Text(
+                'admin.OK'.tr(),
                 style: TextStyle(color: Colors.white, fontSize: 16),
               ),
             ),
@@ -165,8 +166,8 @@ class _AdminRegistrationScreenState extends State<AdminRegistrationScreen> {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF4CAF50)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Add Admin',
+        title: Text(
+          'admin.Add_Admin'.tr(),
           style: TextStyle(
             color: Color(0xFF4CAF50),
             fontWeight: FontWeight.bold,
@@ -181,13 +182,13 @@ class _AdminRegistrationScreenState extends State<AdminRegistrationScreen> {
           children: [
             const SizedBox(height: 40),
             _buildTextField(
-              label: 'Email',
+              label: 'registration.email'.tr(),
               controller: emailController,
               icon: Icons.email,
             ),
             const SizedBox(height: 20),
             _buildTextField(
-              label: 'Password',
+              label:'registration.password'.tr(),
               controller: passwordController,
               icon: Icons.lock,
               isPassword: true,
@@ -208,7 +209,7 @@ class _AdminRegistrationScreenState extends State<AdminRegistrationScreen> {
                     : () {
                   if (emailController.text.trim().isEmpty || passwordController.text.trim().isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please fill all fields'), backgroundColor: Colors.red),
+                      SnackBar(content: Text('registration.all_fields_required'.tr()), backgroundColor: Colors.red),
                     );
                     return;
                   }
@@ -218,8 +219,8 @@ class _AdminRegistrationScreenState extends State<AdminRegistrationScreen> {
 
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                  'Register Admin',
+                    :  Text(
+                  'admin.Register_Admin'.tr(),
                   style: TextStyle(color: Colors.white, fontSize: 18),
                 ),
 

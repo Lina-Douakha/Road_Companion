@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'users_management_screen.dart';
-import 'Users_statistics.dart';
+import 'package:road_companion/screens/admin/users_management_screen.dart';
+import 'package:road_companion/screens/admin/Users_statistics.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ManagementUsers extends StatefulWidget {
-  const ManagementUsers({Key? key}) : super(key: key);  // FIXED this line
+  const ManagementUsers({Key? key}) : super(key: key);
 
   @override
   State<ManagementUsers> createState() => _ManagementUsersState();
@@ -34,14 +35,14 @@ class _ManagementUsersState extends State<ManagementUsers> {
         selectedItemColor: const Color(0xFF1B9169),
         unselectedItemColor: Colors.grey[500],
         elevation: 8,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Manage Users',
+            icon: Icon(Icons.report),
+            label: 'admin.manage_users'.tr(),
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.bar_chart),
-            label: 'Statistics',
+            label: 'admin.statistics'.tr(),
           ),
         ],
       ),

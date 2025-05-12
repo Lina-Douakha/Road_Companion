@@ -86,8 +86,8 @@ class _IncidentHistoryScreenState extends State<IncidentHistoryScreen> {
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'pending': return Colors.orange;
-      case 'resolved': return Colors.green;
+      case 'pending': return Colors.amber;
+      case 'resolved': return  const Color(0xFF00D47E);
       case 'rejected': return Colors.red;
       case 'inprogress': return Colors.blue;
       default: return Colors.grey;
@@ -130,29 +130,31 @@ class _IncidentHistoryScreenState extends State<IncidentHistoryScreen> {
       ),
       child: Scaffold(
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          automaticallyImplyLeading: false,
-          titleSpacing: 0,
-          title: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(kToolbarHeight),
+          child: Container(
+            color: Colors.white, // Solid white background
+            child: AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              automaticallyImplyLeading: false,
+              titleSpacing: 0,
+              title: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
                   'incident_report.historique_des_incidents'.tr(),
                   style: const TextStyle(
-                    fontSize: 18, // Smaller title
+                    fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF1B9169),
                   ),
                 ),
-
-              ],
+              ),
             ),
           ),
         ),
+
+
         body: RefreshIndicator(
           color: const Color(0xFF1B9169),
           backgroundColor: Colors.white,
@@ -187,14 +189,14 @@ class _IncidentHistoryScreenState extends State<IncidentHistoryScreen> {
                           incidentHistory.where((i) => i['status'].toString().toLowerCase() == 'pending')
                               .length.toString(),
                           Icons.access_time,
-                          Colors.orange,
+                          Colors.amber,
                         ),
                         _buildStatItem(
                           "incident_report.Resolved".tr(),
                           incidentHistory.where((i) => i['status'].toString().toLowerCase() == 'resolved')
                               .length.toString(),
                           Icons.check_circle,
-                          Colors.green,
+                          const Color(0xFF00D47E),
                         ),
                       ],
                     ),
@@ -229,7 +231,7 @@ class _IncidentHistoryScreenState extends State<IncidentHistoryScreen> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
-                            child: Text('Retry'.tr(), style: const TextStyle(color: Colors.white)),
+                            child: Text('admin.retry'.tr(), style: const TextStyle(color: Colors.white)),
                           ),
                         ],
                       ),
@@ -313,6 +315,7 @@ class _IncidentHistoryScreenState extends State<IncidentHistoryScreen> {
   Widget _buildIncidentCard(Map<String, dynamic> incident) {
     final hasImage = incident['imageUrl'] != null;
     final hasLocation = incident['location'] != null;
+    final typeofincident =  incident['type'];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -334,7 +337,7 @@ class _IncidentHistoryScreenState extends State<IncidentHistoryScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      incident['type'],
+                     'incident_report.$typeofincident'.tr(),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -427,6 +430,7 @@ class _IncidentHistoryScreenState extends State<IncidentHistoryScreen> {
     final hasImage = incident['imageUrl'] != null;
     final hasLocation = incident['location'] != null;
     final hasCoordinates = incident['coordinates'] != null;
+    final typeofincident = incident['type'];
 
     showModalBottomSheet(
       context: context,
@@ -460,7 +464,7 @@ class _IncidentHistoryScreenState extends State<IncidentHistoryScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    incident['type'],
+                    'incident_report.$typeofincident'.tr(),
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,

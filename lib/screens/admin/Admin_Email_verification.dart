@@ -119,14 +119,14 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
             const SizedBox(width: 10),
             Flexible(
               child: Text(
-                "email_verification.verification_successful".tr(),
+                "admin.verification_successful".tr(),
                 style: const TextStyle(fontWeight: FontWeight.bold),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
         ),
-        content: Text("email_verification.verification_success_message".tr()),
+        content: Text("admin.verification_success_message".tr()),
         actions: [
           TextButton(
             onPressed: () {
@@ -160,7 +160,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
               children: [
                 const Icon(Icons.check_circle, color: Colors.white),
                 const SizedBox(width: 10),
-                Expanded(child: Text("email_verification.resent_success".tr())),
+                Expanded(child: Text("admin.resent_success".tr())),
               ],
             ),
             backgroundColor: Color(0xFF00d47e),
@@ -177,7 +177,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
               children: [
                 const Icon(Icons.error_outline, color: Colors.white),
                 const SizedBox(width: 10),
-                Expanded(child: Text("${"email_verification.error".tr()}: ${e.toString()}")),
+                Expanded(child: Text("${"admin.error".tr()}: ${e.toString()}")),
               ],
             ),
             backgroundColor: Colors.red,
@@ -261,7 +261,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
 
                                 // Main heading
                                 Text(
-                                  "email_verification.check_inbox".tr(),
+                                  "admin.check_inbox".tr(),
                                   style: const TextStyle(
                                     fontSize: 22, // Reduced from 24
                                     fontWeight: FontWeight.bold,
@@ -291,20 +291,6 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
                                   ),
                                 const SizedBox(height: 16), // Reduced from 24
 
-                                // Instructions
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8), // Reduced from 20
-                                  child: Text(
-                                    "email_verification.description".tr(),
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 14, // Reduced from 16
-                                      color: Colors.black54,
-                                      height: 1.4, // Reduced from 1.5
-                                    ),
-                                    overflow: TextOverflow.visible,
-                                  ),
-                                ),
                               ],
                             ),
                           ),
@@ -313,20 +299,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
                         const SizedBox(height: 16),
 
                         // Bottom section with actions
-                        // Divider with text
-                        Row(
-                          children: [
-                            Expanded(child: Divider(color: Colors.grey.shade300)),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8), // Reduced from 16
-                              child: Text(
-                                "email_verification.no_email".tr(),
-                                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                              ),
-                            ),
-                            Expanded(child: Divider(color: Colors.grey.shade300)),
-                          ],
-                        ),
+
                         const SizedBox(height: 24),
 
                         // Resend button
@@ -356,34 +329,18 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                Text("email_verification.sending".tr()),
+                                Text("admin.sending".tr()),
                               ],
                             )
                                 : Text(
-                              "email_verification.resend_button".tr(),
+                              "admin.resend_button".tr(),
                               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
                         const SizedBox(height: 16),
 
-                        // Help text
-                        TextButton(
-                          onPressed: () {
-                            // Open help or support
-                          },
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.black54,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.help_outline, size: 18),
-                              const SizedBox(width: 8),
-                              Text("email_verification.need_help".tr()),
-                            ],
-                          ),
-                        ),
+
                       ],
                     ),
                   ),

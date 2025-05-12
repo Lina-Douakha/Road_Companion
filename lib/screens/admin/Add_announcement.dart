@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class AddAnnouncementScreen extends StatefulWidget {
   final Map<String, dynamic>? announcementData;
@@ -50,11 +51,13 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
   }
 
   Future<void> _saveAnnouncement() async {
+    // Validate form
     if (!_formKey.currentState!.validate()) return;
 
+    // Ensure at least one audience is selected
     if (_selectedAudience.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one audience')),
+        SnackBar(content: Text('admin.please_select_audience'.tr())),
       );
       return;
     }
@@ -78,30 +81,26 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
         'adminId': adminId,
       };
 
-      // Save to Firestore (create new or update existing)
+      final announcementsRef = FirebaseFirestore.instance.collection('announcements');
+
+      // Update or create announcement
       if (widget.announcementId != null) {
-        // Update existing announcement
-        await FirebaseFirestore.instance
-            .collection('announcements')
-            .doc(widget.announcementId)
-            .update(announcementData);
+        await announcementsRef.doc(widget.announcementId).update(announcementData);
       } else {
-        // Create new announcement
-        await FirebaseFirestore.instance
-            .collection('announcements')
-            .add(announcementData);
+        await announcementsRef.add(announcementData);
       }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Announcement saved successfully!')),
+          SnackBar(content: Text('admin.announcement_saved_successfully'.tr())),
         );
-        Navigator.pop(context, true); // Return true to indicate success
+        Navigator.pop(context, true); // Return success
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving announcement: $e')),
+          SnackBar(content: Text('admin.error_saving_announcement: $e'.tr())
+          ),
         );
       }
     } finally {
@@ -112,6 +111,7 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
       }
     }
   }
+
 
   void _toggleAudience(String audience) {
     setState(() {
@@ -144,7 +144,7 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
-          widget.announcementId != null ? 'Edit Announcement' : 'Add New Announcement',
+          widget.announcementId != null ? 'admin.edit_announcement'.tr() : 'admin.add_new_announcement'.tr(),
           style: TextStyle(
             color: Color(0xFF1B9169),
             fontWeight: FontWeight.bold,
@@ -171,7 +171,7 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
             children: [
               // Title Field
               Text(
-                'Announcement Title',
+                'admin.announcement_title'.tr(),
                 style: TextStyle(
                   color: Color(0xFF1B9169),
                   fontWeight: FontWeight.w600,
@@ -182,7 +182,7 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
               TextFormField(
                 controller: _titleController,
                 decoration: InputDecoration(
-                  hintText: 'Enter title here',
+                  hintText: 'admin.enter_title_here'.tr(),
                   hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -206,7 +206,7 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a title';
+                    return 'admin.please_enter_a_title'.tr();
                   }
                   return null;
                 },
@@ -215,7 +215,7 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
 
               // Message Field
               Text(
-                'Announcement Message',
+                'admin.announcement_message'.tr(),
                 style: TextStyle(
                   color: Color(0xFF1B9169),
                   fontWeight: FontWeight.w600,
@@ -226,7 +226,7 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
               TextFormField(
                 controller: _messageController,
                 decoration: InputDecoration(
-                  hintText: 'Enter your message here',
+                  hintText: 'admin.enter_message_here'.tr(),
                   hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -252,52 +252,53 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
                 maxLines: 5,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a message';
+                    return 'admin.please_enter_a_message'.tr();
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 24),
 
-              // Audience Selection
-              Text(
-                'Target Audience',
-                style: TextStyle(
-                  color: Color(0xFF1B9169),
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
+        // Audience Selection
+        Text(
+          'admin.target_audience'.tr(),
+          style: TextStyle(
+            color: Color(0xFF1B9169),
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: _audienceOptions.map((audience) {
+            final isSelected = _selectedAudience.contains(audience);
+            return GestureDetector(
+              onTap: () => _toggleAudience(audience),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isSelected ? Color(0xFFD1FADF) : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected ? Color(0xFF00D47E) : Color(0xFF1B9169).withOpacity(0.3),
+                    width: isSelected ? 1.5 : 1,
+                  ),
+                ),
+                child: Text(
+                  getTranslatedAudience(audience),
+                  style: TextStyle(
+                    color: isSelected ? Color(0xFF00D47E) : Color(0xFF1B9169),
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    fontSize: 14,
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: _audienceOptions.map((audience) {
-                  final isSelected = _selectedAudience.contains(audience);
-                  return GestureDetector(
-                    onTap: () => _toggleAudience(audience),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: isSelected ? Color(0xFFD1FADF) : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected ? Color(0xFF00D47E) : Color(0xFF1B9169).withOpacity(0.3),
-                          width: isSelected ? 1.5 : 1,
-                        ),
-                      ),
-                      child: Text(
-                        audience,
-                        style: TextStyle(
-                          color: isSelected ? Color(0xFF00D47E) : Color(0xFF1B9169),
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
+            );
+          }).toList(),
+        ),
+
               const SizedBox(height: 30),
 
               // Submit Button
@@ -316,8 +317,8 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
                   ),
                   child: Text(
                     widget.announcementId != null
-                        ? 'Update Announcement'
-                        : 'Post Announcement',
+                        ? 'admin.update_announcement'.tr()
+                        : 'admin.post_announcement'.tr(),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -332,4 +333,21 @@ class _AddAnnouncementScreenState extends State<AddAnnouncementScreen> {
       ),
     );
   }
+  String getTranslatedAudience(String audienceKey) {
+    switch (audienceKey) {
+      case 'All':
+        return 'registration.All'.tr();
+      case 'user':
+        return 'registration.user'.tr();
+      case 'mechanic':
+        return 'registration.mechanic'.tr();
+      case 'towing_service':
+        return 'registration.towing_service'.tr();
+      case 'parts_supplier':
+        return 'registration.parts_supplier'.tr();
+      default:
+        return audienceKey;
+    }
+  }
+
 }

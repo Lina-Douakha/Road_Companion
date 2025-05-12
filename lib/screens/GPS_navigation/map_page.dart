@@ -293,38 +293,70 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  Future<double> _getAverageRating(String providerId) async {
-    try {
-      final reviewDoc = await FirebaseFirestore.instance
-          .collection('Reviews')
-          .doc(providerId)
-          .get();
+ Future<double> _getAverageRating(String providerId) async {
+   try {
+     final reviewDoc = await FirebaseFirestore.instance
+         .collection('Reviews')
+         .doc(providerId)
+         .get();
 
-      if (!reviewDoc.exists) return 0.0;
+     if (!reviewDoc.exists) return 0.0;
 
-      final reviewData = reviewDoc.data() as Map<String, dynamic>;
-      final reviewsMap = reviewData['reviews'] as Map<String, dynamic>? ?? {};
+     final reviewData = reviewDoc.data() as Map<String, dynamic>;
+     final reviewsMap = reviewData['reviews'] as Map<String, dynamic>? ?? {};
 
-      double totalRating = 0.0;
-      int reviewCount = 0;
+     // First collect all sender IDs from visible reviews
+     Set<String> senderIds = {};
+     for (final entry in reviewsMap.entries) {
+       if (entry.key.startsWith('review')) {
+         final review = entry.value as Map<String, dynamic>;
+         if (review['isVisible'] != false) {
+           String? senderId = review['senderID'] as String?;
+           if (senderId != null) {
+             senderIds.add(senderId);
+           }
+         }
+       }
+     }
 
-      for (final entry in reviewsMap.entries) {
-        if (entry.key.startsWith('review')) {
-          final review = entry.value as Map<String, dynamic>;
-          // Only count visible reviews (isVisible not set to false)
-          if (review['isVisible'] != false) {
-            totalRating += (review['rating'] as num?)?.toDouble() ?? 0.0;
-            reviewCount++;
-          }
-        }
-      }
+     // Fetch all sender data in one batch to check which senders exist
+     Map<String, bool> existingSenders = {};
+     if (senderIds.isNotEmpty) {
+       final sendersSnapshot = await FirebaseFirestore.instance
+           .collection('users')
+           .where(FieldPath.documentId, whereIn: senderIds.toList())
+           .get();
 
-      return reviewCount > 0 ? totalRating / reviewCount : 0.0;
-    } catch (e) {
-      debugPrint('Error calculating average rating: $e');
-      return 0.0;
-    }
-  }
+       // Create a map of existing users
+       for (var doc in sendersSnapshot.docs) {
+         existingSenders[doc.id] = true;
+       }
+     }
+
+     // Now calculate average only for existing users
+     double totalRating = 0.0;
+     int reviewCount = 0;
+
+     for (final entry in reviewsMap.entries) {
+       if (entry.key.startsWith('review')) {
+         final review = entry.value as Map<String, dynamic>;
+         // Only count visible reviews from existing users
+         if (review['isVisible'] != false) {
+           String? senderId = review['senderID'] as String?;
+           if (senderId != null && existingSenders.containsKey(senderId)) {
+             totalRating += (review['rating'] as num?)?.toDouble() ?? 0.0;
+             reviewCount++;
+           }
+         }
+       }
+     }
+
+     return reviewCount > 0 ? totalRating / reviewCount : 0.0;
+   } catch (e) {
+     debugPrint('Error calculating average rating: $e');
+     return 0.0;
+   }
+ }
 
   Future<void> _findNearbyServiceProviders(String serviceType) async {
     if (_currentLocation == null) {

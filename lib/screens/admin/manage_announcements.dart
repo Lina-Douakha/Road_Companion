@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:road_companion/screens/admin/Add_announcement.dart';
 import 'package:road_companion/screens/admin/announcement_detail.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ManageAnnouncementsScreen extends StatefulWidget {
   const ManageAnnouncementsScreen({Key? key}) : super(key: key);
@@ -36,7 +37,7 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
           children: [
             const SizedBox(height: 24), // Add some space below the pop icon
             Text(
-              'Manage Announcements',
+              'admin.manage_announcements'.tr(),
               style: TextStyle(
                 color: Color(0xFF1B9169),
                 fontWeight: FontWeight.bold,
@@ -95,7 +96,7 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
                 ),
                 SizedBox(height: 16),
                 Text(
-                  'Error: ${snapshot.error}',
+                  'admin.error.tr(): ${snapshot.error}',
                   style: TextStyle(
                     color: Colors.grey.shade600,
                     fontSize: 16,
@@ -118,7 +119,7 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
                 ),
                 SizedBox(height: 16),
                 Text(
-                  'No announcements found. Create one using the + button.',
+                  'admin.no_announcements_found'.tr(),
                   style: TextStyle(
                     color: Colors.grey.shade600,
                     fontSize: 16,
@@ -247,7 +248,7 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              'View Details',
+                              'admin.view_details'.tr(),
                               style: TextStyle(
                                 color: Color(0xFF00D47E),
                                 fontWeight: FontWeight.w500,
@@ -266,8 +267,7 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
         );
       },
     );
-  }
-  void _showEditAnnouncementDialog(BuildContext context, String id, Map<String, dynamic> data) {
+  }void _showEditAnnouncementDialog(BuildContext context, String id, Map<String, dynamic> data) {
     final TextEditingController titleController = TextEditingController(text: data['title'] ?? '');
     final TextEditingController contentController = TextEditingController(text: data['message'] ?? '');
 
@@ -279,25 +279,28 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
       _selectedAudience = List<String>.from(data['audience']);
     }
 
-    final List<String> _audienceOptions = ['All', 'driver', 'mechanic', 'spare_parts', 'towing_service'];
+    // Keep the fixed keys for internal use
+    final List<String> _audienceOptions =  ['All', 'user', 'mechanic', 'towing_service', 'parts_supplier'];
 
-    void _toggleAudience(String audience) {
-      if (audience == 'All') {
-        if (_selectedAudience.contains('All')) {
-          _selectedAudience.remove('All');
+    void _toggleAudience(String audience, StateSetter setState) {
+      setState(() {
+        if (audience == 'All') {
+          if (_selectedAudience.contains('All')) {
+            _selectedAudience.remove('All');
+          } else {
+            _selectedAudience = ['All'];
+          }
         } else {
-          _selectedAudience = ['All'];
+          if (_selectedAudience.contains('All')) {
+            _selectedAudience.remove('All');
+          }
+          if (_selectedAudience.contains(audience)) {
+            _selectedAudience.remove(audience);
+          } else {
+            _selectedAudience.add(audience);
+          }
         }
-      } else {
-        if (_selectedAudience.contains('All')) {
-          _selectedAudience.remove('All');
-        }
-        if (_selectedAudience.contains(audience)) {
-          _selectedAudience.remove(audience);
-        } else {
-          _selectedAudience.add(audience);
-        }
-      }
+      });
     }
 
     showDialog(
@@ -319,7 +322,7 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Edit Announcement',
+                      'admin.edit_announcement'.tr(),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -334,7 +337,7 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Title field (existing code)
+                            // Title field
                             Theme(
                               data: Theme.of(context).copyWith(
                                 textSelectionTheme: TextSelectionThemeData(
@@ -347,7 +350,7 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
                                 controller: titleController,
                                 style: TextStyle(fontSize: 15),
                                 decoration: InputDecoration(
-                                  labelText: 'Title',
+                                  labelText: 'admin.title'.tr(),
                                   alignLabelWithHint: true,
                                   labelStyle: TextStyle(
                                       fontSize: 14,
@@ -378,7 +381,7 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
 
                             const SizedBox(height: 16),
 
-                            // Content field (existing code)
+                            // Content field
                             Theme(
                               data: Theme.of(context).copyWith(
                                 textSelectionTheme: TextSelectionThemeData(
@@ -392,7 +395,7 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
                                 maxLines: 5,
                                 style: TextStyle(fontSize: 15),
                                 decoration: InputDecoration(
-                                  labelText: 'content',
+                                  labelText: 'admin.message'.tr(),
                                   alignLabelWithHint: true,
                                   labelStyle: TextStyle(
                                       fontSize: 14,
@@ -423,9 +426,9 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
 
                             const SizedBox(height: 16),
 
-                            // Audience selection - Modified to use Wrap
+                            // Audience selection - Using translated display but keeping original keys
                             Text(
-                              'Audience',
+                              'admin.audience'.tr(),
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Color(0xFF1B9169),
@@ -438,12 +441,11 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
                               runSpacing: 10,
                               children: _audienceOptions.map((audience) {
                                 final isSelected = _selectedAudience.contains(audience);
+                                // Use the translation function for display
+                                String displayText = getTranslatedAudience(audience);
+
                                 return GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      _toggleAudience(audience);
-                                    });
-                                  },
+                                  onTap: () => _toggleAudience(audience, setState),
                                   child: Container(
                                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                                     decoration: BoxDecoration(
@@ -455,7 +457,7 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
                                       ),
                                     ),
                                     child: Text(
-                                      audience.replaceAll('_', ' ').capitalize(), // Display with spaces and capitalized
+                                      displayText, // Use translated text here
                                       style: TextStyle(
                                         color: isSelected ? Color(0xFF00D47E) : Color(0xFF1B9169),
                                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
@@ -473,7 +475,7 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
 
                     const SizedBox(height: 24),
 
-                    // Action buttons (existing code)
+                    // Action buttons
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -490,7 +492,7 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
                             ),
                           ),
                           child: Text(
-                            'Cancel',
+                            'admin.cancel'.tr(),
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
@@ -515,13 +517,13 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
                           onPressed: () async {
                             if (titleController.text.trim().isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Please enter a title')),
+                                SnackBar(content: Text('admin.please_enter_a_title'.tr())),
                               );
                               return;
                             }
 
                             try {
-                              // Determine audience value
+                              // Determine audience value - Use the raw keys for Firebase storage
                               dynamic audience;
                               if (_selectedAudience.contains('All')) {
                                 audience = 'All';
@@ -535,24 +537,21 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
                                   .doc(id)
                                   .update({
                                 'title': titleController.text.trim(),
-                                'message': contentController.text.trim(), // Corrected field name
+                                'message': contentController.text.trim(),
                                 'audience': audience,
                                 'updatedAt': FieldValue.serverTimestamp(),
                               });
 
                               Navigator.pop(context);
-                              // Assuming you have a showSuccessDialog function
-                              // showSuccessDialog(context, 'Announcement updated successfully!');
-                              // You might need to access the parent's setState differently
                             } catch (e) {
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Error updating announcement: $e')),
+                                SnackBar(content: Text('admin.error_updating_announcement: $e'.tr())),
                               );
                             }
                           },
                           child: Text(
-                            'Update',
+                            'admin.update'.tr(),
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -571,6 +570,23 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
     );
   }
 
+// Update the getTranslatedAudience function to match all possible audience keys
+  String getTranslatedAudience(String audienceKey) {
+    switch (audienceKey) {
+      case 'All':
+        return 'registration.All'.tr();
+      case 'user':
+        return 'registration.user'.tr();
+      case 'mechanic':
+        return 'registration.mechanic'.tr();
+      case 'parts_supplier':
+        return 'registration.spare_parts'.tr();
+      case 'towing_service':
+        return 'registration.towing_service'.tr();
+      default:
+        return audienceKey;
+    }
+  }
 
   Future<void> _showDeleteConfirmation(String id) async {
     return showDialog<void>(
@@ -583,7 +599,7 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
           ),
           title: Center(
             child: Text(
-              'Delete Announcement',
+              'admin.delete_announcement'.tr(),
               style: TextStyle(
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
@@ -592,13 +608,13 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
             ),
           ),
           content: Text(
-            'Are you sure you want to delete this announcement? This action cannot be undone.',
+            'admin.confiramation_message'.tr(),
             style: TextStyle(color: Colors.grey[800]),
           ),
           actions: <Widget>[
             TextButton(
               child: Text(
-                'Cancel',
+                'admin.cancel'.tr(),
                 style: TextStyle(color: Color(0xFF1B9169)),
               ),
               onPressed: () {
@@ -607,7 +623,7 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
             ),
             TextButton(
               child: Text(
-                  'Delete',
+                  'admin.delete'.tr(),
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -656,7 +672,7 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error deleting announcement: $e')),
+        SnackBar(content: Text('admin.error_deleting_announcement: $e'.tr())),
       );
     } finally {
       if (mounted) {
@@ -704,8 +720,8 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Announcement deleted!',
+                Text(
+                  'admin.announcement_deleted'.tr(),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
@@ -724,7 +740,7 @@ class _ManageAnnouncementsScreenState extends State<ManageAnnouncementsScreen> {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text('OK'),
+                  child:  Text('admin.OK'.tr()),
                 ),
               ],
             ),

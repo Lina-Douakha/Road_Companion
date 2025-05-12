@@ -143,9 +143,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
         _users.removeAt(index);
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User moved to deleted_users and removed.')),
-      );
+      _showUserActionSuccessDialog('delete');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to delete user: $e')),
@@ -167,34 +165,27 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
         }
       });
 
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('User ${!currentBlockedStatus ? 'blocked' : 'active'} successfully.')),
-      );
+      _showUserActionSuccessDialog(!currentBlockedStatus ? 'block' : 'unblock');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to toggle block status: $e')),
       );
     }
   }
-
 // Enhanced dialog with more detailed explanation
   void _showBlockDialog(Map<String, dynamic> user, int index, bool isBlocked) {
-    final String actionText = isBlocked ? "Unblock" : "Block";
-    final Color actionColor = isBlocked
-        ? const Color(0xFF1B9169) // soft modern green for unblock
-        : Colors.red; // red for block action
+    final String actionText = isBlocked ? 'admin.Unblock'.tr() : 'admin.Block'.tr();
 
     final String message = isBlocked
-        ? 'Are you sure you want to unblock "${user['Name']}"?'
-        : 'Are you sure you want to block "${user['Name']}"?\n\nThis will immediately log the user out of the app and prevent them from logging in again until unblocked.';
+        ? 'admin.unblock_message'.tr()
+        : 'admin.block_message'.tr() ;
 
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          '$actionText User',
+          '$actionText',
           style: const TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 18,
@@ -208,8 +199,8 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
+            child:  Text(
+              'admin.cancel'.tr(),
               style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
             ),
           ),
@@ -220,17 +211,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
             },
             child: Text(
               actionText,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: isBlocked ? const Color(0xFF1B9169) : Colors.white,
-              ),
-
+              style: const TextStyle(fontWeight: FontWeight.w500),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: isBlocked
                   ? const Color(0xFF1B9169).withOpacity(0.1)
-                  : Colors.red,
-              foregroundColor: isBlocked ? const Color(0xFF1B9169) : Colors.white,
+                  : Colors.red.withOpacity(0.1),
+              foregroundColor: isBlocked ? const Color(0xFF00D47E)  : Colors.amber,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -242,17 +229,16 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       ),
     );
   }
-
   String _getNoUsersMessage() {
     switch (_selectedFilter) {
       case UserFilter.active:
-        return "No unblocked users found.";
+        return 'admin.No_unblocked'.tr();
       case UserFilter.blocked:
-        return "No blocked users found.";
+        return 'admin.No_blocked'.tr();
       case UserFilter.deleted:
-        return "No deleted users found.";
+        return 'admin.No_deleted'.tr();
       default:
-        return "No users found.";
+        return "admin.No_users".tr();
     }
   }
   Widget _buildUserCard(Map<String, dynamic> user, int index, {bool isDeleted = false}) {
@@ -428,23 +414,23 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Delete User',
+        title: Text(
+          'admin.Delete'.tr(),
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 18,
           ),
         ),
-        content: const Text(
-          'Are you sure you want to permanently delete this user?',
+        content: Text(
+          'admin.delete_message'.tr(),
           style: TextStyle(fontSize: 15),
         ),
         actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
+            child:Text(
+              'admin.cancel'.tr(),
               style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
             ),
           ),
@@ -453,8 +439,8 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
               Navigator.pop(context);
               deleteUser(user['UserID'], index);
             },
-            child: const Text(
-              'Delete',
+            child: Text(
+              'admin.Delete'.tr(),
               style: TextStyle(fontWeight: FontWeight.w500),
             ),
             style: ElevatedButton.styleFrom(
@@ -549,20 +535,20 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                 PopupMenuItem(
                   value: 'admin',
                   child: Row(
-                    children: const [
+                    children:  [
                       Icon(Icons.admin_panel_settings, color: Color(0xFF1B9169)),
                       SizedBox(width: 10),
-                      Text('Add Admin'),
+                      Text('admin.Add_Admin'.tr()),
                     ],
                   ),
                 ),
                 PopupMenuItem(
                   value: 'user',
                   child: Row(
-                    children: const [
+                    children: [
                       Icon(Icons.person_add_alt, color: Color(0xFF1B9169)),
                       SizedBox(width: 10),
-                      Text('Add User'),
+                      Text('admin.Add_User'.tr()),
                     ],
                   ),
                 ),
@@ -625,7 +611,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                 controller: _searchController,
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
-                  hintText: "recherche".tr(),
+                  hintText: 'admin.recherche'.tr(),
                   prefixIcon: const Icon(Icons.search, color: Color(0xFF1B9169)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(30),
@@ -707,11 +693,11 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
         segments: [
           ButtonSegment(
             value: UserFilter.active,
-            label: Expanded( // Make the label take available width
-              child: Center( // Center the label text
+            label: Expanded(
+              child: Center(
                 child: _buildStatusSegmentLabel(
                   Icons.check_circle,
-                  'Active'.tr(), // Ensure 'Active' is translated if needed
+                  'admin.Active'.tr(),
                   _selectedFilter == UserFilter.active,
                   color: Color(0xFF00D47E), // Green
                 ),
@@ -724,7 +710,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
               child: Center( // Center the label text
                 child: _buildStatusSegmentLabel(
                   Icons.block,
-                  'Blocked'.tr(), // Ensure 'Blocked' is translated if needed
+                  'admin.Blocked'.tr(),
                   _selectedFilter == UserFilter.blocked,
                   color: Colors.amber, // Orange
                 ),
@@ -737,7 +723,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
               child: Center( // Center the label text
                 child: _buildStatusSegmentLabel(
                   Icons.delete,
-                  'Deleted'.tr(), // Ensure 'Deleted' is translated if needed
+                  'admin.Deleted'.tr(),
                   _selectedFilter == UserFilter.deleted,
                   color: Colors.red, // Red
                 ),
@@ -821,4 +807,101 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       ),
     );
   }
+// Show success dialog with custom message based on user actions
+  void _showUserActionSuccessDialog(String actionType) {
+    String message;
+    Color iconColor;
+    IconData iconData;
+
+    switch (actionType.toLowerCase()) {
+      case 'block':
+        message = 'admin.user_successfully_blocked'.tr();
+        iconColor = Colors.orange;
+        iconData = Icons.block;
+        break;
+      case 'unblock':
+        message = 'admin.user_successfully_unblocked'.tr();
+        iconColor = const Color(0xFF00D47E); // Green
+        iconData = Icons.check_circle;
+        break;
+      case 'delete':
+        message = 'admin.user_successfully_deleted'.tr();
+        iconColor = Colors.red;
+        iconData = Icons.delete_forever;
+        break;
+      default:
+        message = 'admin.action_completed_successfully'.tr();
+        iconColor = Colors.blue;
+        iconData = Icons.check_circle;
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: iconColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    iconData,
+                    color: iconColor,
+                    size: 36,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: iconColor,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text('admin.OK'.tr()),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
 }

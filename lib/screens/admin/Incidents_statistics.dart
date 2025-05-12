@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/services.dart';
-import 'dart:math';
+
 
 class StatisticsIncidents extends StatefulWidget {
   @override
@@ -17,12 +17,31 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
   bool _isLoading = false;
   String _errorMessage = '';
 
+  // Define incident types as they are stored in Firebase
+  final List<String> _incidentTypes = [
+    'accident',
+    'breakdown',
+    'Road_Blockages',
+    'Roadwork',
+    'Special_Events',
+    'other'
+  ];
+
+  // Mapping of Firebase storage format to display format for translations
+  final Map<String, String> _incidentTypeTranslationKeys = {
+    'accident': 'incident_report.accident',
+    'breakdown': 'incident_report.breakdown',
+    'Road_Blockages': 'incident_report.Road_Blockages',
+    'Roadwork': 'incident_report.Roadwork',
+    'Special_Events': 'incident_report.Special_Events',
+    'other': 'incident_report.other',
+  };
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     _incidentStats = _getIncidentStats();
-
   }
 
   @override
@@ -60,73 +79,44 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
       'pendingCount': pendingCount,
     };
   }
+
   Future<Map<String, int>> _getIncidentTypeStats() async {
     final incidentCollection = FirebaseFirestore.instance.collection('Incident Reports');
-
-    // Récupérer tous les incidents sans filtrage par date
     final incidents = await incidentCollection.get();
 
-    // Initialize counters
-    int accidentCount = 0;
-    int breakdownCount = 0;
-    int roadBlockagesCount = 0;
-    int roadworkCount = 0;
-    int eventsCount = 0;
-    int otherCount = 0;
+    // Initialize counters using the exact Firebase keys
+    Map<String, int> typeCounts = {};
+    for (var type in _incidentTypes) {
+      typeCounts[type] = 0;
+    }
 
     for (var doc in incidents.docs) {
       final type = doc['Type'];
-
-      switch (type) {
-        case 'accident':
-          accidentCount++;
-          break;
-        case 'breakdown':
-          breakdownCount++;
-          break;
-        case 'Road_Blockages':
-          roadBlockagesCount++;
-          break;
-        case 'Roadwork':
-          roadworkCount++;
-          break;
-        case 'Special_Events':
-          eventsCount++;
-          break;
-        case 'other':
-          otherCount++;
-          break;
+      // Only increment if it's a recognized type
+      if (typeCounts.containsKey(type)) {
+        typeCounts[type] = (typeCounts[type] ?? 0) + 1;
       }
     }
 
-    return {
-      'Accident': accidentCount,
-      'Breakdown': breakdownCount,
-      'Road Blockages': roadBlockagesCount,
-      'Roadwork': roadworkCount,
-      'Special Events': eventsCount,
-      'Other': otherCount,
-    };
+    return typeCounts;
   }
+
   Future<Map<String, Map<String, int>>> fetchIncidentTypeStatusCounts() async {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-    // Initialize empty map
+    // Initialize map with Firebase keys
     Map<String, Map<String, int>> typeStatusCounts = {};
+    for (var type in _incidentTypes) {
+      typeStatusCounts[type] = {
+        'Pending': 0,
+        'Resolved': 0,
+        'Rejected': 0,
+      };
+    }
 
     try {
       // Fetch all incidents without date filtering
       final querySnapshot = await firestore.collection('Incident Reports').get();
-
-      // Pre-initialize all incident types with zero counts
-      final allTypes = ['Accident', 'Breakdown', 'Road Blockages', 'Roadwork', 'Special Events', 'Other'];
-      for (var type in allTypes) {
-        typeStatusCounts[type] = {
-          'Pending': 0,
-          'Resolved': 0,
-          'Rejected': 0,
-        };
-      }
 
       for (var doc in querySnapshot.docs) {
         final data = doc.data();
@@ -136,29 +126,19 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
           continue; // Skip documents missing required fields
         }
 
-        final type = data['Type'] ?? 'Other';
+        final type = data['Type'] ?? 'other';
         final status = data['Status'] ?? 'Pending';
 
-        // Normalize type values
-        String incidentType;
-        if (type == 'accident') incidentType = 'Accident';
-        else if (type == 'breakdown') incidentType = 'Breakdown';
-        else if (type == 'Road_Blockages') incidentType = 'Road Blockages';
-        else if (type == 'Roadwork') incidentType = 'Roadwork';
-        else if (type == 'Special_Events') incidentType = 'Special Events';
-        else incidentType = 'Other';
-
-        // Increment the correct counter
-        if (status == 'Pending') {
-          typeStatusCounts[incidentType]!['Pending'] = (typeStatusCounts[incidentType]!['Pending'] ?? 0) + 1;
-        } else if (status == 'Resolved') {
-          typeStatusCounts[incidentType]!['Resolved'] = (typeStatusCounts[incidentType]!['Resolved'] ?? 0) + 1;
-        } else if (status == 'Rejected') {
-          typeStatusCounts[incidentType]!['Rejected'] = (typeStatusCounts[incidentType]!['Rejected'] ?? 0) + 1;
+        // Only process if it's a recognized type
+        if (typeStatusCounts.containsKey(type)) {
+          // Increment the correct counter
+          if (status == 'Pending' || status == 'Resolved' || status == 'Rejected') {
+            typeStatusCounts[type]![status] = (typeStatusCounts[type]![status] ?? 0) + 1;
+          }
         }
       }
 
-      // Pour débugger, affichez les données récupérées
+      // For debugging
       print('Type-Status Counts: $typeStatusCounts');
 
     } catch (e) {
@@ -168,70 +148,35 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
     return typeStatusCounts;
   }
 
-
   void _refreshData() {
     setState(() {
       _incidentStats = _getIncidentStats();
     });
   }
 
-  Future<void> _exportStatistics(String format) async {
-    // In a real app, you would implement export functionality here
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('export_started'.tr() + ': $format')),
-    );
-
-    // Simulate export process
-    await Future.delayed(Duration(seconds: 2));
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('export_completed'.tr())),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        title: Text('admin.Admin_Dashboard'.tr(), style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: Color(0xFF1B9169),
+        centerTitle: true,
         elevation: 0,
-        systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-          statusBarColor: const Color(0xFF1B9169),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1B9169)),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Les statistiques'.tr(),
-          style: TextStyle(
-            color: Color(0xFF1B9169),
-            fontSize: 20.0,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh, color: Color(0xFF1B9169)),
-            onPressed: _refreshData,
-          ),
-
-        ],
         bottom: TabBar(
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white,
           controller: _tabController,
-          labelColor: Color(0xFF1B9169),
-          indicatorColor: Color(0xFF1B9169),
           tabs: [
-            Tab(icon: Icon(Icons.dashboard), text: 'overview'.tr()),
-            Tab(icon: Icon(Icons.category), text: 'details'.tr()),
+            Tab(icon: Icon(Icons.analytics, color: Colors.white), text: 'admin.stats_overview'.tr()),
+            Tab(icon: Icon(Icons.stacked_line_chart, color: Colors.white), text: 'admin.detailed_analysis'.tr()),
           ],
+          indicatorColor: Colors.white,
+          indicatorWeight: 3,
         ),
       ),
       body: Column(
         children: [
-
-
           // Loading indicator
           if (_isLoading)
             LinearProgressIndicator(
@@ -262,7 +207,9 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
         ],
       ),
     );
-  } Widget _buildOverviewTab() {
+  }
+
+  Widget _buildOverviewTab() {
     return FutureBuilder<Map<String, dynamic>>(
       future: _incidentStats,
       builder: (context, snapshot) {
@@ -283,7 +230,7 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFF1B9169),
                   ),
-                  child: Text('retry'.tr()),
+                  child: Text('admin.retry'.tr()),
                 ),
               ],
             ),
@@ -297,33 +244,28 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'overview'.tr(),
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold,color: Color(0xFF1B9169)),
-              ),
-              const SizedBox(height: 16),
-
               // Summary Cards
               SizedBox(
                 height: 180,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [
-                    _buildSummaryCard('total_incidents'.tr(), stats['totalIncidents'].toString(), const Color(0xFF1B9169), Icons.list_alt),
-                    _buildSummaryCard('resolved'.tr(), stats['resolvedCount'].toString(), const Color(0xFF4CAF50), Icons.check_circle_outline),
-                    _buildSummaryCard('pending'.tr(), stats['pendingCount'].toString(), const Color(0xFFFFA726), Icons.pending_actions_outlined),
-                    _buildSummaryCard('rejected'.tr(), stats['rejectedCount'].toString(), const Color(0xFFE53935), Icons.cancel_outlined),
+                    _buildSummaryCard('admin.total_incidents'.tr(), stats['totalIncidents'].toString(), const Color(0xFF1B9169), Icons.list_alt),
+                    _buildSummaryCard('incident_report.resolved'.tr(), stats['resolvedCount'].toString(), const Color(0xFF00D47E), Icons.check_circle_outline),
+                    _buildSummaryCard('incident_report.pending'.tr(), stats['pendingCount'].toString(), Colors.amber, Icons.pending_actions_outlined),
+                    _buildSummaryCard('incident_report.rejected'.tr(), stats['rejectedCount'].toString(), Colors.red, Icons.cancel_outlined),
                   ],
                 ),
               ),
 
               const SizedBox(height: 24),
               Divider(height: 32, thickness: 1, color: Colors.grey[300]),
-// Incident Distribution Section
+
+              // Incident Distribution Section
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Text(
-                  'distribution'.tr(),
+                  'admin.distribution'.tr(),
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -337,13 +279,13 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
                 future: _getIncidentTypeStats(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: Text('Loading distribution...', style: TextStyle(color: Colors.grey)),
+                    return Center(
+                      child: Text('admin.Loading_distribution'.tr(), style: TextStyle(color: Colors.grey)),
                     );
                   } else if (snapshot.hasError) {
-                    return Center(child: Text('error_loading_data'.tr()));
+                    return Center(child: Text('admin.error_loading_data'.tr()));
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(child: Text('no_data_available'.tr()));
+                    return Center(child: Text('admin.no_data_available'.tr()));
                   } else {
                     final typeStats = snapshot.data!;
                     return Column(
@@ -360,7 +302,7 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 16.0),
                           child: Text(
-                            'Statut par Type'.tr(),
+                            'admin.Status_by_Type'.tr(),
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -374,20 +316,19 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
                           future: fetchIncidentTypeStatusCounts(),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const Center(
-                                child: Text('Loading status by type...', style: TextStyle(color: Colors.grey)),
+                              return Center(
+                                child: Text('admin.Loading_status_by_type'.tr(), style: TextStyle(color: Colors.grey)),
                               );
                             } else if (snapshot.hasError) {
-                              return Center(child: Text('error_loading_data'.tr()));
+                              return Center(child: Text('admin.error_loading_data'.tr()));
                             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                              return Center(child: Text('no_data_available'.tr()));
+                              return Center(child: Text('admin.no_data_available'.tr()));
                             } else {
                               final statusData = snapshot.data!;
                               return _buildStatusByTypeBarChart(statusData);
                             }
                           },
                         ),
-
                       ],
                     );
                   }
@@ -400,7 +341,6 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
     );
   }
 
-
   Widget _buildDetailsTab() {
     return SingleChildScrollView(
       child: Padding(
@@ -409,8 +349,8 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Les types des incidents'.tr(),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold,color: Color(0xFF1B9169),),
+              'admin.incidents_types'.tr(),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1B9169)),
             ),
             const SizedBox(height: 16),
             FutureBuilder<Map<String, int>>(
@@ -419,9 +359,9 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator(color: Color(0xFF1B9169)));
                 } else if (snapshot.hasError) {
-                  return Center(child: Text('error_loading_data'.tr()));
+                  return Center(child: Text('admin.error_loading_data'.tr()));
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text('no_data_available'.tr()));
+                  return Center(child: Text('admin.no_data_available'.tr()));
                 } else {
                   final typeStats = snapshot.data!;
                   return _buildIncidentTypeList(typeStats);
@@ -433,23 +373,19 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
       ),
     );
   }
+
   Widget _buildSummaryCard(String title, String value, Color color, IconData icon) {
     return Container(
       width: 160,
-      margin: const EdgeInsets.only(right: 16),
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+      margin: EdgeInsets.only(right: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.2),
-          width: 1,
-        ),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.15),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            color: Colors.grey.withOpacity(0.2),
+            blurRadius: 10,
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -457,40 +393,64 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(14),
+            padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
+              color: color.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
               color: color,
-              size: 32,
+              size: 30,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 12),
           Text(
             value,
             style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
           ),
-          const SizedBox(height: 6),
           Text(
             title,
             style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[700],
-              fontWeight: FontWeight.w500,
+              fontSize: 14,
+              color: Colors.grey[600],
             ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
+
+  // Map incident types to their corresponding colors
+  final Map<String, Color> _incidentTypeColors = {
+    'accident': Colors.red,
+    'breakdown': Colors.amber,
+    'Road_Blockages': Colors.blue,
+    'Roadwork': const Color(0xFF00D47E),
+    'Special_Events': Colors.teal,
+    'other': Colors.grey,
+  };
+
+  // Map incident types to their soft colors (for UI elements that need lighter colors)
+  final Map<String, Color> _incidentTypeSoftColors = {
+    'accident': Colors.red.withOpacity(0.6),
+    'breakdown': Colors.amber.withOpacity(0.6),
+    'Road_Blockages': Colors.blue.withOpacity(0.6),
+    'Roadwork': Color(0xFF00D47E).withOpacity(0.6),
+    'Special_Events': Colors.teal.withOpacity(0.4),
+    'other': Colors.grey.withOpacity(0.6),
+  };
+
+  // Map incident status to their corresponding colors
+  final Map<String, Color> _incidentStatusColors = {
+    'Pending': Colors.amber,
+    'Resolved': Color(0xFF00D47E),
+    'Rejected': Colors.red,
+  };
 
   PieChartSectionData _buildPieChartSection({
     required Color color,
@@ -529,13 +489,14 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
       );
     }).toList();
   }
+
   Widget _buildIncidentTypePieChart(Map<String, int> typeStats) {
     final total = typeStats.values.fold(0, (sum, count) => sum + count);
 
     if (total == 0) {
       return Center(
         child: Text(
-          'No Data',
+          'admin.no_data_available'.tr(),
           style: TextStyle(
             fontSize: 16,
             color: Colors.grey.shade500,
@@ -556,10 +517,7 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
             startDegreeOffset: -90,
             pieTouchData: PieTouchData(
               touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                if (event is FlTapUpEvent && pieTouchResponse?.touchedSection != null) {
-                  final touchedIndex = pieTouchResponse!.touchedSection!.touchedSectionIndex;
-                  // TODO: Handle tap (example: show details or animate)
-                }
+                // Touchable chart functionality can be implemented here
               },
             ),
             borderData: FlBorderData(show: false),
@@ -580,7 +538,7 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
             ),
             const SizedBox(height: 4),
             Text(
-              'Incidents',
+              'admin.incidents'.tr(),
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -593,14 +551,16 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
       ],
     );
   }
+
   Widget _buildStatusByTypeBarChart(Map<String, Map<String, int>> typeStatusCounts) {
+    // Only include types that have at least one incident
     final List<String> types = typeStatusCounts.keys.where((type) {
       final counts = typeStatusCounts[type]!;
       return (counts['Pending'] ?? 0) > 0 || (counts['Resolved'] ?? 0) > 0 || (counts['Rejected'] ?? 0) > 0;
     }).toList();
 
     if (types.isEmpty) {
-      return Center(child: Text('no_data_available'.tr(), style: const TextStyle(fontSize: 14, color: Colors.grey)));
+      return Center(child: Text('admin.no_data_available'.tr(), style: const TextStyle(fontSize: 14, color: Colors.grey)));
     }
 
     double maxY = typeStatusCounts.values
@@ -609,7 +569,7 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
         .toDouble();
 
     if (maxY == 0) {
-      return Center(child: Text('no_data_available'.tr(), style: const TextStyle(fontSize: 14, color: Colors.grey)));
+      return Center(child: Text('admin.no_data_available'.tr(), style: const TextStyle(fontSize: 14, color: Colors.grey)));
     }
 
     return Column(
@@ -637,7 +597,7 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
                         final total = (counts['Pending'] ?? 0) + (counts['Resolved'] ?? 0) + (counts['Rejected'] ?? 0);
 
                         return BarTooltipItem(
-                          '$type\nTotal: $total',
+                          '${_translateIncidentType(type)}\nTotal: $total',
                           const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -658,7 +618,7 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
                             return Padding(
                               padding: const EdgeInsets.only(top: 8.0),
                               child: Text(
-                                _formatTypeName(types[value.toInt()]),
+                                _translateIncidentType(types[value.toInt()]),
                                 style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.black87),
                                 textAlign: TextAlign.center,
                               ),
@@ -701,7 +661,8 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
                     ),
                   ),
                   barGroups: List.generate(types.length, (index) {
-                    final counts = typeStatusCounts[types[index]]!;
+                    final type = types[index];
+                    final counts = typeStatusCounts[type]!;
                     final pending = (counts['Pending'] ?? 0).toDouble();
                     final resolved = (counts['Resolved'] ?? 0).toDouble();
                     final rejected = (counts['Rejected'] ?? 0).toDouble();
@@ -714,9 +675,9 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
                           toY: pending + resolved + rejected,
                           width: 28,
                           rodStackItems: [
-                            BarChartRodStackItem(0, pending, const Color(0xFFFFC107)), // Softer Pending
-                            BarChartRodStackItem(pending, pending + resolved, const Color(0xFF66BB6A)), // Softer Resolved
-                            BarChartRodStackItem(pending + resolved, pending + resolved + rejected, const Color(0xFFEF5350)), // Softer Rejected
+                            BarChartRodStackItem(0, pending, Colors.amber), // Pending
+                            BarChartRodStackItem(pending, pending + resolved, const Color(0xFF00D47E)), // Resolved
+                            BarChartRodStackItem(pending + resolved, pending + resolved + rejected, Colors.red), // Rejected
                           ],
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -738,9 +699,9 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
             spacing: 24,
             runSpacing: 8,
             children: [
-              _buildLegendItem(color: const Color(0xFFFFC107), label: 'Pending'),
-              _buildLegendItem(color: const Color(0xFF66BB6A), label: 'Resolved'),
-              _buildLegendItem(color: const Color(0xFFEF5350), label: 'Rejected'),
+              _buildLegendItem(color: Colors.amber, label: 'incident_report.pending'.tr()),
+              _buildLegendItem(color: const Color(0xFF00D47E), label: 'incident_report.resolved'.tr()),
+              _buildLegendItem(color: Colors.red, label: 'incident_report.rejected'.tr()),
             ],
           ),
         ),
@@ -769,242 +730,28 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
     );
   }
 
-  Widget _buildTrendLineChart(List<Map<String, dynamic>> trendData) {
-    // Process data for the line chart
-    List<FlSpot> pendingSpots = [];
-    List<FlSpot> resolvedSpots = [];
-    List<FlSpot> rejectedSpots = [];
-
-    for (int i = 0; i < trendData.length; i++) {
-      final item = trendData[i];
-      pendingSpots.add(FlSpot(i.toDouble(), item['Pending'].toDouble()));
-      resolvedSpots.add(FlSpot(i.toDouble(), item['Resolved'].toDouble()));
-      rejectedSpots.add(FlSpot(i.toDouble(), item['Rejected'].toDouble()));
+  // Translate incident type to display format using translation keys
+  String _translateIncidentType(String type) {
+    final translationKey = _incidentTypeTranslationKeys[type];
+    if (translationKey != null) {
+      return translationKey.tr();
     }
-
-    return LineChart(
-      LineChartData(
-        gridData: FlGridData(
-          show: true,
-          drawVerticalLine: true,
-          horizontalInterval: 1,
-          verticalInterval: 1,
-          getDrawingHorizontalLine: (value) {
-            return FlLine(
-              color: Colors.grey.shade200,
-              strokeWidth: 1,
-            );
-          },
-          getDrawingVerticalLine: (value) {
-            return FlLine(
-              color: Colors.grey.shade200,
-              strokeWidth: 1,
-            );
-          },
-        ),
-        titlesData: FlTitlesData(
-          show: true,
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 30,
-              getTitlesWidget: (value, meta) {
-                return Text(
-                  value.toInt().toString(), // just show the number (index)
-                  style: const TextStyle(fontSize: 10),
-                );
-              },
-            ),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (value, meta) {
-                return Text(
-                  value.toInt().toString(),
-                  style: const TextStyle(fontSize: 10),
-                );
-              },
-              reservedSize: 30,
-            ),
-          ),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        ),
-        borderData: FlBorderData(
-          show: true,
-          border: Border(
-            bottom: BorderSide(color: Colors.grey.shade300, width: 1),
-            left: BorderSide(color: Colors.grey.shade300, width: 1),
-          ),
-        ),
-        minX: 0,
-        maxX: (trendData.length - 1).toDouble(),
-        minY: 0,
-        maxY: trendData.fold(0, (prev, item) =>
-            max(prev, max(
-                item['Pending'] as int,
-                max(item['Resolved'] as int, item['Rejected'] as int)
-            ))
-        ).toDouble() * 1.2,
-        lineTouchData: LineTouchData(
-          touchTooltipData: LineTouchTooltipData(
-            tooltipBgColor: Colors.grey.shade800,
-          ),
-        ),
-        lineBarsData: [
-          LineChartBarData(
-            spots: pendingSpots,
-            isCurved: true,
-            color: const Color(0xFFFFA726), // Orange
-            barWidth: 3,
-            isStrokeCapRound: true,
-            dotData: FlDotData(show: false),
-            belowBarData: BarAreaData(show: false),
-          ),
-          LineChartBarData(
-            spots: resolvedSpots,
-            isCurved: true,
-            color: const Color(0xFF4CAF50), // Green
-            barWidth: 3,
-            isStrokeCapRound: true,
-            dotData: FlDotData(show: false),
-            belowBarData: BarAreaData(show: false),
-          ),
-          LineChartBarData(
-            spots: rejectedSpots,
-            isCurved: true,
-            color: const Color(0xFFE53935), // Red
-            barWidth: 3,
-            isStrokeCapRound: true,
-            dotData: FlDotData(show: false),
-            belowBarData: BarAreaData(show: false),
-          ),
-        ],
-      ),
-    );
-  }
-  Widget _buildDailyBarChart(List<Map<String, dynamic>> trendData) {
-    return BarChart(
-      swapAnimationDuration: const Duration(milliseconds: 700),
-      swapAnimationCurve: Curves.easeOutBack,
-
-      BarChartData(
-        alignment: BarChartAlignment.spaceAround,
-        maxY: trendData.fold(0, (prev, item) =>
-            max(prev, (item['Pending'] as int) + (item['Resolved'] as int) + (item['Rejected'] as int))
-        ).toDouble() * 1.2,
-        barTouchData: BarTouchData(
-          touchTooltipData: BarTouchTooltipData(
-            tooltipBgColor: Colors.grey.shade800,
-          ),
-        ),
-        titlesData: FlTitlesData(
-          show: true,
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (value, meta) {
-                final index = value.toInt();
-                if (index >= 0 && index < trendData.length && index % 3 == 0) {
-                  // Show only every 3rd date to avoid overcrowding
-                  final date = DateTime.parse(trendData[index]['date']);
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      DateFormat('MM/dd').format(date),
-                      style: TextStyle(fontSize: 10),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-              reservedSize: 30,
-            ),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (value, meta) {
-                return Text(
-                  value.toInt().toString(),
-                  style: TextStyle(fontSize: 10),
-                );
-              },
-              reservedSize: 30,
-            ),
-          ),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        ),
-        gridData: FlGridData(
-          show: true,
-          horizontalInterval: 1,
-          drawVerticalLine: false,
-          getDrawingHorizontalLine: (value) {
-            return FlLine(
-              color: Colors.grey.shade300,
-              strokeWidth: 1,
-            );
-          },
-        ),
-        borderData: FlBorderData(
-          show: true,
-          border: Border(
-            bottom: BorderSide(color: Colors.grey.shade300, width: 1),
-            left: BorderSide(color: Colors.grey.shade300, width: 1),
-          ),
-        ),
-        barGroups: List.generate(
-          trendData.length,
-              (index) {
-            final item = trendData[index];
-            return BarChartGroupData(
-              x: index,
-              barRods: [
-                BarChartRodData(
-                  toY: (item['Pending'] + item['Resolved'] + item['Rejected']).toDouble(),
-                  color: const Color(0xFF1B9169),
-                  width: 10,
-                  borderRadius: BorderRadius.circular(2),
-                  rodStackItems: [
-                    BarChartRodStackItem(
-                        0,
-                        item['Pending'].toDouble(),
-                        const Color(0xFFFFA726)
-                    ),
-                    BarChartRodStackItem(
-                        item['Pending'].toDouble(),
-                        item['Pending'].toDouble() + item['Resolved'].toDouble(),
-                        const Color(0xFF4CAF50)
-                    ),
-                    BarChartRodStackItem(
-                        item['Pending'].toDouble() + item['Resolved'].toDouble(),
-                        item['Pending'].toDouble() + item['Resolved'].toDouble() + item['Rejected'].toDouble(),
-                        const Color(0xFFE53935)
-                    ),
-                  ],
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-  String _formatTypeName(String type) {
-    return type.replaceAll('_', ' '); // Special_Events -> Special Events
+    return type.tr(); // Fallback with direct translation
   }
 
+  // Get icon path for a specific incident type
+  String _getIncidentTypeIconPath(String type) {
+    final iconPaths = {
+      'accident': 'assets/GPS/accident_icon.png',
+      'breakdown': 'assets/GPS/breakdown_icon.png',
+      'Road_Blockages': 'assets/GPS/circulation.png',
+      'Roadwork': 'assets/GPS/roadwork.png',
+      'Special_Events': 'assets/GPS/event.png',
+      'other': 'assets/GPS/other.png',
+    };
 
-  final Map<String, Color> _incidentTypeColors = {
-    'Accident': Colors.redAccent,
-    'Breakdown': Colors.orangeAccent,
-    'Road Blockages': Colors.blueAccent,
-    'Roadwork': Colors.greenAccent,
-    'Special Events': Colors.teal,
-    'Other': Colors.purpleAccent,
-  };
+    return iconPaths[type] ?? 'assets/GPS/other.png';
+  }
   Widget _buildIncidentTypeList(Map<String, int> typeStats) {
     final sortedEntries = typeStats.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
@@ -1071,7 +818,7 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
 
               // Title
               title: Text(
-                incidentType.tr(),
+                _translateIncidentType(incidentType),
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
@@ -1083,7 +830,7 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
               subtitle: Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  '$count incidents',
+                  '$count',
                   style: const TextStyle(
                     fontSize: 14,
                     color: Color(0xFF9A9A9A),
@@ -1143,7 +890,7 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
                       children: [
                         // Status distribution heading
                         Text(
-                          'Status Distribution'.tr(),
+                          'admin.Status_Distribution'.tr(),
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
@@ -1233,7 +980,7 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
               ),
               const SizedBox(width: 8),
               Text(
-                statusName.tr(),
+                'incident_report.$statusName'.tr(),
                 style: TextStyle(
                   color: color.withOpacity(0.8),
                   fontSize: 12,
@@ -1256,61 +1003,4 @@ class _StatisticsIncidentsState extends State<StatisticsIncidents> with SingleTi
     );
   }
 
-// Colors mapping for incident statuses
-  final Map<String, Color> _incidentStatusColors = {
-    'Pending': Color(0xFFFFA726),
-    'Resolved': Color(0xFF4CAF50),
-    'Rejected': Color(0xFFE53935),
-  };
-
-  // Function to get the incident icon path
-  String _getIncidentTypeIconPath(String category) {
-    final incidentTypes = {
-      'Accident': 'assets/GPS/accident_icon.png',
-      'Breakdown': 'assets/GPS/breakdown_icon.png',
-      'Road Blockages': 'assets/GPS/circulation.png',
-      'Roadwork': 'assets/GPS/roadwork.png',
-      'Special Events': 'assets/GPS/event.png',
-      'Other': 'assets/GPS/other.png',
-    };
-
-    return incidentTypes[category] ?? 'assets/GPS/other.png';
-  }
-
-  final Map<String, Color> _incidentTypeSoftColors = {
-    'Accident': Colors.redAccent.withOpacity(0.6),  // Softer red
-    'Breakdown': Colors.orangeAccent.withOpacity(0.6),  // Softer orange
-    'Road Blockages': Colors.blueAccent.withOpacity(0.6),  // Softer blue
-    'Roadwork': Colors.greenAccent.withOpacity(0.6),  // Softer green
-    'Special Events': Colors.tealAccent.withOpacity(0.6),  // Softer teal
-    'Other': Colors.purpleAccent.withOpacity(0.6),  // Softer purple
-  };
 }
-// Function to get the incident icon path
-String _getIncidentTypeIconPath2(String category) {
-  switch (category.toLowerCase()) {
-    case 'accident':
-      return 'assets/GPS/accident_icon.png';
-    case 'breakdown':
-      return 'assets/GPS/breakdown_icon.png';
-    case 'road_blockages':
-      return 'assets/GPS/circulation.png';
-    case 'roadwork':
-      return 'assets/GPS/roadwork.png';
-    case 'special_events':
-      return 'assets/GPS/event.png';
-    case 'other':
-    default:
-      return 'assets/GPS/other.png';
-  }
-}
-
-// Softer background colors for the incidents
-final Map<String, Color> _incidentTypeSoftColors2 = {
-  'accident': Colors.redAccent.withOpacity(0.6),
-  'breakdown': Colors.orangeAccent.withOpacity(0.6),
-  'road_blockages': Colors.blueAccent.withOpacity(0.6),
-  'roadwork': Colors.greenAccent.withOpacity(0.6),
-  'special_events': Colors.tealAccent.withOpacity(0.6),
-  'other': Colors.purpleAccent.withOpacity(0.6),
-};

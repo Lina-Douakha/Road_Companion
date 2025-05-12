@@ -267,7 +267,7 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 6),
           child: Tooltip(
-            message: 'incident_report.filter_by_date'.tr(),
+            message: 'admin.filter_by_date'.tr(),
             child: Material(
               color: Colors.transparent, // ✅ Always transparent, no change
               borderRadius: BorderRadius.circular(50),
@@ -309,7 +309,7 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
                 Icon(Icons.calendar_month, color: const Color(0xFF1B9169)),
                 const SizedBox(width: 10),
                 Text(
-                  'incident_report.filter_by_date'.tr(),
+                  'admin.filter_by_date'.tr(),
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 18,
@@ -322,7 +322,7 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'incident_report.select_date_range'.tr(),
+                    'admin.select_date_range'.tr(),
                     style: const TextStyle(
                       fontSize: 14,
                       color: Colors.black54,
@@ -330,14 +330,14 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
                   ),
                   const SizedBox(height: 20),
                   _buildDatePickerTile(
-                    label: 'incident_report.start_date'.tr(),
+                    label: 'admin.start_date'.tr(),
                     date: selectedStartDate,
                     onPick: (picked) => setState(() => selectedStartDate = picked),
                     dateFormat: dateFormat,
                   ),
                   const SizedBox(height: 16),
                   _buildDatePickerTile(
-                    label: 'incident_report.end_date'.tr(),
+                    label: 'admin.end_date'.tr(),
                     date: selectedEndDate,
                     onPick: (picked) => setState(() => selectedEndDate = picked),
                     dateFormat: dateFormat,
@@ -346,7 +346,7 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
                   if (selectedStartDate != null &&
                       selectedEndDate != null &&
                       selectedEndDate!.isBefore(selectedStartDate!))
-                    _buildErrorBox('incident_report.date_range_error'.tr()),
+                    _buildErrorBox('admin.date_range_error'.tr()),
                   if (selectedStartDate != null &&
                       selectedEndDate != null &&
                       !selectedEndDate!.isBefore(selectedStartDate!))
@@ -363,14 +363,14 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
                   });
                 },
                 child: Text(
-                  'incident_report.clear_dates'.tr(),
+                  'admin.clear_dates'.tr(),
                   style: TextStyle(color: Colors.grey.shade700),
                 ),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: Text(
-                  'Cancel',
+                  'admin.cancel'.tr(),
                   style: TextStyle(color: Colors.grey.shade700),
                 ),
               ),
@@ -392,7 +392,7 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
                   }
                 },
                 icon: Icon(Icons.filter_alt),
-                label: Text('incident_report.apply_filter'.tr()),
+                label: Text('admin.apply_filter'.tr()),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1B9169),
                   foregroundColor: Colors.white,
@@ -474,7 +474,7 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  date != null ? dateFormat.format(date) : 'incident_report.select_date'.tr(),
+                  date != null ? dateFormat.format(date) : 'admin.select_date'.tr(),
                   style: TextStyle(
                     fontSize: 16,
                     color: date != null ? Colors.black : Colors.grey.shade600,
@@ -541,10 +541,10 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
   Widget buildPriorityFilter() {
     // List of all priority options for cleaner implementation
     final List<Map<String, dynamic>> priorityOptions = [
-      {'priority': null, 'label': 'All'},
-      {'priority': IncidentPriority.High, 'label': 'High'},
-      {'priority': IncidentPriority.Medium, 'label': 'Medium'},
-      {'priority': IncidentPriority.Low, 'label': 'Low'},
+      {'priority': null, 'label': 'incident_report.All'},
+      {'priority': IncidentPriority.High, 'label': 'admin.high_priority'},
+      {'priority': IncidentPriority.Medium, 'label': 'admin.medium_priority'},
+      {'priority': IncidentPriority.Low, 'label': 'admin.low_priority'},
     ];
 
     return Padding(
@@ -803,15 +803,14 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
       },
     );
   }
-
   Widget _buildIncidentCardForAdmin(Map<String, dynamic> incident, BuildContext context) {
     final category = incident['Type'] ?? 'Unknown';
     final status = incident['Status'] ?? 'Pending';
     final timestamp = incident['timestamp'];
-    final location = incident['Address'] ?? 'Localisation inconnue';
+    final location = incident['Address'] ?? 'location_unknown'.tr();
     final priority = getPriorityFromString(incident['Priority'] ?? 'Medium');
 
-    String formattedDate = 'Date inconnue';
+    String formattedDate = 'date_unknown'.tr();
     if (timestamp is Timestamp) {
       formattedDate = DateFormat('dd/MM/yyyy').format(timestamp.toDate());
     }
@@ -879,7 +878,7 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            priority.toString().split('.').last,
+                            _getPriorityTranslationKey(priority).tr(),  // Use translation key instead
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -990,7 +989,7 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
                   if (status.toLowerCase() == 'pending')
                     _buildQuickActionButton(
                       Icons.check,
-                      'Resolve',
+                      'admin.resolve'.tr(),
                       const Color(0xFF00D47E),
                           () => _updateIncidentStatus(incident['id'], 'Resolved'),
                     ),
@@ -999,14 +998,14 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
                   if (status.toLowerCase() == 'pending')
                     _buildQuickActionButton(
                       Icons.close,
-                      'Reject',
+                      'admin.reject'.tr(),
                       Colors.red,
                           () => _updateIncidentStatus(incident['id'], 'Rejected'),
                     ),
                   if (status.toLowerCase() != 'pending')
                     _buildQuickActionButton(
                       Icons.refresh,
-                      'Reset',
+                      'admin.reset'.tr(),
                       Colors.blue,
                           () => _updateIncidentStatus(incident['id'], 'Pending'),
                     ),
@@ -1018,6 +1017,7 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
       ),
     );
   }
+
   //Show confirmation dialog before updating status
   void _updateIncidentStatus(String incidentId, String status) {
     // Determine confirmation message and colors based on status
@@ -1028,20 +1028,20 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
 
     switch (status.toLowerCase()) {
       case 'resolved':
-        actionVerb = 'approve';
-        confirmButtonText = 'Approve';
+        actionVerb = 'admin.resolve'.tr();
+        confirmButtonText = 'admin.resolve'.tr();
         confirmColor = const Color(0xFF00D47E);
         confirmIcon = Icons.check_circle;
         break;
       case 'rejected':
-        actionVerb = 'reject';
-        confirmButtonText = 'Reject';
+        actionVerb = 'admin.reject'.tr();
+        confirmButtonText = 'admin.reject'.tr();
         confirmColor = Colors.red;
         confirmIcon = Icons.cancel;
         break;
       case 'pending':
-        actionVerb = 'reset';
-        confirmButtonText = 'Reset';
+        actionVerb = 'admin.reset'.tr();
+        confirmButtonText = 'admin.reset'.tr();
         confirmColor = Colors.blue;
         confirmIcon = Icons.refresh;
         break;
@@ -1092,21 +1092,18 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Confirm Action',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Are you sure you want to $actionVerb this incident?',
+                  status.toLowerCase() == 'resolved'
+                      ? 'admin.confirm_resolve_action'.tr()
+                      : status.toLowerCase() == 'rejected'
+                      ? 'admin.confirm_reject_action'.tr()
+                      : 'admin.confirm_reset_action'.tr(),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,
                     color: Colors.grey[700],
                   ),
                 ),
+
                 const SizedBox(height: 24),
                 Row(
                   children: [
@@ -1121,7 +1118,7 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
-                        child: Text('Cancel'),
+                        child: Text('admin.cancel'.tr()),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1190,8 +1187,6 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
       );
     }
   }
-
-
   void showPriorityChangeDialog(BuildContext context, String incidentId, IncidentPriority currentPriority) {
     showDialog(
       context: context,
@@ -1219,7 +1214,7 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'incident_report.change_priority'.tr(),
+                  'admin.change_priority'.tr(),
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -1243,7 +1238,7 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.grey[700],
                       ),
-                      child: Text('cancel'.tr()),
+                      child: Text('admin.cancel'.tr()),
                     ),
                   ],
                 ),
@@ -1261,7 +1256,8 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
       IncidentPriority priority,
       {bool isSelected = false}
       ) {
-    final String label = priority.toString().split('.').last;
+    // Use translation keys instead of direct enum values
+    final String translationKey = _getPriorityTranslationKey(priority);
     final Color color = getPriorityColor(priority);
     final IconData icon = getPriorityIcon(priority);
 
@@ -1274,7 +1270,7 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
           borderRadius: BorderRadius.circular(12),
           onTap: () {
             Navigator.pop(context);
-            _updateIncidentPriority(incidentId, label);
+            _updateIncidentPriority(incidentId, priority.toString().split('.').last);
           },
           child: Container(
             width: double.infinity,
@@ -1298,7 +1294,7 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
                 ),
                 const SizedBox(width: 16),
                 Text(
-                  label,
+                  translationKey.tr(),
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.black87,
@@ -1320,7 +1316,21 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
     );
   }
 
-  // Method to update incident priority
+// Helper method to get translation keys for priority levels
+  String _getPriorityTranslationKey(IncidentPriority priority) {
+    switch (priority) {
+      case IncidentPriority.High:
+        return 'admin.high_priority';
+      case IncidentPriority.Medium:
+        return 'admin.medium_priority';
+      case IncidentPriority.Low:
+        return 'admin.low_priority';
+      default:
+        return 'admin.unknown_priority';
+    }
+  }
+
+// Method to update incident priority
   Future<void> _updateIncidentPriority(String incidentId, String newPriority) async {
     try {
       await _firestore.collection('Incident Reports').doc(incidentId).update({
@@ -1328,26 +1338,25 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
         'UpdatedAt': FieldValue.serverTimestamp(),
       });
 
-      SuccessDialog(context, 'Priority updated successfully');
+      SuccessDialog(context, 'admin.priority_updated_success'.tr());
     } catch (e) {
       print('Error updating priority: $e');
       // Show error dialog
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Error'),
-          content: Text('Failed to update incident priority: $e'),
+          title: Text('error'.tr()),
+          content: Text('admin.update_priority_failed'.tr() + ': $e'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
+              child: Text('ok'.tr()),
             ),
           ],
         ),
       );
     }
   }
-
 // Show success dialog with custom message based on status
   void _showStatusUpdateSuccessDialog(String status) {
     String message;
@@ -1355,19 +1364,19 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
 
     switch (status.toLowerCase()) {
       case 'resolved':
-        message = 'Incident successfully marked as resolved';
+        message = 'admin.incident_successfully_marked_as_resolved'.tr();
         iconColor = const Color(0xFF00D47E);
         break;
       case 'rejected':
-        message = 'Incident has been rejected';
+        message = 'admin.incident_has_been_rejected'.tr();
         iconColor = Colors.red;
         break;
       case 'pending':
-        message = 'Incident status reset to pending';
+        message = 'admin.incident_status_reset_to_pending'.tr();
         iconColor = Colors.blue;
         break;
       default:
-        message = 'Status updated successfully';
+        message = 'admin.status_updated_successfully'.tr();
         iconColor = Colors.blue;
     }
 
