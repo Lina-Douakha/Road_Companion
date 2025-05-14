@@ -101,7 +101,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("edit_profile.success_message".tr()),
-          backgroundColor: Colors.green,
+          backgroundColor: Color(0xFF00d47e),
         ),
       );
 
@@ -239,7 +239,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget _buildSaveButton() {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: _isEdited ? Colors.green : Colors.grey,
+        backgroundColor: _isEdited ? Color(0xFF00d47e) : Colors.grey,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
       ),

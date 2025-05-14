@@ -91,7 +91,7 @@ class _AdminRegistrationScreenState extends State<AdminRegistrationScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 2),
+            borderSide: const BorderSide(color: Color(0xFF00d47e), width: 2),
           ),
         ),
       ),
@@ -136,7 +136,7 @@ class _AdminRegistrationScreenState extends State<AdminRegistrationScreen> {
                 Navigator.pop(context); // Go back to previous screen
               },
               style: TextButton.styleFrom(
-                backgroundColor: Colors.green,
+                backgroundColor: Color(0xFF00d47e),
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -163,13 +163,13 @@ class _AdminRegistrationScreenState extends State<AdminRegistrationScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF4CAF50)),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF00d47e)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'admin.Add_Admin'.tr(),
           style: TextStyle(
-            color: Color(0xFF4CAF50),
+            color: Color(0xFF00d47e),
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -198,7 +198,7 @@ class _AdminRegistrationScreenState extends State<AdminRegistrationScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4CAF50),
+                  backgroundColor: const Color(0xFF00d47e),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

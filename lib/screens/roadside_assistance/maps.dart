@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:road_companion/screens/GPS_navigation/Search_page.dart';
 import 'package:http/http.dart' as http;
@@ -504,12 +505,12 @@ class _ServiceProviderMapPageState extends State<ServiceProviderMapPage> {
                           ),
                         ],
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
                           Icon(Icons.search, color: Colors.grey),
                           SizedBox(width: 8),
                           Text(
-                            "Rechercher un lieu",
+                            "GPS.Search".tr(),
                             style: TextStyle(color: Colors.grey),
                           ),
                         ],

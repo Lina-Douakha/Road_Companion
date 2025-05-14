@@ -244,7 +244,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   Widget _buildUserCard(Map<String, dynamic> user, int index, {bool isDeleted = false}) {
     final bool isBlocked = user['isBlocked'] ?? false;
     final blockIcon = isBlocked ? Icons.lock : Icons.lock_open_outlined;
-    final blockColor = isBlocked ? Colors.redAccent : Colors.green;
+    final blockColor = isBlocked ? Colors.redAccent : Color(0xFF00d47e);
     final blockTooltip = isBlocked ? 'Unblock User' : 'Block User';
 
     return Padding(

@@ -164,8 +164,8 @@ class _PriorityQuestionScreenState extends State<PriorityQuestionScreen> {
                                 showAnswer = !showAnswer;
                               });
                             },
-                            label: const Text(
-                              "Afficher la réponse",
+                            label: Text(
+                              "Afficher".tr(),
                               style: TextStyle(
                                 color: Colors.black,
                                 fontWeight: FontWeight.w600,

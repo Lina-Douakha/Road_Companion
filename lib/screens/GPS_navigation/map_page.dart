@@ -41,6 +41,25 @@ class _MapPageState extends State<MapPage> {
   StreamSubscription<QuerySnapshot>? _incidentsSubscription;
   String? _selectedServiceType;
 
+  // Define constant keys for service types
+  static const String SERVICE_TYPE_MECHANIC = "mechanic";
+  static const String SERVICE_TYPE_PARTS_SUPPLIER = "parts_supplier";
+  static const String SERVICE_TYPE_TOWING_SERVICE = "towing_service";
+
+  // Map to convert UI translation keys to database values
+  final Map<String, String> _serviceTypeToDatabaseRole = {
+    "service_types.mechanic": SERVICE_TYPE_MECHANIC,
+    "service_types.parts_supplier": SERVICE_TYPE_PARTS_SUPPLIER,
+    "service_types.towing_service": SERVICE_TYPE_TOWING_SERVICE,
+  };
+
+  // Map to convert database values to UI translation keys
+  final Map<String, String> _databaseRoleToServiceType = {
+    SERVICE_TYPE_MECHANIC: "service_types.mechanic",
+    SERVICE_TYPE_PARTS_SUPPLIER: "service_types.parts_supplier",
+    SERVICE_TYPE_TOWING_SERVICE: "service_types.towing_service",
+  };
+
   @override
   void initState() {
     super.initState();
@@ -67,9 +86,9 @@ class _MapPageState extends State<MapPage> {
       _getCustomIcon('Routes Barrées'),
       _getCustomIcon('Travaux'),
       _getCustomIcon('Événements Spéciaux'),
-      _getServiceProviderIcon('mechanic'),
-      _getServiceProviderIcon('parts_supplier'),
-      _getServiceProviderIcon('towing_service'),
+      _getServiceProviderIcon(SERVICE_TYPE_MECHANIC),
+      _getServiceProviderIcon(SERVICE_TYPE_PARTS_SUPPLIER),
+      _getServiceProviderIcon(SERVICE_TYPE_TOWING_SERVICE),
     ]);
   }
 
@@ -112,13 +131,13 @@ class _MapPageState extends State<MapPage> {
 
     String assetPath;
     switch (role) {
-      case 'mechanic':
+      case SERVICE_TYPE_MECHANIC:
         assetPath = 'assets/GPS/marker_meca.png';
         break;
-      case 'parts_supplier':
+      case SERVICE_TYPE_PARTS_SUPPLIER:
         assetPath = 'assets/GPS/marker_parts.png';
         break;
-      case 'towing_service':
+      case SERVICE_TYPE_TOWING_SERVICE:
         assetPath = 'assets/GPS/marker_towing.png';
         break;
       default:
@@ -219,7 +238,7 @@ class _MapPageState extends State<MapPage> {
       _getUserLocation();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Location permission is required")),
+        SnackBar(content: Text("map_messages.location_permission_required".tr())),
       );
     }
   }
@@ -235,7 +254,7 @@ class _MapPageState extends State<MapPage> {
       _startTracking();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error getting location: $e")),
+        SnackBar(content: Text("${"map_messages.error_finding_providers".tr()}: $e")),
       );
     }
   }
@@ -293,98 +312,81 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
- Future<double> _getAverageRating(String providerId) async {
-   try {
-     final reviewDoc = await FirebaseFirestore.instance
-         .collection('Reviews')
-         .doc(providerId)
-         .get();
+  Future<double> _getAverageRating(String providerId) async {
+    try {
+      final reviewDoc = await FirebaseFirestore.instance
+          .collection('Reviews')
+          .doc(providerId)
+          .get();
 
-     if (!reviewDoc.exists) return 0.0;
+      if (!reviewDoc.exists) return 0.0;
 
-     final reviewData = reviewDoc.data() as Map<String, dynamic>;
-     final reviewsMap = reviewData['reviews'] as Map<String, dynamic>? ?? {};
+      final reviewData = reviewDoc.data() as Map<String, dynamic>;
+      final reviewsMap = reviewData['reviews'] as Map<String, dynamic>? ?? {};
 
-     // First collect all sender IDs from visible reviews
-     Set<String> senderIds = {};
-     for (final entry in reviewsMap.entries) {
-       if (entry.key.startsWith('review')) {
-         final review = entry.value as Map<String, dynamic>;
-         if (review['isVisible'] != false) {
-           String? senderId = review['senderID'] as String?;
-           if (senderId != null) {
-             senderIds.add(senderId);
-           }
-         }
-       }
-     }
+      Set<String> senderIds = {};
+      for (final entry in reviewsMap.entries) {
+        if (entry.key.startsWith('review')) {
+          final review = entry.value as Map<String, dynamic>;
+          if (review['isVisible'] != false) {
+            String? senderId = review['senderID'] as String?;
+            if (senderId != null) {
+              senderIds.add(senderId);
+            }
+          }
+        }
+      }
 
-     // Fetch all sender data in one batch to check which senders exist
-     Map<String, bool> existingSenders = {};
-     if (senderIds.isNotEmpty) {
-       final sendersSnapshot = await FirebaseFirestore.instance
-           .collection('users')
-           .where(FieldPath.documentId, whereIn: senderIds.toList())
-           .get();
+      Map<String, bool> existingSenders = {};
+      if (senderIds.isNotEmpty) {
+        final sendersSnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .where(FieldPath.documentId, whereIn: senderIds.toList())
+            .get();
 
-       // Create a map of existing users
-       for (var doc in sendersSnapshot.docs) {
-         existingSenders[doc.id] = true;
-       }
-     }
+        for (var doc in sendersSnapshot.docs) {
+          existingSenders[doc.id] = true;
+        }
+      }
 
-     // Now calculate average only for existing users
-     double totalRating = 0.0;
-     int reviewCount = 0;
+      double totalRating = 0.0;
+      int reviewCount = 0;
 
-     for (final entry in reviewsMap.entries) {
-       if (entry.key.startsWith('review')) {
-         final review = entry.value as Map<String, dynamic>;
-         // Only count visible reviews from existing users
-         if (review['isVisible'] != false) {
-           String? senderId = review['senderID'] as String?;
-           if (senderId != null && existingSenders.containsKey(senderId)) {
-             totalRating += (review['rating'] as num?)?.toDouble() ?? 0.0;
-             reviewCount++;
-           }
-         }
-       }
-     }
+      for (final entry in reviewsMap.entries) {
+        if (entry.key.startsWith('review')) {
+          final review = entry.value as Map<String, dynamic>;
+          if (review['isVisible'] != false) {
+            String? senderId = review['senderID'] as String?;
+            if (senderId != null && existingSenders.containsKey(senderId)) {
+              totalRating += (review['rating'] as num?)?.toDouble() ?? 0.0;
+              reviewCount++;
+            }
+          }
+        }
+      }
 
-     return reviewCount > 0 ? totalRating / reviewCount : 0.0;
-   } catch (e) {
-     debugPrint('Error calculating average rating: $e');
-     return 0.0;
-   }
- }
+      return reviewCount > 0 ? totalRating / reviewCount : 0.0;
+    } catch (e) {
+      debugPrint('Error calculating average rating: $e');
+      return 0.0;
+    }
+  }
 
-  Future<void> _findNearbyServiceProviders(String serviceType) async {
+  Future<void> _findNearbyServiceProviders(String serviceTypeKey) async {
     if (_currentLocation == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Waiting for location...")),
+        SnackBar(content: Text("map_messages.waiting_for_location".tr())),
       );
       return;
     }
 
     setState(() {
       _markers.removeWhere((marker) => marker.markerId.value.startsWith('service-'));
-      _selectedServiceType = serviceType;
+      _selectedServiceType = serviceTypeKey;
     });
 
-    String role;
-    switch (serviceType) {
-      case "Mécanicien":
-        role = "mechanic";
-        break;
-      case "Pièce détachée":
-        role = "parts_supplier";
-        break;
-      case "Remorquage":
-        role = "towing_service";
-        break;
-      default:
-        return;
-    }
+    // Convert UI translation key to database role
+    String role = _serviceTypeToDatabaseRole[serviceTypeKey] ?? "mechanic";
 
     try {
       const radiusInKm = 10;
@@ -410,7 +412,6 @@ class _MapPageState extends State<MapPage> {
       final icon = await _getServiceProviderIcon(role);
       final providers = <Map<String, dynamic>>[];
 
-      // Get average ratings for all providers
       await Future.wait(querySnapshot.docs.map((doc) async {
         final data = doc.data() as Map<String, dynamic>;
         if (data['Location'] != null) {
@@ -444,7 +445,7 @@ class _MapPageState extends State<MapPage> {
               position: position,
               icon: icon,
               infoWindow: InfoWindow(
-                title: '$serviceType - $name',
+                title: '${serviceTypeKey.tr()} - $name',
                 snippet: 'Tap for more information',
                 onTap: () {
                   Navigator.push(
@@ -477,13 +478,13 @@ class _MapPageState extends State<MapPage> {
         _toggleProvidersSheet(true, providers: providers);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("No $serviceType found nearby")),
+          SnackBar(content: Text("map_messages.no_providers_found".tr(args: [serviceTypeKey.tr()]))),
         );
         _toggleProvidersSheet(false);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error finding service providers: $e")),
+        SnackBar(content: Text("${"map_messages.error_finding_providers".tr()}: $e")),
       );
       _toggleProvidersSheet(false);
     }
@@ -507,17 +508,27 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  // Helper method to get database service type from translation key
+  String _getRoleFromServiceTypeKey(String serviceTypeKey) {
+    return _serviceTypeToDatabaseRole[serviceTypeKey] ?? SERVICE_TYPE_MECHANIC;
+  }
+
+  // Helper method to get translation key from database service type
+  String _getServiceTypeKeyFromRole(String role) {
+    return _databaseRoleToServiceType[role] ?? "service_types.mechanic";
+  }
+
   Widget _buildQuickAccessButtons() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
         children: [
-          _buildQuickButton("Mécanicien", Icons.handyman),
+          _buildQuickButton("service_types.mechanic".tr(), Icons.handyman, "service_types.mechanic"),
           const SizedBox(width: 8),
-          _buildQuickButton("Pièce détachée", Icons.shopping_cart),
+          _buildQuickButton("service_types.parts_supplier".tr(), Icons.shopping_cart, "service_types.parts_supplier"),
           const SizedBox(width: 8),
-          _buildQuickButton("Remorquage", Icons.local_shipping),
+          _buildQuickButton("service_types.towing_service".tr(), Icons.local_shipping, "service_types.towing_service"),
           if (_selectedServiceType != null)
             Padding(
               padding: const EdgeInsets.only(left: 8),
@@ -538,9 +549,9 @@ class _MapPageState extends State<MapPage> {
                     borderRadius: BorderRadius.circular(30),
                   ),
                 ),
-                child: const Text(
-                  "Clear",
-                  style: TextStyle(
+                child: Text(
+                  "Clear".tr(),
+                  style: const TextStyle(
                     color: Colors.black,
                     fontSize: 12,
                   ),
@@ -552,9 +563,9 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  Widget _buildQuickButton(String label, IconData icon) {
+  Widget _buildQuickButton(String label, IconData icon, String serviceTypeKey) {
     return ElevatedButton.icon(
-      onPressed: () => _findNearbyServiceProviders(label),
+      onPressed: () => _findNearbyServiceProviders(serviceTypeKey),
       icon: Icon(icon, color: Colors.black, size: 18),
       label: Text(
         label,
@@ -654,8 +665,8 @@ class _MapPageState extends State<MapPage> {
                             Marker(
                               markerId: const MarkerId("search_result"),
                               position: result,
-                              infoWindow: const InfoWindow(
-                                title: "Lieu recherché",
+                              infoWindow: InfoWindow(
+                                title: "GPS.Search".tr(),
                               ),
                             ),
                           );
@@ -676,12 +687,12 @@ class _MapPageState extends State<MapPage> {
                           ),
                         ],
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
                           Icon(Icons.search, color: Colors.grey),
                           SizedBox(width: 8),
                           Text(
-                            "Rechercher un lieu",
+                            "GPS.Search".tr(),
                             style: TextStyle(color: Colors.grey),
                           ),
                         ],
@@ -709,7 +720,7 @@ class _MapPageState extends State<MapPage> {
               ),
               icon: const Icon(Icons.report_problem, color: Colors.white, size: 20),
               label: Text(
-                "report incident".tr(),
+                "GPS.report_incident".tr(),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,
@@ -757,7 +768,7 @@ class _MapPageState extends State<MapPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            _selectedServiceType ?? "Service Providers",
+                            _selectedServiceType?.tr() ?? "Service Providers".tr(),
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 18,

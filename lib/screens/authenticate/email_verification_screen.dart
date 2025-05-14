@@ -84,7 +84,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     try {
       await FirebaseAuth.instance.currentUser?.sendEmailVerification();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("email_verification.description".tr()), backgroundColor: Colors.green),
+        SnackBar(content: Text("email_verification.description".tr()), backgroundColor: Color(0xFF00d47e)),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

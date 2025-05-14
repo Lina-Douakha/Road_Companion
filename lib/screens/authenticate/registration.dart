@@ -641,7 +641,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Colors.green,
+                      color: Color(0xFF00d47e),
                     ),
                   ),
                 ),
@@ -762,7 +762,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: acceptedTerms ? Colors.green : const Color(0xFFCBD5E1),
+                      backgroundColor: acceptedTerms ? Color(0xFF00d47e) : const Color(0xFFCBD5E1),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -871,7 +871,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 2),
+            borderSide: const BorderSide(color: Color(0xFF00d47e), width: 2),
           ),
         ),
       ),
@@ -903,7 +903,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.green, width: 2),
+            borderSide: const BorderSide(color: Color(0xFF00d47e), width: 2),
           ),
         ),
       ),
@@ -916,7 +916,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         Radio<bool>(
           value: value,
           groupValue: offerService,
-          activeColor: Colors.green,
+          activeColor: Color(0xFF00d47e),
           onChanged: (val) => setState(() => offerService = val!),
         ),
         Text(label),
@@ -930,7 +930,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         Radio<String>(
           value: roleKey,
           groupValue: serviceType,
-          activeColor: Colors.green,
+          activeColor: Color(0xFF00d47e),
           onChanged: (val) => setState(() => serviceType = val!),
         ),
         Text(_getTranslatedRoleName(roleKey)),
@@ -966,14 +966,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 child: Text(
                   fileName ?? label,
                   style: TextStyle(
-                    color: fileName != null ? Colors.green : Colors.grey,
+                    color: fileName != null ? Color(0xFF00d47e) : Colors.grey,
                     fontWeight: FontWeight.w500,
                   ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),
               ),
-              const Icon(Icons.upload_file, color: Colors.green),
+              const Icon(Icons.upload_file, color: Color(0xFF00d47e)),
             ],
           ),
         ),

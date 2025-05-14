@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:road_companion/screens/admin/admin_load_reviews.dart';
 import 'package:road_companion/screens/admin/UserDetailsScreen.dart';
 
@@ -33,12 +34,12 @@ class _AdminReviewManagerState extends State<AdminReviewManager> {
       setState(() {
         providers = snapshot.docs.map((doc) => doc.id).toList();
         status    = providers.isEmpty
-            ? '❌ No providers found.'
-            : '✅ Providers loaded (${providers.length})';
+            ? tr('admin_no_providers_found')
+            : tr('admin_providers_loaded', args: [providers.length.toString()]);
       });
     } catch (e) {
       setState(() {
-        status = '❌ Error fetching providers: $e';
+        status = tr('admin_error_fetching_providers', args: [e.toString()]);
       });
     } finally {
       setState(() {
@@ -93,7 +94,7 @@ class _AdminReviewManagerState extends State<AdminReviewManager> {
                 flexibleSpace: FlexibleSpaceBar(
                   titlePadding: EdgeInsets.only(bottom: screenHeight * 0.03),
                   title: Text(
-                    'Manage Reviews',
+                    tr('admin_manage_reviews'),
                     style: TextStyle(
                       color: Color(0xFF1B9169),
                       fontWeight: FontWeight.bold,
@@ -168,12 +169,12 @@ class _AdminReviewManagerState extends State<AdminReviewManager> {
                                     offset: const Offset(0, 3),
                                   )],
                                 ),
-                                child: Text('Error loading provider data'),
+                                child: Text(tr('admin_error_loading_provider_data')),
                               ),
                             );
                           }
                           Map<String, dynamic>? userData = snapshot.data?.data() as Map<String, dynamic>?;
-                          String providerName = userData?['Name'] ?? 'Provider $providerNum';
+                          String providerName = userData?['Name'] ?? tr('admin_provider_default_name', args: [providerNum.toString()]);
 
                           return Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -205,12 +206,12 @@ class _AdminReviewManagerState extends State<AdminReviewManager> {
                                           );
                                         } else {
                                           ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(content: Text('User profile not found')),
+                                            SnackBar(content: Text(tr('admin_user_profile_not_found'))),
                                           );
                                         }
                                       } catch (e) {
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Error loading user profile: ${e.toString()}')),
+                                          SnackBar(content: Text(tr('admin_error_loading_user_profile', args: [e.toString()]))),
                                         );
                                         print('Error navigating to user profile: $e');
                                       }
@@ -279,7 +280,7 @@ class _AdminReviewManagerState extends State<AdminReviewManager> {
                                                 ),
                                                 SizedBox(width: 4),
                                                 Text(
-                                                  'Check Reviews',
+                                                  tr('admin_check_reviews'),
                                                   style: TextStyle(
                                                     color: Color(0xFF00D47E),
                                                     fontWeight: FontWeight.w500,

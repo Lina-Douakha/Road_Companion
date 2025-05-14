@@ -26,7 +26,7 @@ class ClickableCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, size: screenWidth * 0.08, color: Colors.green[800]),
+            Icon(icon, size: screenWidth * 0.08, color: Color(0xff049b5f)),
             SizedBox(width: 16),
             Text(
               text,

@@ -322,7 +322,6 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -330,7 +329,22 @@ class _HandleRequestPageState extends State<HandleRequestPage> {
                   children: [
                     CircleAvatar(
                       radius: 24,
-                      backgroundImage: AssetImage(profilePhoto),
+                      backgroundImage: profilePhoto != null && profilePhoto.isNotEmpty
+                          ? NetworkImage(profilePhoto) // Use NetworkImage for URLs
+                          : null,
+                      backgroundColor: Color(0xFF1B9169).withOpacity(0.2),
+                      child: profilePhoto == null || profilePhoto.isEmpty
+                          ? Text(
+                              clientName.isNotEmpty
+                                  ? clientName[0].toUpperCase()
+                                  : '?',
+                              style: TextStyle(
+                                color: Color(0xFF1B9169),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                              ),
+                            )
+                          : null,
                     ),
                     const SizedBox(width: 12),
                     Column(

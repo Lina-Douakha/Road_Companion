@@ -4,12 +4,20 @@ import 'package:road_companion/screens/admin/admin_laws_navigation_menu.dart';
 import 'package:road_companion/screens/admin/admin_reviews.dart';
 import 'package:road_companion/screens/admin/Admin_management_users.dart';
 import 'package:road_companion/screens/admin/Admin_management_incidents.dart';
+import 'package:road_companion/screens/admin/manage_announcements.dart';
 import 'package:road_companion/services/auth_service.dart';
 import 'package:road_companion/screens/authenticate/login.dart';
-import 'package:road_companion/screens/admin/manage_announcements.dart';
+import 'package:easy_localization/easy_localization.dart';
 
-class AdminDashboardScreen extends StatelessWidget {
-  const AdminDashboardScreen({Key? key}) : super(key: key);
+class AdminDashboardScreen extends StatefulWidget {
+  AdminDashboardScreen({Key? key}) : super(key: key);
+
+  @override
+  _AdminDashboardScreenState createState() => _AdminDashboardScreenState();
+}
+
+class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+  final ValueNotifier<String> selectedLanguage = ValueNotifier<String>("Français");
 
   Future<void> _logout(BuildContext context) async {
     final AuthService _authService = AuthService();
@@ -48,6 +56,135 @@ class AdminDashboardScreen extends StatelessWidget {
         MaterialPageRoute(builder: (context) => LoginScreen()),
       );
     }
+  }
+
+  Widget _buildLanguageOption(String langCode) {
+    return GestureDetector(
+      onTap: () {
+        context.setLocale(Locale(langCode));
+        setState(() {}); // Now setState works since we're in a StatefulWidget
+        debugPrint("Langue actuelle: ${context.locale.languageCode}");
+        Navigator.pop(context);
+      },
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        margin: EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          color: context.locale.languageCode == langCode
+              ? Color(0xFFECFDF3)
+              : Color(0xFFF3F5F7),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.grey[300]!,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "language_options.$langCode".tr(),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: context.locale.languageCode == langCode
+                    ? Colors.black
+                    : Colors.black54,
+              ),
+            ),
+            if (context.locale.languageCode == langCode)
+              Icon(Icons.check, color: Color(0xFF00D47E)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showLanguageSelection(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "profile.language".tr(),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              Divider(),
+              _buildLanguageOption("fr"),
+              _buildLanguageOption("en"),
+              _buildLanguageOption("ar"),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget buildListTile(IconData icon, String title, {required String value, required VoidCallback onTap}) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ListTile(
+        leading: Container(
+          padding: EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Color(0xFF00D47E).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: Color(0xFF00D47E)),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+            SizedBox(width: 4),
+            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+          ],
+        ),
+        onTap: onTap,
+      ),
+    );
   }
 
   @override
@@ -105,7 +242,7 @@ class AdminDashboardScreen extends StatelessWidget {
                       // Added SizedBox to create space above the title
                       SizedBox(height: isSmallScreen ? 20.0 : 30.0),
                       Text(
-                        'Admin Dashboard',
+                        'admin.dashboard'.tr(),  // Translated title
                         style: TextStyle(
                           fontSize: isSmallScreen ? 28.0 : 32.0,
                           fontWeight: FontWeight.bold,
@@ -113,6 +250,20 @@ class AdminDashboardScreen extends StatelessWidget {
                         ),
                       ),
                       SizedBox(height: isSmallScreen ? 5.0 : 10.0),
+                      // Language selector button
+                      ValueListenableBuilder<String>(
+                        valueListenable: selectedLanguage,
+                        builder: (context, currentLanguage, child) {
+                          return buildListTile(
+                              Icons.language,
+                              "profile.language".tr(),
+                              value: "language_options.${context.locale.languageCode}".tr(),
+                              onTap: () {
+                                _showLanguageSelection(context);
+                              }
+                          );
+                        },
+                      ),
                       Expanded(
                         child: isLargeScreen
                             ? _buildGridLayout(context)
@@ -143,8 +294,8 @@ class AdminDashboardScreen extends StatelessWidget {
           children: [
             _buildAdminCard(
               context,
-              title: 'Users Management',
-              subtitle: 'Manage users',
+              title: 'admin.users_management'.tr(),
+              subtitle: 'admin.manage_users'.tr(),
               icon: Icons.people,
               onTap: () => Navigator.push(
                 context,
@@ -154,8 +305,8 @@ class AdminDashboardScreen extends StatelessWidget {
             const SizedBox(height: 16),
             _buildAdminCard(
               context,
-              title: 'Incidents Management',
-              subtitle: 'Manage incidents',
+              title: 'admin.incidents_management'.tr(),
+              subtitle: 'admin.manage_incidents'.tr(),
               icon: Icons.report_problem,
               onTap: () => Navigator.push(
                 context,
@@ -165,8 +316,8 @@ class AdminDashboardScreen extends StatelessWidget {
             const SizedBox(height: 16),
             _buildAdminCard(
               context,
-              title: 'Educational Content',
-              subtitle: 'Manage statistics, exams and traffic laws',
+              title: 'admin.educational_content'.tr(),
+              subtitle: 'admin.manage_educational'.tr(),
               icon: Icons.school,
               onTap: () => Navigator.push(
                 context,
@@ -176,8 +327,8 @@ class AdminDashboardScreen extends StatelessWidget {
             const SizedBox(height: 16),
             _buildAdminCard(
               context,
-              title: 'Service Providers',
-              subtitle: 'Manage users, reviews and feedback',
+              title: 'admin.service_providers'.tr(),
+              subtitle: 'admin.manage_providers'.tr(),
               icon: Icons.business_center,
               onTap: () => Navigator.push(
                 context,
@@ -185,15 +336,15 @@ class AdminDashboardScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            _buildAdminCard(
-              context,
-              title: 'Send Announcements',
-              subtitle: 'Send and manage announcements',
-              icon: Icons.school,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ManageAnnouncementsScreen()),
-              ),
+               _buildAdminCard(
+               context,
+               title: 'admin.manage_announcements'.tr(),
+               subtitle: 'admin.manage_announcements'.tr(),
+               icon: Icons.business_center,
+               onTap: () => Navigator.push(
+                 context,
+                 MaterialPageRoute(builder: (context) => ManageAnnouncementsScreen()),
+               ),
             ),
           ],
         ),
@@ -219,8 +370,8 @@ class AdminDashboardScreen extends StatelessWidget {
           children: [
             _buildAdminCard(
               context,
-              title: 'Users Management',
-              subtitle: 'Manage users',
+              title: 'admin.users_management'.tr(),
+              subtitle: 'admin.manage_users'.tr(),
               icon: Icons.people,
               onTap: () => Navigator.push(
                 context,
@@ -229,8 +380,8 @@ class AdminDashboardScreen extends StatelessWidget {
             ),
             _buildAdminCard(
               context,
-              title: 'Incidents Management',
-              subtitle: 'Manage incidents',
+              title: 'admin.incidents_management'.tr(),
+              subtitle: 'admin.manage_incidents'.tr(),
               icon: Icons.report_problem,
               onTap: () => Navigator.push(
                 context,
@@ -239,8 +390,8 @@ class AdminDashboardScreen extends StatelessWidget {
             ),
             _buildAdminCard(
               context,
-              title: 'Educational Content',
-              subtitle: 'Manage statistics, exams and traffic laws',
+              title: 'admin.educational_content'.tr(),
+              subtitle: 'admin.manage_educational'.tr(),
               icon: Icons.school,
               onTap: () => Navigator.push(
                 context,
@@ -249,13 +400,23 @@ class AdminDashboardScreen extends StatelessWidget {
             ),
             _buildAdminCard(
               context,
-              title: 'Service Providers',
-              subtitle: 'Manage users, reviews and feedback',
+              title: 'admin.service_providers'.tr(),
+              subtitle: 'admin.manage_providers'.tr(),
               icon: Icons.business_center,
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => AdminReviewManager()),
               ),
+            ),
+            _buildAdminCard(
+               context,
+               title: 'admin.manage_announcements'.tr(),
+               subtitle: 'admin.manage_announcements'.tr(),
+               icon: Icons.business_center,
+               onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ManageAnnouncementsScreen()),
+               ),
             ),
           ],
         ),
@@ -264,12 +425,12 @@ class AdminDashboardScreen extends StatelessWidget {
   }
 
   Widget _buildAdminCard(
-    BuildContext context, {
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
+      BuildContext context, {
+        required String title,
+        required String subtitle,
+        required IconData icon,
+        required VoidCallback onTap,
+      }) {
     final isSmallScreen = MediaQuery.of(context).size.width < 600;
 
     return Container(

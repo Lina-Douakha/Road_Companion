@@ -107,7 +107,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
 
         final statusColor = translatedNotification["status"] ==
             "historique_mecanicien.accepted".tr()
-            ? Color(0xFF01BF7F)
+            ? Color(0xFF00d47e)
             : Color(0xFFFF3B30);
 
         return Padding(

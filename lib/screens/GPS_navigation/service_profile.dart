@@ -8,6 +8,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:road_companion/screens/chat.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class MechanicProfilePage extends StatefulWidget {
   final String providerId;
@@ -279,13 +280,13 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
       final workingHours = _providerData['Working_hours'] as String? ?? '';
 
       if (workingHours.isEmpty) {
-        return 'No Specific Working time';
+        return 'mechanic_profile.specific_working_time'.tr();
       }
 
       final parts = workingHours.split('|');
 
       if (parts.length != 3) {
-        return 'No Specific Working time';
+        return 'mechanic_profile.specific_working_time'.tr();
       }
 
       final daysStr = parts[0].trim();
@@ -293,7 +294,7 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
       final endTime = parts[2].trim().replaceAll(':', 'h');
 
       if (daysStr.isEmpty) {
-        return 'No Specific Working time';
+        return 'mechanic_profile.specific_working_time'.tr();
       }
 
       final dayNumbers = daysStr.split(' ')
@@ -308,13 +309,13 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
       }
 
       final dayNames = {
-        1: 'Dimanche',
-        2: 'Lundi',
-        3: 'Mardi',
-        4: 'Mercredi',
-        5: 'Jeudi',
-        6: 'Vendredi',
-        7: 'Samedi',
+        1: 'day.sunday'.tr(),
+        2: 'day.monday'.tr(),
+        3: 'day.tuesday'.tr(),
+        4: 'day.wednesday'.tr(),
+        5: 'day.thursday'.tr(),
+        6: 'day.friday'.tr(),
+        7: 'day.saturday'.tr(),
       };
       if (dayNumbers.contains(1) &&
           dayNumbers.contains(2) &&
@@ -322,27 +323,27 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
           dayNumbers.contains(4) &&
           dayNumbers.contains(5) &&
           dayNumbers.length == 5) {
-        return 'Dimanche - Jeudi : ${startTime} - ${endTime}';
+        return '${'day.sunday'.tr()} - ${'day.thursday'.tr()} : ${startTime} - ${endTime}';
       } else if (dayNumbers.length == 7) {
-        return 'Tous les jours : ${startTime} - ${endTime}';
+        return '${'days.everyday'.tr()} : ${startTime} - ${endTime}';
       } else if (dayNumbers.length == 2 &&
                  dayNumbers.contains(6) &&
                  dayNumbers.contains(7)) {
-        return 'Week-end : ${startTime} - ${endTime}';
+        return '${'days.weekend'.tr()} : ${startTime} - ${endTime}';
       } else {
         if (dayNumbers.length > 1 &&
             dayNumbers.every((d) => d == dayNumbers.first + dayNumbers.indexOf(d))) {
-          final firstDay = dayNames[dayNumbers.first] ?? 'Jour';
-          final lastDay = dayNames[dayNumbers.last] ?? 'Jour';
+          final firstDay = dayNames[dayNumbers.first] ?? 'days.day'.tr();
+          final lastDay = dayNames[dayNumbers.last] ?? 'days.day'.tr();
           return '$firstDay - $lastDay : ${startTime} - ${endTime}';
         } else {
-          final dayList = dayNumbers.map((d) => dayNames[d] ?? 'Jour').join(', ');
+          final dayList = dayNumbers.map((d) => dayNames[d] ?? 'days.day'.tr()).join(', ');
           return '$dayList : ${startTime} - ${endTime}';
         }
       }
     } catch (e) {
       debugPrint('Error formatting working hours: $e');
-      return 'No Specific Working time';
+      return 'mechanic_profile.specific_working_time'.tr();
     }
   }
 
@@ -427,9 +428,9 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Center(
+                      Center(
                         child: Text(
-                          'Laisser un avis',
+                          'mechanic_profile.leave_review'.tr(),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -437,7 +438,7 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const Text('Notez le service'),
+                      Text('mechanic_profile.rate_service'.tr()),
                       const SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -468,7 +469,7 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                               horizontal: 12,
                               vertical: 8,
                             ),
-                            hintText: 'Votre commentaire',
+                            hintText: 'mechanic_profile.your_comment'.tr(),
                             hintStyle: const TextStyle(color: Colors.grey),
                             border: const OutlineInputBorder(),
                             focusedBorder: OutlineInputBorder(
@@ -484,8 +485,8 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                         children: [
                           TextButton(
                             onPressed: () => Navigator.pop(context),
-                            child: const Text(
-                              'Annuler',
+                            child: Text(
+                              'mechanic_profile.cancel'.tr(),
                               style: TextStyle(color: Color(0xFF00D47E)),
                             ),
                           ),
@@ -537,9 +538,9 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
 
                                   Navigator.pop(context);
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text("Merci pour votre avis !"),
-                                      backgroundColor: Colors.green,
+                                    SnackBar(
+                                      content: Text("mechanic_profile.thank_you".tr()),
+                                      backgroundColor: Color(0xFF00d47e),
                                       duration: Duration(seconds: 2),
                                     ),
                                   );
@@ -554,8 +555,8 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                                 Navigator.pop(context);
                               }
                             },
-                            child: const Text(
-                              'Envoyer',
+                            child: Text(
+                              'mechanic_profile.send'.tr(),
                               style: TextStyle(color: Colors.white),
                             ),
                           ),
@@ -668,7 +669,7 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Request sent successfully"),
-          backgroundColor: Colors.green,
+          backgroundColor: Color(0xFF00d47e),
         ),
       );
     } catch (e) {
@@ -691,8 +692,8 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
               backgroundColor: Colors.white,
               titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
               contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              title: const Text(
-                'Décrire votre problème',
+              title: Text(
+                'mechanic_profile.describe_problem'.tr(),
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.black87),
               ),
               content: SizedBox(
@@ -700,8 +701,8 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                 child: TextField(
                   controller: problemController,
                   maxLines: 4,
-                  decoration: const InputDecoration(
-                    hintText: 'Description (optionnelle)',
+                  decoration: InputDecoration(
+                    hintText: 'mechanic_profile.optional_description'.tr(),
                     hintStyle: TextStyle(color: Colors.grey),
                     border: OutlineInputBorder(),
                     focusedBorder: OutlineInputBorder(
@@ -714,7 +715,7 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                 TextButton(
                   onPressed: isSending ? null : () => Navigator.pop(context),
                   style: TextButton.styleFrom(foregroundColor: ColorsManager.Bgreen),
-                  child: const Text('Annuler'),
+                  child: Text('mechanic_profile.cancel'.tr()),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: ColorsManager.Bgreen),
@@ -738,7 +739,7 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                             strokeWidth: 2,
                           ),
                         )
-                      : const Text('Envoyer', style: TextStyle(color: Colors.white)),
+                      : Text('mechanic_profile.send'.tr(), style: TextStyle(color: Colors.white)),
                 ),
               ],
             );
@@ -785,8 +786,8 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final address = _providerData['Address'] as String? ?? 'Adresse non disponible';
-    final name = _providerData['Name'] as String? ?? 'Nom inconnu';
+    final address = _providerData['Address'] as String? ?? 'mechanic_profile.address_not_available'.tr();
+    final name = _providerData['Name'] as String? ?? 'mechanic_profile.unknown_name'.tr();
     final phoneNumber = _providerData['Phone'] as String? ?? '';
     final link = _providerData['Link'] as String? ?? '';
     final workingHours = _formatWorkingHours();
@@ -869,7 +870,7 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                       padding: EdgeInsets.only(right: 8),
                       child: Icon(Icons.build, color: Colors.white),
                     ),
-                    label: const Text('Demander', style: TextStyle(color: Colors.white, fontSize: 16)),
+                    label: Text('mechanic_profile.request_service'.tr(), style: TextStyle(color: Colors.white, fontSize: 16)),
                   ),
                   const SizedBox(height: 16),
 
@@ -887,8 +888,8 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                     ),
                     onPressed: _showRatingDialog,
                     icon: const Icon(Icons.star_border, size: 20),
-                    label: const Text(
-                      'Noter & Commenter',
+                    label: Text(
+                      'mechanic_profile.rate_and_review'.tr(),
                       style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                     ),
                   ),
@@ -910,12 +911,12 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                       borderRadius: BorderRadius.circular(6),
                       child: SizedBox(
                         height: 50,
-                        child: const Center(
+                        child: Center(
                           child: Row(
                             children: [
                               Icon(Icons.link, size: 20, color: ColorsManager.Green1),
                               SizedBox(width: 8),
-                              Text("Open Link for more information"),
+                              Text("mechanic_profile.open_link".tr()),
                             ],
                           ),
                         ),
@@ -923,18 +924,18 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                     ),
                     const Divider(thickness: 0.5, height: 10),
                   ],
-                  const Align(
+                  Align(
                     alignment: Alignment.centerLeft,
-                    child: Text("Avis des clients",
+                    child: Text("mechanic_profile.reviews".tr(),
                         style: TextStyle(fontWeight: FontWeight.bold, color: ColorsManager.Green1, fontSize: 14)),
                   ),
                   const SizedBox(height: 8),
                   _isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : _reviews.isEmpty
-                          ? const Padding(
+                          ? Padding(
                               padding: EdgeInsets.symmetric(vertical: 20),
-                              child: Text("Aucun avis pour le moment.",
+                              child: Text("mechanic_profile.no_reviews".tr(),
                                   style: TextStyle(fontSize: 13, color: Colors.grey)),
                             )
                           : Column(

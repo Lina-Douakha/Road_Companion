@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class TrafficLawsManager extends StatefulWidget {
   @override
@@ -109,21 +110,21 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
     final String languageCode = selectedLanguage;
 
     Map<String, Map<String, String>> languageMappings = {
-      'ar': {'code': 'fr', 'name': 'French'},
-      'fr': {'code': 'ar', 'name': 'Arabic'},
-      'en': {'code': 'ar', 'name': 'Arabic'},
+      'ar': {'code': 'ar', 'name': tr("admin.arabicLanguage")},
+      'fr': {'code': 'fr', 'name': tr("admin.frenchLanguage")},
+      'en': {'code': 'en', 'name': tr("admin.englishLanguage")},
     };
 
     List<Map<String, String>> otherLanguages = [];
     if (languageCode == 'ar') {
-      otherLanguages.add({'code': 'fr', 'name': 'French'});
-      otherLanguages.add({'code': 'en', 'name': 'English'});
+      otherLanguages.add({'code': 'fr', 'name': tr("admin.frenchLanguage")});
+      otherLanguages.add({'code': 'en', 'name':  tr("admin.englishLanguage")});
     } else if (languageCode == 'fr') {
-      otherLanguages.add({'code': 'ar', 'name': 'Arabic'});
-      otherLanguages.add({'code': 'en', 'name': 'English'});
+      otherLanguages.add({'code': 'ar', 'name': tr("admin.arabicLanguage")});
+      otherLanguages.add({'code': 'en', 'name':  tr("admin.englishLanguage")});
     } else if (languageCode == 'en') {
-      otherLanguages.add({'code': 'ar', 'name': 'Arabic'});
-      otherLanguages.add({'code': 'fr', 'name': 'French'});
+      otherLanguages.add({'code': 'ar', 'name': tr("admin.arabicLanguage")});
+      otherLanguages.add({'code': 'fr', 'name': tr("admin.frenchLanguage")});
     }
 
     final bool hasPendingChanges = pendingPanelChanges.containsKey(id) &&
@@ -138,7 +139,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
 
     if (data.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Panel not found')),
+        SnackBar(content: Text(tr("admin.panelNotFound"))),
       );
       return;
     }
@@ -177,7 +178,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Edit Panel',
+                        tr("admin.editPanel"),
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -234,8 +235,8 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                           Expanded(
                             child: Text(
                               hasAllOtherLanguageChanges
-                                  ? "All other language versions have been modified. Update this version and save now to update them all simultaneously."
-                                  : "You must edit this panel in all languages before changes take effect.",
+                                  ? tr("admin.allVersionsModified")
+                                  : tr("admin.editAllPanels"),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: hasAllOtherLanguageChanges
@@ -269,7 +270,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                               style: TextStyle(fontSize: 15),
                               textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
                               decoration: InputDecoration(
-                                labelText: 'Panel Title',
+                                labelText: tr("admin.panelTitle"),
                                 alignLabelWithHint: true,
                                 labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
                                 enabledBorder: OutlineInputBorder(
@@ -302,7 +303,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                               controller: imageUrlController,
                               style: TextStyle(fontSize: 15),
                               decoration: InputDecoration(
-                                labelText: 'Image URL',
+                                labelText:tr("admin.imageUrl"),
                                 alignLabelWithHint: true,
                                 labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
                                 enabledBorder: OutlineInputBorder(
@@ -337,7 +338,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                   Padding(
                                     padding: const EdgeInsets.only(bottom: 8.0),
                                     child: Text(
-                                      'Image Preview:',
+                                      tr("admin.imagePreview"),
                                       style: TextStyle(
                                         color: Color(0xFF1B9169),
                                         fontWeight: FontWeight.w500,
@@ -364,7 +365,9 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                             Icon(Icons.broken_image, size: 50, color: Colors.grey),
                                             SizedBox(height: 8),
                                             Text(
-                                              'Image not found: $imageAssetPath',
+                                              tr("admin.imageNotFound", namedArgs: {
+                                                "imageAssetPath": imageAssetPath,
+                                              }),
                                               style: TextStyle(color: Colors.grey.shade700),
                                               textAlign: TextAlign.center,
                                             ),
@@ -397,7 +400,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                           ),
                         ),
                         child: Text(
-                          'Cancel',
+                          tr("admin.cancel"),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -469,12 +472,14 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                 pendingPanelChanges.remove(id);
 
                                 Navigator.pop(context);
-                                showSuccessDialog(context, "All language versions updated successfully!");
+                                showSuccessDialog(context, tr("admin.allVersionsUpdated"));
                                 fetchItems();
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Error updating panel: $e'),
+                                    content: Text(tr("admin.errorUpdating", namedArgs: {
+                                      "error": e.toString(),
+                                    })),
                                     backgroundColor: Colors.red,
                                   ),
                                 );
@@ -487,17 +492,22 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
 
                               // Create a list of missing languages
                               List<String> missingLanguages = [];
-                              if (!pendingPanelChanges[id]!.containsKey('ar')) missingLanguages.add('Arabic');
-                              if (!pendingPanelChanges[id]!.containsKey('fr')) missingLanguages.add('French');
-                              if (!pendingPanelChanges[id]!.containsKey('en')) missingLanguages.add('English');
+                              if (!pendingPanelChanges[id]!.containsKey('ar')) missingLanguages.add('admin.arabicLanguage'.tr());
+                              if (!pendingPanelChanges[id]!.containsKey('fr')) missingLanguages.add('admin.frenchLanguage'.tr());
+                              if (!pendingPanelChanges[id]!.containsKey('en')) missingLanguages.add('admin.englishLanguage'.tr());
 
-                              String missingLanguagesText = missingLanguages.join(', ');
+                              String missingLanguagesText = missingLanguages.join(' | ');
 
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Changes saved. Please edit the $missingLanguagesText ${missingLanguages.length > 1 ? "versions" : "version"} to complete the update.',
-                                    style: TextStyle(color: Colors.amber[700], fontWeight: FontWeight.bold),
+                                      tr("admin.changesSaved", namedArgs: {
+                                        "missingLanguages": missingLanguagesText,
+                                        "versionsLabel": missingLanguages.length > 1 ?
+                                        tr("admin.versions") :
+                                        tr("admin.version")
+                                      }),
+                                      style: TextStyle(color: Colors.amber[700], fontWeight: FontWeight.bold),
                                   ),
                                   backgroundColor: Colors.amber[50],
                                   duration: Duration(seconds: 3),
@@ -509,7 +519,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                           }
                         },
                         child: Text(
-                          hasAllOtherLanguageChanges ? 'Save All Versions' : 'Save Changes',
+                          hasAllOtherLanguageChanges ?  tr("admin.saveAllVersions") : tr("admin.saveChanges"),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -531,21 +541,21 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
     final String languageCode = selectedLanguage;
 
     Map<String, Map<String, String>> languageMappings = {
-      'ar': {'code': 'fr', 'name': 'French'},
-      'fr': {'code': 'ar', 'name': 'Arabic'},
-      'en': {'code': 'ar', 'name': 'Arabic'},
+      'ar': {'code': 'ar', 'name': tr("admin.arabicLanguage")},
+      'fr': {'code': 'fr', 'name': tr("admin.frenchLanguage")},
+      'en': {'code': 'en', 'name': tr("admin.englishLanguage")},
     };
 
     List<Map<String, String>> otherLanguages = [];
     if (languageCode == 'ar') {
-      otherLanguages.add({'code': 'fr', 'name': 'French'});
-      otherLanguages.add({'code': 'en', 'name': 'English'});
+      otherLanguages.add({'code': 'fr', 'name':  tr("admin.frenchLanguage")});
+      otherLanguages.add({'code': 'en', 'name':  tr("admin.englishLanguage")});
     } else if (languageCode == 'fr') {
-      otherLanguages.add({'code': 'ar', 'name': 'Arabic'});
-      otherLanguages.add({'code': 'en', 'name': 'English'});
+      otherLanguages.add({'code': 'ar', 'name': tr("admin.arabicLanguage")});
+      otherLanguages.add({'code': 'en', 'name':  tr("admin.englishLanguage")});
     } else if (languageCode == 'en') {
-      otherLanguages.add({'code': 'ar', 'name': 'Arabic'});
-      otherLanguages.add({'code': 'fr', 'name': 'French'});
+      otherLanguages.add({'code': 'ar', 'name': tr("admin.arabicLanguage")});
+      otherLanguages.add({'code': 'fr', 'name':  tr("admin.frenchLanguage")});
     }
 
     final bool hasPendingChanges = pendingChanges.containsKey(id) &&
@@ -593,7 +603,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Edit Priority',
+                  tr("admin.editPriority"),
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -650,8 +660,8 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                           Expanded(
                             child: Text(
                               hasAllOtherLanguageChanges
-                                  ? "All other language versions have been modified. Update this version and save now to update them all simultaneously."
-                                  : "You must edit this priority in all languages before changes take effect.",
+                                  ?tr("admin.allVersionsModified")
+                                  : tr("admin.editAllPriorities"),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: hasAllOtherLanguageChanges
@@ -687,7 +697,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                               minLines: 1,
                               textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
                               decoration: InputDecoration(
-                                labelText: 'Description',
+                                labelText: tr("admin.description"),
                                 alignLabelWithHint: true,
                                 labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
                                 enabledBorder: OutlineInputBorder(
@@ -723,7 +733,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                               minLines: 1,
                               textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
                               decoration: InputDecoration(
-                                labelText: 'Question',
+                                labelText: tr("admin.question"),
                                 alignLabelWithHint: true,
                                 labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
                                 enabledBorder: OutlineInputBorder(
@@ -756,7 +766,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                               controller: imageUrlController,
                               style: TextStyle(fontSize: 15),
                               decoration: InputDecoration(
-                                labelText: 'Image URL',
+                                labelText:tr("admin.imageUrl"),
                                 alignLabelWithHint: true,
                                 labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
                                 enabledBorder: OutlineInputBorder(
@@ -790,7 +800,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                   Padding(
                                     padding: const EdgeInsets.only(bottom: 8.0),
                                     child: Text(
-                                      'Image Preview:',
+                                      tr("admin.imagePreview"),
                                       style: TextStyle(
                                         color: Color(0xFF1B9169),
                                         fontWeight: FontWeight.w500,
@@ -817,7 +827,9 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                             Icon(Icons.broken_image, size: 50, color: Colors.grey),
                                             SizedBox(height: 8),
                                             Text(
-                                              'Image not found: $imageAssetPath',
+                                              tr("admin.imageNotFound", namedArgs: {
+                                                "imageAssetPath": imageAssetPath,
+                                              }),
                                               style: TextStyle(color: Colors.grey.shade700),
                                               textAlign: TextAlign.center,
                                             ),
@@ -849,7 +861,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                           ),
                         ),
                         child: Text(
-                          'Cancel',
+                          tr("admin.cancel"),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -918,12 +930,15 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                 pendingChanges.remove(id);
 
                                 Navigator.pop(context);
-                                showSuccessDialog(context, "All language versions updated successfully!");
+                                showSuccessDialog(context,
+                                    tr("admin.allVersionsUpdated"));
                                 fetchItems();
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Error updating priority: $e'),
+                                    content: Text(tr("admin.errorUpdating", namedArgs: {
+                                      "error": e.toString(),
+                                    })),
                                     backgroundColor: Colors.red,
                                   ),
                                 );
@@ -935,16 +950,21 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                               Navigator.pop(context);
 
                               List<String> missingLanguages = [];
-                              if (!pendingChanges[id]!.containsKey('ar')) missingLanguages.add('Arabic');
-                              if (!pendingChanges[id]!.containsKey('fr')) missingLanguages.add('French');
-                              if (!pendingChanges[id]!.containsKey('en')) missingLanguages.add('English');
+                              if (!pendingChanges[id]!.containsKey('ar')) missingLanguages.add('admin.arabicLanguage'.tr());
+                              if (!pendingChanges[id]!.containsKey('fr')) missingLanguages.add('admin.frenchLanguage'.tr());
+                              if (!pendingChanges[id]!.containsKey('en')) missingLanguages.add('admin.englishLanguage'.tr());
 
-                              String missingLanguagesText = missingLanguages.join(', ');
+                              String missingLanguagesText = missingLanguages.join(' | ');
 
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Changes saved. Please edit the $missingLanguagesText ${missingLanguages.length > 1 ? "versions" : "version"} to complete the update.',
+                                    tr("admin.changesSaved", namedArgs: {
+                                      "missingLanguages": missingLanguagesText,
+                                      "versionsLabel": missingLanguages.length > 1 ?
+                                      tr("admin.versions") :
+                                      tr("admin.version")
+                                    }),
                                     style: TextStyle(color: Colors.amber[700], fontWeight: FontWeight.bold),
                                   ),
                                   backgroundColor: Colors.amber[50],
@@ -957,7 +977,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                           }
                         },
                         child: Text(
-                          hasAllOtherLanguageChanges ? 'Save All Versions' : 'Save Changes',
+                          hasAllOtherLanguageChanges ? tr("admin.saveAllVersions") : tr("admin.saveChanges"),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -979,22 +999,22 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
     final String languageCode = selectedLanguage;
 
     Map<String, Map<String, String>> languageMappings = {
-      'ar': {'code': 'fr', 'name': 'French'},
-      'fr': {'code': 'ar', 'name': 'Arabic'},
-      'en': {'code': 'ar', 'name': 'Arabic'},
+      'ar': {'code': 'ar', 'name':  tr("admin.arabicLanguage")},
+      'fr': {'code': 'fr', 'name':  tr("admin.frenchLanguage")},
+      'en': {'code': 'en', 'name':  tr("admin.englishLanguage")},
     };
 
 
     List<Map<String, String>> otherLanguages = [];
     if (languageCode == 'ar') {
-      otherLanguages.add({'code': 'fr', 'name': 'French'});
-      otherLanguages.add({'code': 'en', 'name': 'English'});
+      otherLanguages.add({'code': 'fr', 'name': tr("admin.frenchLanguage")});
+      otherLanguages.add({'code': 'en', 'name':  tr("admin.EnglishLanguage")});
     } else if (languageCode == 'fr') {
-      otherLanguages.add({'code': 'ar', 'name': 'Arabic'});
-      otherLanguages.add({'code': 'en', 'name': 'English'});
+      otherLanguages.add({'code': 'ar', 'name': tr("admin.arabicLanguage")});
+      otherLanguages.add({'code': 'en', 'name':  tr("admin.englishLanguage")});
     } else if (languageCode == 'en') {
-      otherLanguages.add({'code': 'ar', 'name': 'Arabic'});
-      otherLanguages.add({'code': 'fr', 'name': 'French'});
+      otherLanguages.add({'code': 'ar', 'name':  tr("admin.arabicLanguage")});
+      otherLanguages.add({'code': 'fr', 'name':  tr("admin.frenchLanguage")});
     }
 
     Map<String, dynamic> data;
@@ -1039,7 +1059,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Edit Question',
+                  tr("admin.editQuestion"),
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -1096,8 +1116,8 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                           Expanded(
                             child: Text(
                               hasAllOtherLanguageChanges
-                                  ? "All other language versions have been modified. Update this version and save now to update them all simultaneously."
-                                  : "You must edit this question in all languages before changes take effect.",
+                                  ?tr("admin.allVersionsModified")
+                                  : tr("admin.editAllLanguages"),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: hasAllOtherLanguageChanges
@@ -1117,7 +1137,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Question text field
+
                           Theme(
                             data: Theme.of(context).copyWith(
                               textSelectionTheme: TextSelectionThemeData(
@@ -1134,7 +1154,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                               minLines: 1,
                               textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
                               decoration: InputDecoration(
-                                labelText: 'Question Text',
+                                labelText: tr("admin.questionText"),
                                 alignLabelWithHint: true,
                                 labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
                                 enabledBorder: OutlineInputBorder(
@@ -1170,7 +1190,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                               minLines: 1,
                               textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
                               decoration: InputDecoration(
-                                labelText: 'Answer',
+                                labelText:tr("admin.answer"),
                                 alignLabelWithHint: true,
                                 labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
                                 enabledBorder: OutlineInputBorder(
@@ -1207,7 +1227,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                           ),
                         ),
                         child: Text(
-                          'Cancel',
+                        tr("admin.cancel"),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -1273,12 +1293,14 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                 pendingQuestionChanges.remove(id);
 
                                 Navigator.pop(context);
-                                showSuccessDialog(context, "All language versions updated successfully!");
+                                showSuccessDialog(context,tr("admin.allVersionsUpdated"));
                                 fetchItems();
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Error updating priority: $e'),
+                                    content: Text(tr("admin.errorUpdating", namedArgs: {
+                                      "error": e.toString(),
+                                    })),
                                     backgroundColor: Colors.red,
                                   ),
                                 );
@@ -1290,16 +1312,21 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                               Navigator.pop(context);
 
                               List<String> missingLanguages = [];
-                              if (!pendingQuestionChanges[id]!.containsKey('ar')) missingLanguages.add('Arabic');
-                              if (!pendingQuestionChanges[id]!.containsKey('fr')) missingLanguages.add('French');
-                              if (!pendingQuestionChanges[id]!.containsKey('en')) missingLanguages.add('English');
+                              if (!pendingQuestionChanges[id]!.containsKey('ar')) missingLanguages.add('admin.arabicLanguage'.tr());
+                              if (!pendingQuestionChanges[id]!.containsKey('fr')) missingLanguages.add('admin.frenchLanguage'.tr());
+                              if (!pendingQuestionChanges[id]!.containsKey('en')) missingLanguages.add('admin.englishLanguage'.tr());
 
-                              String missingLanguagesText = missingLanguages.join(', ');
+                              String missingLanguagesText = missingLanguages.join(' | ');
 
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Changes saved. Please edit the $missingLanguagesText ${missingLanguages.length > 1 ? "versions" : "version"} to complete the update.',
+                                    tr("admin.changesSaved", namedArgs: {
+                                      "missingLanguages": missingLanguagesText,
+                                      "versionsLabel": missingLanguages.length > 1 ?
+                                      tr("admin.versions") :
+                                      tr("admin.version")
+                                    }),
                                     style: TextStyle(color: Colors.amber[700], fontWeight: FontWeight.bold),
                                   ),
                                   backgroundColor: Colors.amber[50],
@@ -1312,7 +1339,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                           }
                         },
                         child: Text(
-                          hasAllOtherLanguageChanges ? 'Save All Versions' : 'Save Changes',
+                          hasAllOtherLanguageChanges ? tr("admin.saveAllVersions") : tr("admin.saveChanges"),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -1349,7 +1376,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                 height: screenHeight * 0.12,
                 alignment: Alignment.center,
                 child: Text(
-                  'Manage Traffic Laws',
+                    tr("admin.manageTrafficLaws"),
                   style: TextStyle(
                     color: Color(0xFF1B9169),
                     fontWeight: FontWeight.bold,
@@ -1479,9 +1506,9 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                   labelStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   unselectedLabelStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                   tabs: [
-                    Tab(text: 'Panels'),
-                    Tab(text: 'Priorities'),
-                    Tab(text: 'Questions'),
+                    Tab(text: tr("admin.tabPanels")),
+                    Tab(text: tr("admin.tabPriorities")),
+                    Tab(text: tr("admin.tabQuestions"))
                   ],
                 ),
               ),
@@ -1506,7 +1533,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                       ),
                       SizedBox(height: 16),
                       Text(
-                        'No items found',
+                        tr("admin.noItemsFound"),
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 16,
@@ -1578,7 +1605,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                 hasPendingChanges ? Icons.warning_amber_rounded :
                                 selectedCategory == 'panels' ? Icons.traffic :
                                 selectedCategory == 'priorities' ? Icons.priority_high_rounded :
-                                Icons.help_outline,  // Using help_outline to match SliverList exactly
+                                Icons.question_answer_outlined,  // Using help_outline to match SliverList exactly
                                 color: hasPendingChanges ? Colors.amber[700] : Colors.grey[900],
                                 size: 20
                             ),
@@ -1599,7 +1626,9 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
 
                                   if (hasPendingChanges)
                                     Text(
-                                      'Modified in: $pendingLanguages - needs other language',
+                                      tr("admin.modifiedIn", namedArgs: {
+                                        "languages": pendingLanguages,
+                                      }),
                                       style: TextStyle(
                                         fontSize: 11,
                                         color: Colors.amber[700],
@@ -1635,7 +1664,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                   builder: (context) => AlertDialog(
                                     title: Center(
                                       child: Text(
-                                        selectedCategory == 'questions' ? 'Question removal' : 'Confirm Deletion',
+                                        tr("admin.confirmDeletion"),
                                         style: TextStyle(
                                           color: Colors.black,
                                           fontWeight: FontWeight.bold,
@@ -1644,15 +1673,13 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                       ),
                                     ),
                                     content: Text(
-                                      selectedCategory == 'questions'
-                                          ? 'Are you sure you want to delete this question?'
-                                          : 'Are you sure you want to delete this ${selectedCategory.substring(0, selectedCategory.length - 1)}?',
+                                        tr("admin.confirmDeleteItem"),
                                       style: TextStyle(color: Colors.grey[800]),
                                     ),
                                     actions: [
                                       TextButton(
-                                        child: const Text(
-                                          'Cancel',
+                                        child:  Text(
+                                          tr("admin.cancel"),
                                           style: TextStyle(color: Color(0xFF00D47E)),
                                         ),
                                         onPressed: () => Navigator.of(context).pop(),
@@ -1683,8 +1710,8 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                                           child: Lottie.asset('assets/animation/deleted.json'),
                                                         ),
                                                         const SizedBox(height: 12),
-                                                        const Text(
-                                                          'Question deleted!',
+                                                         Text(
+                                                          tr("admin.questionDeleted"),
                                                           style: TextStyle(
                                                             color: Colors.black87,
                                                             fontWeight: FontWeight.w600,
@@ -1712,7 +1739,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                             borderRadius: BorderRadius.circular(20),
                                           ),
                                         ),
-                                        child: const Text('Confirm'),
+                                        child: Text(tr("admin.confirm")),
                                       ),
                                     ],
                                   ),
@@ -1771,7 +1798,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Add New Panel',
+                  tr("admin.addNewPanel"),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -1786,12 +1813,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Title field
-                        Directionality(
-                          textDirection: selectedLanguage == 'ar'
-                              ? TextDirection.rtl
-                              : TextDirection.ltr,
-                          child: Theme(
+                          Theme(
                             data: Theme.of(context).copyWith(
                               textSelectionTheme: TextSelectionThemeData(
                                 cursorColor: Color(0xFF00D47E),
@@ -1806,7 +1828,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                               textAlign: selectedLanguage == 'ar' ? TextAlign
                                   .right : TextAlign.left,
                               decoration: InputDecoration(
-                                labelText: 'Panel Title',
+                                labelText: tr("admin.panelTitle"),
                                 alignLabelWithHint: true,
                                 labelStyle: TextStyle(
                                     fontSize: 14, color: Color(0xFF1B9169)),
@@ -1826,16 +1848,11 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                 filled: true,
                               ),
                             ),
-                          )
-                        ),
+                          ),
 
                         const SizedBox(height: 16),
 
-                        Directionality(
-                          textDirection: selectedLanguage == 'ar'
-                              ? TextDirection.rtl
-                              : TextDirection.ltr,
-                          child: Theme(
+                         Theme(
                             data: Theme.of(context).copyWith(
                               textSelectionTheme: TextSelectionThemeData(
                                 cursorColor: Color(0xFF00D47E),
@@ -1850,7 +1867,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                               textAlign: selectedLanguage == 'ar' ? TextAlign
                                   .right : TextAlign.left,
                               decoration: InputDecoration(
-                                labelText: 'Image URL (Asset Path)',
+                                labelText: tr("admin.imageUrl"),
                                 alignLabelWithHint: true,
                                 labelStyle: TextStyle(
                                     fontSize: 14, color: Color(0xFF1B9169)),
@@ -1876,8 +1893,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                     color: Color(0xFF1B9169), size: 20) : null,
                               ),
                             ),
-                          )
-                        ),
+                          ),
                       ],
                     ),
                   ),
@@ -1899,7 +1915,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                         ),
                       ),
                       child: Text(
-                        'Cancel',
+                        tr("admin.cancel"),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -1923,9 +1939,22 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                         if (titleController.text
                             .trim()
                             .isEmpty) {
+
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Please enter a title')),
+                            SnackBar(
+                              content: Text(
+                                tr("admin.pleaseEnterTitle"),
+                                style: TextStyle(
+                                  color: Colors.orange[700], // Dark red text
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              backgroundColor: Colors.orange[50], // Light red background
+                              behavior: SnackBarBehavior.floating,
+                              elevation: 2,
+                            ),
                           );
+
                           return;
                         }
 
@@ -1964,17 +1993,31 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
 
                           Navigator.pop(context);
                           showSuccessDialog(
-                              context, 'Panel added successfully!');
+                              context, tr("admin.panelAddedSuccess"));
                           fetchItems(); // Refresh list after adding
                         } catch (e) {
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error adding panel: $e')),
+                            SnackBar(
+                              content: Text(
+                                tr("admin.errorAddingPanel"),
+                                style: TextStyle(
+                                  color: Colors.red[700], // Dark red text
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              backgroundColor: Colors.red[50], // Light red background
+                              behavior: SnackBarBehavior.floating,
+                              elevation: 2,
+                            ),
                           );
+
+
                         }
                       },
-                      child: Text(
-                        'Add Panel',
+
+                      child: Text(tr("admin.addPanel")
+                        ,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -2015,7 +2058,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Add New Priority',
+                  tr("admin.addNewPriority"),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -2031,11 +2074,8 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Description field
-                        Directionality(
-                          textDirection: selectedLanguage == 'ar'
-                              ? TextDirection.rtl
-                              : TextDirection.ltr,
-                          child: Theme(
+
+                       Theme(
                             data: Theme.of(context).copyWith(
                               textSelectionTheme: TextSelectionThemeData(
                                 cursorColor: Color(0xFF00D47E),
@@ -2052,7 +2092,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                               textAlign: selectedLanguage == 'ar' ? TextAlign
                                   .right : TextAlign.left,
                               decoration: InputDecoration(
-                                labelText: 'Description',
+                                labelText: tr("admin.description"),
                                 alignLabelWithHint: true,
                                 labelStyle: TextStyle(
                                     fontSize: 14, color: Color(0xFF1B9169)),
@@ -2072,17 +2112,14 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                 filled: true,
                               ),
                             ),
-                          )
+
                         ),
 
                         const SizedBox(height: 16),
 
                         // Question field
-                        Directionality(
-                          textDirection: selectedLanguage == 'ar'
-                              ? TextDirection.rtl
-                              : TextDirection.ltr,
-                          child: Theme(
+
+                           Theme(
                             data: Theme.of(context).copyWith(
                               textSelectionTheme: TextSelectionThemeData(
                                 cursorColor: Color(0xFF00D47E),
@@ -2099,7 +2136,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                               textAlign: selectedLanguage == 'ar' ? TextAlign
                                   .right : TextAlign.left,
                               decoration: InputDecoration(
-                                labelText: 'Question',
+                                labelText: tr("admin.addquestion"),
                                 alignLabelWithHint: true,
                                 labelStyle: TextStyle(
                                     fontSize: 14, color: Color(0xFF1B9169)),
@@ -2119,17 +2156,13 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                 filled: true,
                               ),
                             ),
-                          )
+
                         ),
 
                         const SizedBox(height: 16),
 
                         // Image URL field
-                        Directionality(
-                          textDirection: selectedLanguage == 'ar'
-                              ? TextDirection.rtl
-                              : TextDirection.ltr,
-                          child: Theme(
+                       Theme(
                             data: Theme.of(context).copyWith(
                               textSelectionTheme: TextSelectionThemeData(
                                 cursorColor: Color(0xFF00D47E),
@@ -2144,7 +2177,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                               textAlign: selectedLanguage == 'ar' ? TextAlign
                                   .right : TextAlign.left,
                               decoration: InputDecoration(
-                                labelText: 'Image URL',
+                                labelText: tr("admin.imageUrl"),
                                 alignLabelWithHint: true,
                                 labelStyle: TextStyle(
                                     fontSize: 14, color: Color(0xFF1B9169)),
@@ -2170,7 +2203,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                     color: Color(0xFF1B9169), size: 20) : null,
                               ),
                             ),
-                          )
+
                         ),
                       ],
                     ),
@@ -2193,7 +2226,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                         ),
                       ),
                       child: Text(
-                        'Cancel',
+                        tr("admin.cancel"),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -2219,8 +2252,19 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                             .isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                                content: Text('Please enter a description')),
+                              content: Text(
+                                tr("admin.pleaseEnterDescription"),
+                                style: TextStyle(
+                                  color: Colors.orange[700], // Dark red text
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              backgroundColor: Colors.orange[50], // Light red background
+                              behavior: SnackBarBehavior.floating,
+                              elevation: 2,
+                            ),
                           );
+
                           return;
                         }
 
@@ -2260,18 +2304,29 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
 
                           Navigator.pop(context);
                           showSuccessDialog(
-                              context, 'Priority added successfully!');
+                              context, tr("admin.priorityAddedSuccess"));
                           fetchItems(); // Refresh list after adding
                         } catch (e) {
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                                content: Text('Error adding priority: $e')),
+                              content: Text(
+                                tr("admin.errorAddingPriority"),
+                                style: TextStyle(
+                                  color: Colors.red[700], // Dark red text
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              backgroundColor: Colors.red[50], // Light red background
+                              behavior: SnackBarBehavior.floating,
+                              elevation: 2,
+                            ),
                           );
+
                         }
                       },
                       child: Text(
-                        'Add Priority',
+                        tr("admin.addPriority"),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -2306,7 +2361,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Add New Question',
+                  tr("admin.addNewQuestion"),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -2322,9 +2377,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Question text field
-                        Directionality(
-                          textDirection: selectedLanguage == 'ar' ? TextDirection.rtl : TextDirection.ltr,
-                          child: TextField(
+                       TextField(
                             cursorColor: Color(0xFF00D47E),
                             controller: questionTextController,
                             style: TextStyle(fontSize: 15),
@@ -2332,7 +2385,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                             minLines: 1,
                             textAlign: selectedLanguage == 'ar' ? TextAlign.right : TextAlign.left,
                             decoration: InputDecoration(
-                              labelText: 'Question Text',
+                              labelText: tr("admin.questionText"),
                               alignLabelWithHint: true,
                               labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
                               enabledBorder: OutlineInputBorder(
@@ -2347,15 +2400,12 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                               fillColor: Color(0xFF1B9169).withOpacity(0.05),
                               filled: true,
                             ),
-                          ),
+
                         ),
 
                         const SizedBox(height: 16),
 
-                        // Answer field
-                        Directionality(
-                          textDirection: selectedLanguage == 'ar' ? TextDirection.rtl : TextDirection.ltr,
-                          child:Theme(
+                        Theme(
                             data: Theme.of(context).copyWith(
                               textSelectionTheme: TextSelectionThemeData(
                                 cursorColor: Color(0xFF00D47E),
@@ -2371,7 +2421,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                               minLines: 1,
                               textAlign: selectedLanguage == 'ar' ? TextAlign.right : TextAlign.left,
                               decoration: InputDecoration(
-                                labelText: 'Answer',
+                                labelText: tr("admin.answer"),
                                 alignLabelWithHint: true,
                                 labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
                                 enabledBorder: OutlineInputBorder(
@@ -2387,7 +2437,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                                 filled: true,
                               ),
                             ),
-                          ),
+
                         ),
                       ],
                     ),
@@ -2409,7 +2459,7 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                         ),
                       ),
                       child: Text(
-                        'Cancel',
+                       tr("admin.cancel"),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -2433,7 +2483,18 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                         if (questionTextController.text.trim().isEmpty ||
                             answerController.text.trim().isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Please fill in all fields')),
+                            SnackBar(
+                              content: Text(
+                                tr("admin.fillAllFields"),
+                                style: TextStyle(
+                                  color: Colors.orange[700],
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              backgroundColor: Colors.orange[50],
+                              behavior: SnackBarBehavior.floating,
+                              elevation: 2,
+                            ),
                           );
                           return;
                         }
@@ -2454,17 +2515,34 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                           });
 
                           Navigator.pop(context);
-                          showSuccessDialog(context, 'Question added successfully!');
+                          showSuccessDialog(context, tr("admin.questionAddedSuccess"),);
                           fetchItems(); // Refresh list after adding
                         } catch (e) {
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error adding question: $e')),
+                            SnackBar(content: Text(tr("admin.errorAddingQuestion", namedArgs: {
+                              "error": e.toString(),
+                            }))),
                           );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                tr("admin.errorAddingQuestion"),
+                                style: TextStyle(
+                                  color: Colors.red[700], // Dark red text
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              backgroundColor: Colors.red[50], // Light red background
+                              behavior: SnackBarBehavior.floating,
+                              elevation: 2,
+                            ),
+                          );
+
                         }
                       },
                       child: Text(
-                        'Add question',
+                        tr("admin.addQuestion"),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -2495,7 +2573,9 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
     } catch (e) {
       print("Error deleting item: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error deleting item: $e')),
+        SnackBar(content: Text(tr("admin.errorDeletingItem", namedArgs: {
+          "error": e.toString(),
+        }))),
       );
     }
   }
@@ -2591,8 +2671,8 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
                   child: Lottie.asset('assets/animation/deleted.json'),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Item deleted!',
+                Text(
+                  tr("admin.itemDeleted"),
                   style: TextStyle(
                     color: Colors.black87,
                     fontWeight: FontWeight.w600,
@@ -2606,5 +2686,4 @@ class _TrafficLawsManagerState extends State<TrafficLawsManager> with SingleTick
       },
     );
   }
-
 }

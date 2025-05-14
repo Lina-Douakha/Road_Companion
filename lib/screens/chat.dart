@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ChatScreen extends StatefulWidget {
   final String receiverId;
@@ -313,7 +314,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'No messages yet',
+                              'chat.No_messages_yet'.tr(),
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 16,
@@ -321,7 +322,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              'Start the conversation by saying hi!',
+                              'chat.Start'.tr(),
                               style: TextStyle(
                                 color: Colors.grey[500],
                                 fontSize: 14,
@@ -527,7 +528,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           textCapitalization: TextCapitalization.sentences,
                           style: TextStyle(fontSize: 16),
                           decoration: InputDecoration(
-                            hintText: 'Message...',
+                            hintText: 'chat.Message'.tr(),
                             hintStyle: TextStyle(color: Colors.grey[500], fontSize: 15),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -579,9 +580,9 @@ class _ChatScreenState extends State<ChatScreen> {
     final dateToCheck = DateTime(dateTime.year, dateTime.month, dateTime.day);
 
     if (dateToCheck == today) {
-      return 'Today';
+      return 'chat.Today'.tr();
     } else if (dateToCheck == yesterday) {
-      return 'Yesterday';
+      return 'chat.Yesterday'.tr();
     } else {
       return DateFormat('MMM d, yyyy').format(dateTime);
     }

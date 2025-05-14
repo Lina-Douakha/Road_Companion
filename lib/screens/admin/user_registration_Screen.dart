@@ -613,7 +613,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
-        statusBarColor: Color(0xFF4CAF50),
+        statusBarColor: Color(0xFF00d47e),
         statusBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
@@ -622,13 +622,13 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
           backgroundColor: Colors.white,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Color(0xFF4CAF50)),
+            icon: const Icon(Icons.arrow_back, color: Color(0xFF00d47e)),
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(
             'admin.Add_User'.tr(),
             style: TextStyle(
-              color: Color(0xFF4CAF50),
+              color: Color(0xFF00d47e),
               fontWeight: FontWeight.bold,
               fontSize: 20,
             ),
@@ -737,7 +737,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: Color(0xFF00d47e),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -805,7 +805,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                                           Navigator.pop(context); // Go back
                                         },
                                         style: TextButton.styleFrom(
-                                          backgroundColor: Colors.green,
+                                          backgroundColor: Color(0xFF00d47e),
                                           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(8),
@@ -902,7 +902,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 2),
+            borderSide: const BorderSide(color: Color(0xFF00d47e), width: 2),
           ),
         ),
       ),
@@ -934,7 +934,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.green, width: 2),
+            borderSide: const BorderSide(color: Color(0xFF00d47e), width: 2),
           ),
         ),
       ),
@@ -947,7 +947,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
         Radio<bool>(
           value: value,
           groupValue: offerService,
-          activeColor: Colors.green,
+          activeColor: Color(0xFF00d47e),
           onChanged: (val) => setState(() => offerService = val!),
         ),
         Text(label),
@@ -961,7 +961,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
         Radio<String>(
           value: roleKey,
           groupValue: serviceType,
-          activeColor: Colors.green,
+          activeColor: Color(0xFF00d47e),
           onChanged: (val) => setState(() => serviceType = val!),
         ),
         Text(_getTranslatedRoleName(roleKey)),
@@ -997,14 +997,14 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                 child: Text(
                   fileName ?? label,
                   style: TextStyle(
-                    color: fileName != null ? Colors.green : Colors.grey,
+                    color: fileName != null ? Color(0xFF00d47e) : Colors.grey,
                     fontWeight: FontWeight.w500,
                   ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),
               ),
-              const Icon(Icons.upload_file, color: Colors.green),
+              const Icon(Icons.upload_file, color: Color(0xFF00d47e)),
             ],
           ),
         ),

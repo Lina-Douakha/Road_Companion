@@ -163,7 +163,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("change_password.success_message".tr()),
-            backgroundColor: Colors.green,
+            backgroundColor: Color(0xFF00d47e),
           ),
         );
 
@@ -224,7 +224,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.green, width: 2),
+          borderSide: const BorderSide(color: Color(0xFF00d47e), width: 2),
         ),
         suffixIcon: IconButton(
           icon: Icon(_isObscured ? Icons.visibility_off : Icons.visibility),

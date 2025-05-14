@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
-
+import 'package:easy_localization/easy_localization.dart';
 
 class AdminExamManager extends StatefulWidget {
   @override
@@ -101,7 +101,7 @@ class _AdminExamManagerState extends State<AdminExamManager> {
 
     if (data.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Question not found')),
+         SnackBar(content: Text(tr("admin.questionNotFound"))),
       );
       return;
     }
@@ -149,7 +149,9 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Edit ${isTheo ? "Theoretical" : "Test"} Question',
+                        isTheo ?
+                        tr("admin.editTheoQuestion") :
+                        tr("admin.editTestQuestion"),
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -207,8 +209,8 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                           Expanded(
                             child: Text(
                               allLanguagesComplete
-                                  ? "All other language translations have been changed. If you update this version and save now, all translations will be updated at once."
-                                  : "You must edit this question in all languages before changes take effect.",
+                                  ?"admin.allTranslationsChanged".tr()
+                                  : "admin.editAllLanguages".tr(),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: allLanguagesComplete
@@ -222,7 +224,6 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                     ),
                   const SizedBox(height: 20),
 
-                  // Rest of your dialog content remains the same until saving logic
                   Flexible(
                     child: SingleChildScrollView(
                       child: Column(
@@ -246,7 +247,7 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                               minLines: 1,
                               textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
                               decoration: InputDecoration(
-                                labelText: 'Question Text',
+                                labelText: "admin.questionText".tr(),
                                 alignLabelWithHint: true,
                                 labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
                                 enabledBorder: OutlineInputBorder(
@@ -280,7 +281,7 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                   controller: imageController,
                                   style: TextStyle(fontSize: 15),
                                   decoration: InputDecoration(
-                                    labelText: 'Image URL',
+                                    labelText: "admin.imageUrl".tr(),
                                     alignLabelWithHint: true,
                                     labelStyle: TextStyle(fontSize: 14, color: Color(0xFF1B9169)),
                                     enabledBorder: OutlineInputBorder(
@@ -315,7 +316,7 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                   Padding(
                                     padding: const EdgeInsets.only(bottom: 6.0),
                                     child: Text(
-                                      'Image Preview:',
+                                      "admin.imagePreview".tr(),
                                       style: TextStyle(
                                         color: Color(0xFF1B9169),
                                         fontWeight: FontWeight.w500,
@@ -341,7 +342,9 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                             Icon(Icons.broken_image, size: 36, color: Colors.grey),
                                             SizedBox(height: 6),
                                             Text(
-                                              'Image not found: $imageAssetPath',
+                                              tr("admin.imageNotFound", namedArgs: {
+                                                "imageAssetPath": imageAssetPath,
+                                              }),
                                               style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                                               textAlign: TextAlign.center,
                                             ),
@@ -366,7 +369,7 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                 Icon(Icons.list_alt, size: 18, color: Color(0xFF1B9169)),
                                 SizedBox(width: 8),
                                 Text(
-                                  "Answer Options",
+                                  tr("admin.answerOptions"),
                                   style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
@@ -400,8 +403,7 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                   width: 1,
                                 ),
                               ),
-                              child: Directionality(
-                                textDirection: languageCode == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+
                                 child: Row(
                                   children: [
                                     Container(
@@ -457,7 +459,9 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                           style: TextStyle(fontSize: 15),
                                           textAlign: languageCode == 'ar' ? TextAlign.right : TextAlign.left,
                                           decoration: InputDecoration(
-                                            hintText: 'Option ${i + 1}',
+                                            hintText: tr("admin.option", namedArgs: {
+                                              "number": (i + 1).toString(),
+                                            }),
                                             hintStyle: TextStyle(
                                               fontSize: 14,
                                               color: Colors.grey.shade500,
@@ -472,7 +476,6 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                     ),
                                   ],
                                 ),
-                              ),
                             );
                           }).toList(),
                         ],
@@ -496,7 +499,7 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                           ),
                         ),
                         child: Text(
-                          'Cancel',
+                          tr("admin.cancel"),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -616,14 +619,16 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Error updating question: $e'),
+                                    content: Text(tr("admin.errorUpdating", namedArgs: {
+                                      "error": e.toString(),
+                                    })),
                                     backgroundColor: Colors.red,
                                   ),
                                 );
                                 return;
                               }
                               Navigator.pop(context);
-                              showSuccessDialog(context, "All language versions updated successfully!");
+                              showSuccessDialog(context, tr("admin.allVersionsUpdated"));
                               fetchTestQuestions();
                             } else {
                               // Not all languages updated yet
@@ -631,17 +636,22 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                               Navigator.pop(context);
 
                               // Create missing languages list
-                              List<String> missingLanguages = ['fr', 'en', 'ar']
-                                  .where((lang) => !pendingChanges[questionId]!.containsKey(lang))
-                                  .map((lang) => getLanguageName(lang))
-                                  .toList();
+                              List<String> missingLanguages = [];
+                              if (!pendingChanges[questionId]!.containsKey('ar')) missingLanguages.add('admin.arabicLanguage'.tr());
+                              if (!pendingChanges[questionId]!.containsKey('fr')) missingLanguages.add('admin.frenchLanguage'.tr());
+                              if (!pendingChanges[questionId]!.containsKey('en')) missingLanguages.add('admin.englishLanguage'.tr());
 
-                              String missingLanguagesText = missingLanguages.join(' and ');
+                              String missingLanguagesText = missingLanguages.join(' | ');
 
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Changes saved. Please edit the $missingLanguagesText ${missingLanguages.length > 1 ? 'versions' : 'version'} to complete the update.',
+                                    tr("admin.changesSaved", namedArgs: {
+                                      "missingLanguages": missingLanguagesText,
+                                      "versionsLabel": missingLanguages.length > 1 ?
+                                      tr("admin.versions") :
+                                      tr("admin.version")
+                                    }),
                                     style: TextStyle(color: Colors.amber[700], fontWeight: FontWeight.bold),
                                   ),
                                   backgroundColor: Colors.amber[50],
@@ -656,7 +666,7 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                           }
                         },
                         child: Text(
-                          allLanguagesComplete ? 'Save All Versions' : 'Save Changes',
+                          allLanguagesComplete ? tr("admin.saveAllVersions") : tr("admin.saveChanges"),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -767,7 +777,7 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                 alignment: Alignment.bottomCenter,
                 padding: EdgeInsets.only(bottom: screenHeight * 0.03),
                 child: Text(
-                  'Manage Questions',
+                  tr("admin.manageQuestions"),
                   style: TextStyle(
                     color: Color(0xFF1B9169),
                     fontWeight: FontWeight.bold,
@@ -963,7 +973,7 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                               child: Row(
                                 children: [
                                   Icon(
-                                      hasPendingChanges ? Icons.warning_amber_rounded : Icons.help_outline,
+                                      hasPendingChanges ? Icons.warning_amber_rounded : Icons.question_answer_outlined,
                                       color: hasPendingChanges ? Colors.amber[700] : Colors.grey[900],
                                       size: 20
                                   ),
@@ -973,7 +983,9 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Question $questionNum',
+                                          tr("admin.question", namedArgs: {
+                                            "number": questionNum.toString(),
+                                          }),
                                           style: TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w600,
@@ -982,7 +994,9 @@ class _AdminExamManagerState extends State<AdminExamManager> {
                                         ),
                                         if (hasPendingChanges)
                                           Text(
-                                            'Modified in: $pendingLanguages - needs other language',
+                                            tr("admin.modifiedIn", namedArgs: {
+                                              "languages": pendingLanguages,
+                                            }),
                                             style: TextStyle(
                                               fontSize: 11,
                                               color: Colors.amber[700],

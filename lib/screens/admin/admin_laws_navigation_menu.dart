@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:road_companion/screens/admin/admin_traffic_laws.dart';
 import 'package:road_companion/screens/admin/admin_tests.dart';
 import 'package:road_companion/screens/admin/admin_stat.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class AdminNavigationMenu extends StatefulWidget {
   const AdminNavigationMenu({Key? key}) : super(key: key);
@@ -37,18 +38,18 @@ class _AdminNavigationMenuState extends State<AdminNavigationMenu> {
         selectedItemColor:  Color(0xFF1B9169),
         unselectedItemColor: Colors.grey[500],
         elevation: 8,
-        items: const [
+        items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.analytics),
-            label: 'Statistics',
+            label: tr("admin.statistics"),
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.quiz),
-            label: 'Exams',
+            label: tr("admin.exams"),
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.gavel),
-            label: 'Laws',
+            label: tr("admin.laws"),
           ),
         ],
       ),

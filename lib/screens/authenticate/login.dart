@@ -111,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, style: const TextStyle(color: Colors.white)),
-        backgroundColor: isError ? Colors.red : Colors.green,
+        backgroundColor: isError ? Colors.red : Color(0xFF00d47e),
         duration: const Duration(seconds: 3),
       ),
     );
@@ -211,7 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Colors.green, width: 2),
+                      borderSide: const BorderSide(color: Color(0xFF00d47e), width: 2),
                     ),
                   ),
                 ),
@@ -239,7 +239,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Colors.green, width: 2),
+                      borderSide: const BorderSide(color: Color(0xFF00d47e), width: 2),
                     ),
                     suffixIcon: IconButton(
                       icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),

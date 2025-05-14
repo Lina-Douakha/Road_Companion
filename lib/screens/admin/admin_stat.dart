@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class AdminStatScreen extends StatefulWidget {
   @override
@@ -13,6 +14,7 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
   bool loading = true;
   late TabController _tabController;
   int _selectedIndex = 0;
+
   int totalTests = 0;
 
   final List<Color> gradientColors = [
@@ -111,7 +113,7 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: Text("Admin Dashboard", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text('admin.dashboard'.tr(), style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor:Color(0xFF1B9169),
         centerTitle: true,
         elevation: 0,
@@ -120,8 +122,8 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
           unselectedLabelColor: Colors.white,
           controller: _tabController,
           tabs: [
-            Tab(icon: Icon(Icons.analytics, color: Colors.white,), text: "Stats Overview"),
-            Tab(icon: Icon(Icons.stacked_line_chart, color: Colors.white), text: "Detailed Analysis"),
+            Tab(icon: Icon(Icons.analytics, color: Colors.white,), text: 'admin.statsOverview'.tr()),
+            Tab(icon: Icon(Icons.stacked_line_chart, color: Colors.white), text: "admin.detailedAnalysis".tr()),
           ],
           indicatorColor: Colors.white,
           indicatorWeight: 3,
@@ -153,7 +155,7 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
             ),
             SizedBox(height: 20),
             Text(
-              "Loading dashboard data...",
+              "admin.loadingDashboard".tr(),
               style: TextStyle(
                 color: Color(0xFF1B9169),
                 fontSize: 16,
@@ -174,7 +176,7 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
           Icon(Icons.analytics_outlined, size: 80, color: Colors.grey),
           SizedBox(height: 16),
           Text(
-            "No Data Available",
+            "admin.noDataAvailable".tr(),
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -183,7 +185,7 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
           ),
           SizedBox(height: 8),
           Text(
-            "No test responses have been submitted yet",
+            "admin.noTestResponsesSubmitted".tr(),
             style: TextStyle(
               fontSize: 16,
               color: Colors.grey[600],
@@ -203,7 +205,7 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
           _buildSummaryCards(),
           SizedBox(height: 20),
           Text(
-            "Test Performance Overview",
+            "admin.testPerformanceOverview".tr(),
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -236,28 +238,28 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
         padding: EdgeInsets.symmetric(horizontal: 12), // add little side padding
         children: [
           _buildSummaryCard(
-            "Total Tests",
+            "admin.totalTests".tr(),
             totalTests.toString(),
             Colors.indigo,
             Icons.quiz,
           ),
           SizedBox(width: 12),
           _buildSummaryCard(
-            "Active Tests",
+            "admin.activeTests".tr(),
             totalActiveTests.toString(),
             Color(0xFF1B9169), // nice turquoise
             Icons.check_circle,
           ),// space between cards
           SizedBox(width: 12),
           _buildSummaryCard(
-            "Total Responses",
+    "admin.totalResponsesLabel".tr(),
             totalResponses.toString(),
             Color(0xFF3498DB), // softer purple
             Icons.people,
           ),
           SizedBox(width: 12),
           _buildSummaryCard(
-            "Avg. Responses",
+            "admin.avgResponses".tr(),
             avgResponses.toStringAsFixed(1),
             Colors.amber, // warm orange
             Icons.analytics,
@@ -375,15 +377,24 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Test ID: $testID",
+                              tr(
+                                "admin.test_id",
+                                namedArgs: {
+                                  "id": testID.replaceAll("Test", ""),
+                                },
+                              ),
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color:Color(0xFF1B9169),
                               ),
                             ),
-                            Text(
-                              "Last Submission: ${data['latest']}",
+                            Text(tr(
+                              "admin.last_submission",
+                              namedArgs: {
+                                "date": data['latest'],
+                              },
+                            ),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[600],
@@ -399,7 +410,12 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          "${data['count']} Responses",
+                          tr(
+                            "admin.responses",
+                            namedArgs: {
+                              "count": data['count'].toString(),
+                            },
+                          ),
                           style: TextStyle(
                             color: Color(0xFF00D47E),
                             fontWeight: FontWeight.bold,
@@ -417,7 +433,7 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Average Score",
+                        "admin.averageScore".tr(),
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey[600],
@@ -462,9 +478,9 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        _buildStatChip("Highest", _formatNumber(data['highestScore']), Color(0xFF00D47E)),
+                        _buildStatChip("admin.highest".tr(), _formatNumber(data['highestScore']), Color(0xFF00D47E)),
                         SizedBox(width: 16),
-                        _buildStatChip("Lowest", _formatNumber(data['lowestScore']), Colors.red),
+                        _buildStatChip("admin.lowest".tr(), _formatNumber(data['lowestScore']), Colors.red),
                         SizedBox(width: 16),
                         TextButton.icon(
                           onPressed: () {
@@ -474,7 +490,7 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
                             });
                           },
                           icon: Icon(Icons.bar_chart, size: 18),
-                          label: Text("View Details"),
+                          label: Text("admin.viewDetails".tr()),
                           style: TextButton.styleFrom(
                             foregroundColor: Color(0xFF1B9169),
                           ),
@@ -500,7 +516,7 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
     final trendData = (data['trendData'] as List);
 
 
-    String dateRange = "No data available";
+    String dateRange = "admin.noDataAvailable".tr();
     if (trendData.isNotEmpty) {
       final firstDate = (trendData.first['date'] as DateTime);
       final lastDate = (trendData.last['date'] as DateTime);
@@ -530,7 +546,12 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
                 },
               ),
               Text(
-                "Test ID: $testID",
+                tr(
+                  "admin.test_id",
+                  namedArgs: {
+                    "id": testID.replaceAll("Test", ""),
+                  },
+                ),
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -555,11 +576,11 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildMetricItem("Total\nResponses", data['count'].toString(), Colors.white),
+                _buildMetricItem( "admin.totalResponsesLabel".tr(), data['count'].toString(), Colors.white),
                 Container(height: 40, width: 1, color: Colors.white.withOpacity(0.3)),
-                _buildMetricItem("Average\nScore", _formatNumber(data['average']), Colors.white),
+                _buildMetricItem( "admin.averageScore".tr(), _formatNumber(data['average']), Colors.white),
                 Container(height: 40, width: 1, color: Colors.white.withOpacity(0.3)),
-                _buildMetricItem("Latest\nSubmission", data['latest'].toString().split('–')[0], Colors.white),
+                _buildMetricItem("admin.lastSubmission".tr(), data['latest'].toString().split('–')[0], Colors.white),
               ],
             ),
           ),
@@ -587,7 +608,7 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Score Trend Over Time",
+                      "admin.scoreTrendOverTime".tr(),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -616,7 +637,7 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
                 SizedBox(height: 20),
                 Expanded(
                   child: trendData.isEmpty
-                      ? Center(child: Text("Not enough data for trends"))
+                      ? Center(child: Text("admin.notEnoughDataForTrends".tr()))
                       : LineChart(
                     LineChartData(
                       gridData: FlGridData(
@@ -778,7 +799,7 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Score Distribution",
+                  "admin.scoreDistribution".tr(),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -789,9 +810,9 @@ class _AdminStatScreenState extends State<AdminStatScreen> with SingleTickerProv
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildScoreDistributionItem("Lowest", _formatNumber(data['lowestScore']), Colors.red),
-                    _buildScoreDistributionItem("Average", _formatNumber(data['average']), Colors.amber),
-                    _buildScoreDistributionItem("Highest", _formatNumber(data['highestScore']), Color(0xFF00D47E)),
+                    _buildScoreDistributionItem("admin.lowest".tr(), _formatNumber(data['lowestScore']), Colors.red),
+                    _buildScoreDistributionItem("admin.average".tr(), _formatNumber(data['average']), Colors.amber),
+                    _buildScoreDistributionItem("admin.highest".tr(), _formatNumber(data['highestScore']), Color(0xFF00D47E)),
                   ],
                 ),
               ],

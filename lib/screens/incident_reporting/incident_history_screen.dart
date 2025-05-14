@@ -82,7 +82,7 @@ class _IncidentHistoryScreenState extends State<IncidentHistoryScreen> {
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'pending': return Colors.orange;
-      case 'resolved': return Colors.green;
+      case 'resolved': return Color(0xFF00d47e);
       case 'rejected': return Colors.red;
       case 'inprogress': return Colors.blue;
       default: return Colors.grey;
@@ -195,7 +195,7 @@ class _IncidentHistoryScreenState extends State<IncidentHistoryScreen> {
                           incidentHistory.where((i) => i['status'].toString().toLowerCase() == 'resolved')
                               .length.toString(),
                           Icons.check_circle,
-                          Colors.green,
+                          Color(0xFF00d47e),
                         ),
                       ],
                     ),

@@ -373,7 +373,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ? Text(
               value,
               style: TextStyle(
-                color: Colors.green,
+                color: Color(0xFF00d47e),
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -398,7 +398,7 @@ class _ProfilePageState extends State<ProfilePage> {
       trailing: Switch(
         value: value,
         onChanged: onChanged,
-        activeColor: Colors.green,
+        activeColor: Color(0xFF00d47e),
       ),
       dense: true,
       contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),

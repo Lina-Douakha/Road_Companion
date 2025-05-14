@@ -10,6 +10,7 @@ import 'package:road_companion/screens/profile/privacyPolicy.dart';
 import 'package:road_companion/screens/profile/ChangePasswordPage.dart';
 import 'package:road_companion/services/auth_service.dart';
 import 'package:road_companion/screens/authenticate/login.dart';
+import 'package:road_companion/screens/profile/display_announcements.dart';
 
 class PersonOutlineScreen extends StatefulWidget {
   @override
@@ -24,6 +25,7 @@ class _PersonOutlineScreenState extends State<PersonOutlineScreen> {
   String? _profilePhoto;
   String? _userName;
   String? _userEmail;
+   Map<String, dynamic>? _userData;
   final ValueNotifier<String> selectedLanguage = ValueNotifier<String>("Français");
   final ValueNotifier<bool> notificationsEnabled = ValueNotifier<bool>(true);
   bool _isLoading = true;
@@ -51,6 +53,7 @@ class _PersonOutlineScreenState extends State<PersonOutlineScreen> {
         if (userDoc.exists) {
           Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
           setState(() {
+            _userData = userData;
             _userName = userData['Name'] ?? "Nom non défini".tr();
             phoneNumber = userData['Phone'] ?? "Non spécifié".tr();
             localisation = userData['Address'] ?? "Non spécifié".tr();
@@ -674,24 +677,27 @@ String _formatDays(String daysString) {
 
           SizedBox(height: isSmallScreen ? 12 : 16),
 
-          _buildSettingsCard([
-            _buildListTile(
-              Icons.lock,
-              "profile.security".tr(),
-              isSmallScreen,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ChangePasswordPage()),
-                );
-              },
-            ),
-            _buildListTile(
-              Icons.send,
-              "profile.send_feedback".tr(),
-              isSmallScreen
-            ),
-          ], isSmallScreen),
+           _buildSettingsCard([
+                      _buildListTile(Icons.lock, "profile.security".tr(),isSmallScreen, onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ChangePasswordPage()),
+                        );
+                      }),
+                      _buildListTile(Icons.send, "profile.send_feedback".tr(), isSmallScreen, onTap: () {
+                          // Get user data from FirebaseAuth instead of _userData
+                          User? user = FirebaseAuth.instance.currentUser;
+                          String userRole = user != null ? 'user' : 'guest'; // Default role
+                          String userID = user?.uid ?? '';
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => AnnouncementsScreen(
+                              currentUserRole: userRole,
+                              currentUserId: userID
+                            )),
+                          );
+                        }),
+                      ], isSmallScreen),
 
           SizedBox(height: isSmallScreen ? 12 : 16),
 
@@ -795,7 +801,7 @@ String _formatDays(String daysString) {
           ? Text(
               value,
               style: TextStyle(
-                color: Colors.green,
+                color: Color(0xFF00d47e),
                 fontSize: isSmallScreen ? 13 : 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -833,7 +839,7 @@ String _formatDays(String daysString) {
       trailing: Switch(
         value: value,
         onChanged: onChanged,
-        activeColor: Colors.green,
+        activeColor: Color(0xFF00d47e),
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
       dense: true,

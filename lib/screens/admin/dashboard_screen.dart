@@ -25,7 +25,7 @@ class AdminDashboardScreen extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-        backgroundColor: Colors.green,
+        backgroundColor: Color(0xFF00d47e),
         centerTitle: true,
       ),
       body: Padding(

@@ -640,7 +640,7 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
           value: IncidentStatusFilter.Pending,
           label: _buildStatusSegmentLabel(
             Icons.access_time,
-            'incident_report.pending'.tr(),
+            'incident_report.Pending'.tr(),
             _selectedStatus == IncidentStatusFilter.Pending,
             color: Colors.amber, // Orange color for pending
           ),
@@ -649,7 +649,7 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
           value: IncidentStatusFilter.Resolved,
           label: _buildStatusSegmentLabel(
             Icons.check_circle,
-            'incident_report.resolved'.tr(),
+            'incident_report.Resolved'.tr(),
             _selectedStatus == IncidentStatusFilter.Resolved,
             color: Color(0xFF00D47E), // Green color for resolved
           ),
@@ -658,7 +658,7 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
           value: IncidentStatusFilter.Rejected,
           label: _buildStatusSegmentLabel(
             Icons.cancel,
-            'incident_report.rejected'.tr(),
+            'incident_report.Rejected'.tr(),
             _selectedStatus == IncidentStatusFilter.Rejected,
             color: Colors.red, // Red color for rejected
           ),
@@ -913,7 +913,7 @@ class _IncidentManagementScreenState extends State<IncidentManagementScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          "incident_report.${status.toLowerCase()}".tr(),
+                          "incident_report.${status}".tr(),
                           style: TextStyle(
                             fontSize: 12,
                             color: _getStatusColor(status),

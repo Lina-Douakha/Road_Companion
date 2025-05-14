@@ -14,7 +14,7 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
       backgroundColor: Colors.white, // Corrige le fond noir
       appBar: AppBar(
         title: Text("Choisir la langue"),
-        backgroundColor: Colors.green[700],
+        backgroundColor: Color(0xFF00d47e),
       ),
       body: Center(
         child: ElevatedButton(
@@ -77,7 +77,7 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
           children: [
             Text(language, style: TextStyle(fontSize: 16)),
             if (_selectedLanguage == language)
-              Icon(Icons.check, color: Colors.green),
+              Icon(Icons.check, color: Color(0xFF00d47e)),
           ],
         ),
       ),

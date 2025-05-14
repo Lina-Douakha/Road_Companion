@@ -3,6 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:road_companion/screens/admin/UserDetailsScreen.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:lottie/lottie.dart';
+
 class AdminLoadReviews extends StatefulWidget {
   final String providerId;
 
@@ -11,113 +14,135 @@ class AdminLoadReviews extends StatefulWidget {
   @override
   _AdminLoadReviewsState createState() => _AdminLoadReviewsState();
 }
+
 class _AdminLoadReviewsState extends State<AdminLoadReviews> {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   List<Map<String, dynamic>> reviews = [];
   String status = 'Loading...';
   bool isLoading = true;
+  double averageRating = 0.0;
+  int totalReviews = 0;
   List<Map<String, dynamic>> users = [];
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   final ScrollController scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     loadReviews(widget.providerId);
   }
+
   Future<void> toggleBlockUser(String userId, bool currentBlockedStatus) async {
     try {
-
       await firestore.collection('users').doc(userId).update({
         'isBlocked': !currentBlockedStatus,
       });
 
       setState(() {
-
         final userIndex = users.indexWhere((user) => user['UserID'] == userId);
         if (userIndex != -1) {
-
           users[userIndex]['isBlocked'] = !currentBlockedStatus;
         }
       });
     } catch (e) {
-
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to toggle block status: $e')),
+        SnackBar(content: Text('admin.user_management.failed_toggle'.tr(args: [e.toString()]))),
       );
     }
   }
+
   Future<void> loadReviews(String providerID) async {
-    try {
-      final providerRef = _db.collection('Reviews').doc(providerID);
-      final providerDoc = await providerRef.get();
-
-      if (!providerDoc.exists) {
+      try {
         setState(() {
-          status = '❌ Document does not exist!';
-          isLoading = false;
+          isLoading = true;
+          reviews = [];
+          averageRating = 0.0;
+          totalReviews = 0;
         });
-        return;
-      }
 
-      final data = providerDoc.data() as Map<String, dynamic>;
-      final reviewsMap = data['reviews'] as Map<String, dynamic>? ?? {};
+        final providerRef = _db.collection('Reviews').doc(providerID);
+        final providerDoc = await providerRef.get();
 
-      List<Map<String, dynamic>> reviewsList = [];
+        if (!providerDoc.exists) {
+          setState(() {
+            status = 'admin.review_management.no_reviews_found'.tr();
+            isLoading = false;
+          });
+          return;
+        }
 
-      for (var entry in reviewsMap.entries) {
-        final v = entry.value as Map<String, dynamic>;
+        final data = providerDoc.data() as Map<String, dynamic>;
+        final reviewsMap = data['reviews'] as Map<String, dynamic>? ?? {};
 
-        final bool isVisible = v.containsKey('isVisible')
-            ? (v['isVisible'] as bool)
-            : true;
+        List<Map<String, dynamic>> validReviews = [];
+        double totalRating = 0.0;
+        int validReviewCount = 0;
 
-        final String senderID = v['senderID'] ?? '';
-        String name = v['name'] ?? '';
-        String image = v['image'] ?? '';
+        // Check each review to verify sender exists
+        for (var entry in reviewsMap.entries) {
+          final reviewData = entry.value as Map<String, dynamic>;
+          final String senderID = reviewData['senderID'] ?? '';
 
-        if (senderID.isNotEmpty) {
-          try {
+          if (senderID.isNotEmpty) {
+            try {
+              // Verify sender exists in users collection
+              final userDoc = await _db.collection('users').doc(senderID).get();
 
-            final userDoc = await _db.collection('users').doc(senderID).get();
+              if (userDoc.exists) {
+                final userData = userDoc.data() as Map<String, dynamic>;
 
-            if (userDoc.exists) {
-              final userData = userDoc.data() as Map<String, dynamic>;
+                // Add the review to valid reviews
+                validReviews.add({
+                  'name': userData['Name'] ?? reviewData['name'] ?? 'Unknown',
+                  'image': userData['ProfilePhoto'] ?? reviewData['image'] ?? '',
+                  'rating': (reviewData['rating'] is num)
+                      ? (reviewData['rating'] as num).toDouble()
+                      : 0.0,
+                  'comment': reviewData['comment'] ?? 'No comment',
+                  'date': reviewData['date'] ?? 'No date',
+                  'senderID': senderID,
+                  'isVisible': reviewData.containsKey('isVisible')
+                      ? (reviewData['isVisible'] as bool)
+                      : true,
+                });
 
-              name = userData['Name'] ?? name;
-              image = userData['ProfilePhoto'] ?? image;
+                // Calculate average rating
+                totalRating += validReviews.last['rating'];
+                validReviewCount++;
+              }
+            } catch (e) {
+              debugPrint('Error checking user $senderID: $e');
             }
-          } catch (e) {
-            debugPrint('Error fetching user data for $senderID: $e');
-
           }
         }
-        reviewsList.add({
-          'name': name,
-          'image': image,
-          'rating': (v['rating'] is num)
-              ? (v['rating'] as num).toDouble()
-              : 0.0,
-          'comment': v['comment'] ?? 'No comment',
-          'date': v['date'] ?? 'No date',
-          'senderID': senderID,
-          'isVisible': isVisible,
-        });
-      }
 
-      setState(() {
-        reviews = reviewsList;
-        status = reviews.isEmpty ? '❌ No reviews found.' : '✅ Reviews loaded!';
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        status = '❌ Error: $e';
-        isLoading = false;
-      });
-      debugPrint('Error loading reviews: $e');
-    }
+        // Calculate average rating if there are valid reviews
+        if (validReviewCount > 0) {
+          averageRating = totalRating / validReviewCount;
+        }
+
+        if (mounted) {
+          setState(() {
+            reviews = validReviews;
+            totalReviews = validReviewCount;
+            status = validReviews.isEmpty
+                ? 'admin.review_management.no_valid_reviews'.tr()
+                : 'admin.review_management.reviews_loaded'.tr(args: [validReviews.length.toString()]);
+            isLoading = false;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            status = 'admin.review_management.load_error'.tr(args: [e.toString()]);
+            isLoading = false;
+          });
+        }
+        debugPrint('Error loading reviews: $e');
+      }
   }
+
   @override
   void dispose() {
     scrollController.dispose();
@@ -133,7 +158,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
         surfaceTintColor: Color(0xFF1B9169),
         elevation: 0,
         title: Text(
-          'Provider Reviews',
+          'admin.review_management.provider_reviews'.tr(),
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -168,7 +193,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                       children: [
                         Flexible(
                           child: Text(
-                            'Provider ID: ${widget.providerId}',
+                            'admin.review_management.provider_id'.tr(args: [widget.providerId]),
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w500,
@@ -182,7 +207,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                             await Clipboard.setData(ClipboardData(text: widget.providerId));
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Provider ID copied to clipboard',
+                                content: Text('admin.review_management.provider_id_copied'.tr(),
                                     style: TextStyle(color: Colors.green)),
                                 backgroundColor: Colors.green[50],
                                 behavior: SnackBarBehavior.floating,
@@ -213,6 +238,8 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                 color: Color(0xFF00D47E),
               ),
             )
+                : reviews.isEmpty
+                ? _buildEmptyState()
                 : ListView.builder(
               padding: EdgeInsets.all(16),
               itemCount: reviews.length,
@@ -234,188 +261,210 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                       ],
                     ),
                     child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12.0),
-                    child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                    onTap: () async {
-                      try {
-                        final snapshot = await firestore.collection('users').doc(review['senderID']).get();
+                      borderRadius: BorderRadius.circular(12.0),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () async {
+                            try {
+                              final snapshot = await firestore.collection('users').doc(review['senderID']).get();
 
-                        if (snapshot.exists) {
+                              if (snapshot.exists) {
+                                Map<String, dynamic> userData = snapshot.data() as Map<String, dynamic>? ?? {};
 
-                          Map<String, dynamic> userData = snapshot.data() as Map<String, dynamic>? ?? {};
-
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => UserDetailsScreen(user: userData),
-                            ),
-                          );
-                        } else {
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('User profile not found')),
-                          );
-                        }
-                      } catch (e) {
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error loading user profile: ${e.toString()}')),
-                        );
-                        print('Error navigating to user profile: $e');
-                      }
-                },
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 24,
-                                backgroundColor: Color(0xFF1B9169).withOpacity(0.1),
-                                backgroundImage: review['image'] != null && review['image'].isNotEmpty
-                                    ? AssetImage(review['image'])
-                                    : null,
-                                child: review['image'] == null || review['image'].isEmpty
-                                    ? Text(
-                                  review['name'][0].toUpperCase(),
-                                  style: TextStyle(
-                                    color: Color(0xFF1B9169),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => UserDetailsScreen(user: userData),
                                   ),
-                                )
-                                    : null,
-                              ),
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('admin.review_management.user_profile_not_found'.tr())),
+                                );
+                              }
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('admin.review_management.error_loading_profile'.tr(args: [e.toString()]))),
+                              );
+                              print('Error navigating to user profile: $e');
+                            }
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
                                   children: [
-                                    Text(
-                                      review['name'],
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
+                                    CircleAvatar(
+                                      radius: 24,
+                                      backgroundColor: Color(0xFF1B9169).withOpacity(0.1),
+                                      backgroundImage: review['image'] != null && review['image'].isNotEmpty
+                                          ? AssetImage(review['image'])
+                                          : null,
+                                      child: review['image'] == null || review['image'].isEmpty
+                                          ? Text(
+                                        review['name'] != null && review['name'].isNotEmpty
+                                            ? review['name'][0].toUpperCase()
+                                            : '?',
+                                        style: TextStyle(
+                                          color: Color(0xFF1B9169),
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
+                                      )
+                                          : null,
+                                    ),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            review['name'] ?? 'Anonymous',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          Text(
+                                            review['date'] ?? 'No date',
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    Text(
-                                      review['date'],
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 14,
+                                    Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: _getRatingColor(review['rating']).withOpacity(0.5),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.star,
+                                            color: Colors.white,
+                                            size: 16,
+                                          ),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            review['rating'].toStringAsFixed(1),
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
                                 ),
-                              ),
-                              Container(
-                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: _getRatingColor(review['rating']).withOpacity(0.5),
-                                  borderRadius: BorderRadius.circular(16),
+                                SizedBox(height: 12),
+                                Text(
+                                  review['comment'] ?? 'No comment',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.grey[800],
+                                  ),
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
+                                SizedBox(height: 12),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    Icon(
-                                      Icons.star,
-                                      color:Colors.white,
-                                      size: 16,
+                                    TextButton.icon(
+                                      onPressed: () {
+                                        // Add functionality to flag or moderate review
+                                        _showModerateDialog(review);
+                                      },
+                                      icon: Icon(
+                                        Icons.flag_outlined,
+                                        size: 16,
+                                        color: Colors.orange[700],
+                                      ),
+                                      label: Text(
+                                        'admin.review_management.moderate'.tr(),
+                                        style: TextStyle(
+                                          color: Colors.orange[700],
+                                        ),
+                                      ),
+                                      style: TextButton.styleFrom(
+                                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                        backgroundColor: Colors.orange[50],
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
                                     ),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      review['rating'].toStringAsFixed(1),
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
+                                    SizedBox(width: 8), // Add spacing between buttons
+                                    TextButton.icon(
+                                      onPressed: () {
+                                        showUserManagementDialog(review);
+                                      },
+                                      icon: Icon(
+                                        Icons.admin_panel_settings_outlined,
+                                        size: 16,
+                                        color: Colors.blue[700],
+                                      ),
+                                      label: Text(
+                                        'admin.review_management.manage_user'.tr(),
+                                        style: TextStyle(
+                                          color: Colors.blue[700],
+                                        ),
+                                      ),
+                                      style: TextButton.styleFrom(
+                                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                        backgroundColor: Colors.blue[50],
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 12),
-                          Text(
-                            review['comment'],
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: Colors.grey[800],
+                              ],
                             ),
                           ),
-                          SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              TextButton.icon(
-                                onPressed: () {
-                                  // Add functionality to flag or moderate review
-                                  _showModerateDialog(review);
-                                },
-                                icon: Icon(
-                                  Icons.flag_outlined,
-                                  size: 16,
-                                  color: Colors.orange[700],
-                                ),
-                                label: Text(
-                                  'Moderate',
-                                  style: TextStyle(
-                                    color: Colors.orange[700],
-                                  ),
-                                ),
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                  backgroundColor: Colors.orange[50],
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 8), // Add spacing between buttons
-                              TextButton.icon(
-                                onPressed: () {
-                                showUserManagementDialog(review);
-
-                                },
-                                icon: Icon(
-                                  Icons.admin_panel_settings_outlined,
-                                  size: 16,
-                                  color: Colors.blue[700],
-                                ),
-                                label: Text(
-                                  'Manage User',
-                                  style: TextStyle(
-                                    color: Colors.blue[700],
-                                  ),
-                                ),
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                  backgroundColor: Colors.blue[50],
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                    ),
-                    ),
                     ),
                   ),
                 );
-                },
+              },
             ),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildEmptyState() {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Lottie.asset(
+              'assets/animation/emptybox.json',
+              width: 200,
+              height: 200,
+              fit: BoxFit.contain,
+            ),
+            Text(
+              'admin.review_management.no_reviews'.tr(),
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
   void showUserManagementDialog(Map<String, dynamic> review) {
     showDialog(
       context: context,
@@ -442,13 +491,13 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                       ),
                       child: Icon(
                         Icons.admin_panel_settings,
-                        color:Colors.blue[700],
+                        color: Colors.blue[700],
                         size: 28,
                       ),
                     ),
                     SizedBox(height: 12),
                     Text(
-                      'Manage User',
+                      'admin.review_management.manage_user'.tr(),
                       style: TextStyle(
                         color: Colors.black87,
                         fontWeight: FontWeight.bold,
@@ -465,7 +514,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
                   child: Text(
-                    'Choose an action for this user:',
+                    'admin.user_management.choose_action'.tr(),
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey[800],
@@ -485,7 +534,6 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: () {
-
                           Navigator.pop(context);
                           showWarningMessageDialog(review['senderID']);
                         },
@@ -495,7 +543,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                           size: 20,
                         ),
                         label: Text(
-                          'Send Warning',
+                          'admin.user_management.send_warning'.tr(),
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
@@ -539,7 +587,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                                 Navigator.pop(context);
                                 SuccessDialog(
                                     context,
-                                    isBlocked ? "User activated successfully!" : "User blocked successfully!"
+                                    isBlocked ? "admin.user_management.user_activated".tr() : "admin.user_management.user_blocked".tr()
                                 );
                               });
                             },
@@ -549,7 +597,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                               size: 20,
                             ),
                             label: Text(
-                              isBlocked ? 'Activate User' : 'Block User',
+                              isBlocked ? 'admin.user_management.activate_user'.tr() : 'admin.user_management.block_user'.tr(),
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
@@ -576,7 +624,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                         Navigator.pop(context);
                       },
                       child: Text(
-                        'Cancel',
+                        tr("admin.cancel"),
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
@@ -603,7 +651,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
 
   void showWarningMessageDialog(String userId) {
     final TextEditingController messageController = TextEditingController(
-        text: "Your recent comment has been flagged for not following our community guidelines. Please remember to keep all interactions respectful and appropriate. Continued violations may result in account restrictions."
+        text: "admin.default_warning".tr()
     );
 
     showDialog(
@@ -643,7 +691,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                           ),
                           SizedBox(height: 12),
                           Text(
-                            'Send Warning',
+                            'admin.user_management.warning_message_title'.tr(),
                             style: TextStyle(
                               color: Colors.black87,
                               fontWeight: FontWeight.bold,
@@ -658,7 +706,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                       Padding(
                         padding: EdgeInsets.symmetric(vertical: 8),
                         child: Text(
-                          'Enter a message to warn this user:',
+                          'admin.user_management.enter_warning_message'.tr(),
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.grey[800],
@@ -685,7 +733,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                           textAlignVertical: TextAlignVertical.top,
                           cursorColor: Colors.orange[300],
                           decoration: InputDecoration(
-                            hintText: 'Write your warning message here...',
+                            hintText: 'admin.user_management.write_warning_placeholder'.tr(),
                             hintStyle: TextStyle(color: Colors.grey[400]),
                             filled: true,
                             fillColor: Colors.grey[50],
@@ -731,7 +779,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                                                   color: Colors.orange[500],
                                                 ),
                                                 SizedBox(width: 20),
-                                                Text("Sending warning..."),
+                                                Text("admin.user_management.sending_warning".tr()),
                                               ],
                                             ),
                                           ),
@@ -741,7 +789,6 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
 
                                     final currentAdmin = FirebaseAuth.instance.currentUser;
                                     final adminId = currentAdmin?.uid ?? 'unknown_admin';
-
 
                                     await FirebaseFirestore.instance
                                         .collection('users')
@@ -758,11 +805,11 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                                       ]),
                                     });
 
-                                    Navigator.pop(context);
+                                    Navigator.pop(context); // Close loading dialog
 
-                                    Navigator.pop(context);
+                                    Navigator.pop(context); // Close warning message dialog
 
-                                    SuccessDialog(context, "Warning sent successfully");
+                                    SuccessDialog(context, "admin.user_management.warning_sent".tr());
                                   } catch (e) {
                                     // Close loading indicator
                                     Navigator.pop(context);
@@ -770,7 +817,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                                     // Show error message
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text('Failed to send warning: ${e.toString()}',
+                                        content: Text('admin.user_management.failed_to_send_warning'.tr(args: [e.toString()]),
                                             style: TextStyle(color: Colors.red)),
                                         backgroundColor: Colors.red[50],
                                         behavior: SnackBarBehavior.floating,
@@ -782,11 +829,10 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                                     );
                                   }
                                 } else {
-
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Please enter a warning message',
-                                      style: TextStyle(color: Colors.red)),
+                                      content: Text('admin.user_management.warning_empty'.tr(),
+                                          style: TextStyle(color: Colors.red)),
                                       backgroundColor: Colors.red[50],
                                       behavior: SnackBarBehavior.floating,
                                       margin: EdgeInsets.all(10),
@@ -798,7 +844,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                                 }
                               },
                               child: Text(
-                                'Send Warning',
+                                'admin.user_management.send_warning'.tr(),
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
@@ -820,7 +866,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                           TextButton(
                             onPressed: () => Navigator.pop(context),
                             child: Text(
-                              'Cancel',
+                              tr("admin.cancel"),
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500,
@@ -840,6 +886,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
       },
     );
   }
+
 
   Color _getRatingColor(double rating) {
     if (rating >= 4.5) return Colors.green[700]!;
@@ -873,7 +920,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
             ),
             SizedBox(height: 12),
             Text(
-              'Moderate Review',
+              'admin.moderation_dialog.moderate_review'.tr(),
               style: TextStyle(
                 color: Colors.black87,
                 fontWeight: FontWeight.bold,
@@ -904,7 +951,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                         Icon(Icons.person, size: 16, color: Colors.grey[600]),
                         SizedBox(width: 8),
                         Text(
-                          'User:',
+                          'admin.moderation_dialog.user'.tr(),
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 14,
@@ -927,7 +974,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                         Icon(Icons.star, size: 16, color: Colors.grey[600]),
                         SizedBox(width: 8),
                         Text(
-                          'Rating:',
+                          'admin.review_management.rating'.tr(),
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 14,
@@ -958,7 +1005,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
               // Action section
               Center(
                 child: Text(
-                  'Moderation Actions',
+                  'admin.moderation_dialog.moderation_actions'.tr(),
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: Colors.black87,
@@ -990,7 +1037,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                     padding: EdgeInsets.symmetric(vertical: 12),
                   ),
                   child: Text(
-                    'Cancel',
+                    tr("admin.cancel"),
                     style: TextStyle(
                       color: Colors.grey[800],
                       fontWeight: FontWeight.w500,
@@ -1014,11 +1061,11 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                         }
                       });
                       Navigator.of(context).pop(); // close the dialog immediately
-                     if (wasVisible){
-                       SuccessDialog(context, "Review hidden successfully!");
-                     }else {
-                       SuccessDialog(context, "Review unhidden successfully!");
-                     }
+                      if (wasVisible){
+                        SuccessDialog(context, "admin.review_management.review_hidden".tr());
+                      } else {
+                        SuccessDialog(context, "admin.review_management.review_unhidden".tr());
+                      }
                     }
                   },
                   style: TextButton.styleFrom(
@@ -1029,7 +1076,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                     padding: EdgeInsets.symmetric(vertical: 12),
                   ),
                   child: Text(
-                    (review['isVisible'] == true) ? 'Hide' : 'Unhide',
+                    (review['isVisible'] == true) ? 'admin.moderation_dialog.hide'.tr() : 'admin.moderation_dialog.unhide'.tr(),
                     style: TextStyle(
                       color: Colors.orange[700],
                       fontWeight: FontWeight.w500,
@@ -1047,7 +1094,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                       _deleteReview(review);
                     });
                     Navigator.of(context).pop();
-                    SuccessDialog(context, "Review deleted successfully!");
+                    SuccessDialog(context, "admin.review_management.review_deleted".tr());
                   },
                   style: TextButton.styleFrom(
                     backgroundColor: Colors.red[50],
@@ -1057,7 +1104,7 @@ class _AdminLoadReviewsState extends State<AdminLoadReviews> {
                     padding: EdgeInsets.symmetric(vertical: 12),
                   ),
                   child: Text(
-                    'Delete',
+                    'admin.moderation_dialog.delete'.tr(),
                     style: TextStyle(
                       color: Colors.red,
                       fontWeight: FontWeight.w500,
