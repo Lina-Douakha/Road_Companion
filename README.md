@@ -13,7 +13,7 @@ a mobile app designed to assist drivers, improve road safety, and simplify traff
 
 ## Getting Started
 - Clone the repository:
-  git clone https://github.com/Amina3524/road_companion_app.git
+  git clone https://github.com/Lina-Douakha/Road_Companion.git
   Change dir to the road_companion_app
 - Run `flutter pub get` to install dependencies.
 - Run `flutter run` to start the app.
